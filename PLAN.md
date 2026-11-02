@@ -4,18 +4,21 @@
 
 ServicePilot is a Flutter mobile app where homeowners in Phnom Penh browse, book and track home repair, maintenance and cleaning services from independent workers and small service companies.
 
+> **Mandatory Authentication:** Users must log in to use the app. All screens and features are gated behind authentication — there is no guest or unauthenticated access.
+
 ---
 
 ## 2. Who Uses It
 
+All users must log in to access the application.
+
 | Role | Signs in? | Description |
 |---|---|---|
-| **Visitor** (any person) | No | Browses service categories, provider profiles and prices. Cannot book or manage anything. |
 | **Homeowner** (customer) | Yes | Searches providers, adds fixed-price services to a cart, requests quotes, books a time, tracks job status and views booking history. |
 | **Independent Provider** | Yes | Manages own profile and service listings, sets or quotes prices, accepts/rejects bookings, updates job status. |
 | **Service Company** | Yes | Manages company profile and listings, receives bookings, assigns jobs to company technicians, tracks progress. |
 | **Company Technician** | Yes | Receives assigned jobs from their company, updates job status. |
-| **Admin** (owner: you) | Yes | Manages users, providers, service categories; reviews bookings and helps resolve problems. |
+| **Platform Admin** (owner: you) | Yes | Manages users, providers, service categories; reviews bookings and helps resolve problems. |
 
 ---
 
@@ -23,6 +26,7 @@ ServicePilot is a Flutter mobile app where homeowners in Phnom Penh browse, book
 
 ### In (course prototype, Dec 2026)
 
+- Mandatory authentication: users must log in/register to access the app; unauthenticated access is blocked across all screens.
 - Service categories: plumbing, electrical, AC maintenance, appliance repair, home cleaning.
 - Homeowner: browse categories and providers; view profiles, services and prices; add fixed-price services from **one** provider to a cart; request quotes for non-fixed-price services; add description and photos; enter address and preferred time; checkout (no real payment); track booking status; view history; contact provider via Telegram/Messenger link.
 - Independent provider: manage profile and listings; set prices or send quotes; accept/reject bookings; manage appointments and update job status.
@@ -32,6 +36,7 @@ ServicePilot is a Flutter mobile app where homeowners in Phnom Penh browse, book
 
 ### Out (explicitly excluded)
 
+- Guest / unauthenticated browsing (all users must log in before accessing the app).
 - Real KHQR payments and automatic payouts.
 - Live GPS tracking.
 - Automatic technician assignment.
@@ -153,29 +158,30 @@ ServicePilot is a Flutter mobile app where homeowners in Phnom Penh browse, book
 
 ## 5. Who May Do What
 
-| Action | Visitor | Homeowner | Indep. Provider | Company | Technician | Admin |
-|---|---|---|---|---|---|---|
-| Browse categories & providers | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| View service listings & prices | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Sign up / sign in | ✅ | ✅ | ✅ | ✅ | ✅ | — |
-| Add to cart & checkout | — | ✅ | — | — | — | — |
-| Send quote request | — | ✅ | — | — | — | — |
-| Approve / reject a quote | — | ✅ (own) | — | — | — | — |
-| View own booking history | — | ✅ (own) | — | — | — | — |
-| Manage own profile & listings | — | — | ✅ (own) | ✅ (own) | — | — |
-| Set / update service prices | — | — | ✅ (own) | ✅ (own) | — | — |
-| Send a quote price | — | — | ✅ (own) | ✅ (own) | — | — |
-| Accept / reject booking | — | — | ✅ (own) | ✅ (own) | — | — |
-| Update job status | — | — | ✅ (own) | ✅ (own) | ✅ (assigned) | — |
-| Assign technician to job | — | — | — | ✅ (own) | — | — |
-| Manage all users & providers | — | — | — | — | — | ✅ |
-| Manage service categories | — | — | — | — | — | ✅ |
-| Review / resolve any booking | — | — | — | — | — | ✅ |
-| Delete a booking | — | — | — | — | — | ✅ |
-| Delete a user account | — | — | — | — | — | ✅ |
+| Action | Homeowner | Indep. Provider | Company | Technician | Admin |
+|---|---|---|---|---|---|
+| Browse categories & providers | ✅ | ✅ | ✅ | ✅ | ✅ |
+| View service listings & prices | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Sign up / sign in | ✅ | ✅ | ✅ | ✅ | — |
+| Add to cart & checkout | ✅ | — | — | — | — |
+| Send quote request | ✅ | — | — | — | — |
+| Approve / reject a quote | ✅ (own) | — | — | — | — |
+| View own booking history | ✅ (own) | — | — | — | — |
+| Manage own profile & listings | — | ✅ (own) | ✅ (own) | — | — |
+| Set / update service prices | — | ✅ (own) | ✅ (own) | — | — |
+| Send a quote price | — | ✅ (own) | ✅ (own) | — | — |
+| Accept / reject booking | — | ✅ (own) | ✅ (own) | — | — |
+| Update job status | — | ✅ (own) | ✅ (own) | ✅ (assigned) | — |
+| Assign technician to job | — | — | ✅ (own) | — | — |
+| Manage all users & providers | — | — | — | — | ✅ |
+| Manage service categories | — | — | — | — | ✅ |
+| Review / resolve any booking | — | — | — | — | ✅ |
+| Delete a booking | — | — | — | — | ✅ |
+| Delete a user account | — | — | — | — | ✅ |
 
 - **"own"** = the record belongs to that user.
 - **"assigned"** = the technician was assigned by their company.
+- **All actions require authentication**: A user must be logged in to browse, book, or manage anything in the app.
 - Homeowners **cannot** delete bookings; they can cancel a pending booking (status change, not deletion).
 - Only Admin can permanently delete records.
 
@@ -187,16 +193,16 @@ Each check below maps to one decision above. A tester can verify each independen
 
 | # | Decision | Done-when check |
 |---|---|---|
-| 1 | It is a home-service booking mobile app | A tester opens the app on a phone, sees service categories, and can follow the flow from browse → cart → checkout without errors. |
-| 2 | Visitors can browse without signing in | A tester who is **not** signed in can view categories, providers and prices. Attempting to add to cart or book redirects to the sign-in screen. |
+| 1 | It is a home-service booking mobile app | A tester opens the app on a phone, logs in, sees service categories, and can follow the flow from browse → cart → checkout without errors. |
+| 2 | Mandatory login to use the app | Launching the app unauthenticated immediately opens the login / register screen. The tester cannot view categories, providers, or services without logging in first. |
 | 3 | Homeowners sign in and book | A signed-in homeowner adds a fixed-price service to the cart, enters address and time, submits the booking, and sees it in booking history with status `pending`. |
 | 4 | Quote flow works | A homeowner sends a quote request with description and photo → the provider sees it and sends a price → the homeowner approves → booking is created with the quoted price. |
 | 5 | Cart is single-provider only | A homeowner with items from Provider A in the cart tries to add an item from Provider B → the app prevents it or asks to clear the cart first. |
 | 6 | Provider accepts/rejects booking | A provider sees an incoming booking and can confirm or reject it; the homeowner sees the updated status. |
-| 7 | Provider manages listings | A provider creates a new service listing with title, description, category, price and photo → it appears in the public browse view. The provider edits it → changes are visible. |
+| 7 | Provider manages listings | A provider creates a new service listing with title, description, category, price and photo → it appears in the browse view. The provider edits it → changes are visible. |
 | 8 | Company assigns a technician | A company user assigns a confirmed booking to one of their technicians → the technician sees the assigned job and can update its status. |
 | 9 | Job status updates end-to-end | A provider (or assigned technician) moves a booking through `confirmed` → `in_progress` → `completed` → the homeowner sees each status change. |
-| 10 | Admin manages categories | Admin creates, edits and deletes a service category → changes are reflected in the public browse view. |
+| 10 | Admin manages categories | Admin creates, edits and deletes a service category → changes are reflected in the browse view. |
 | 11 | Admin manages users | Admin can view, edit roles and delete user accounts. A deleted account can no longer sign in. |
 | 12 | Admin reviews bookings | Admin can see all bookings and change their status (e.g., cancel a disputed booking). |
 | 13 | Only admin can delete | A non-admin user has no delete button or API route for bookings/users. Attempting the API directly returns 403. |
@@ -209,8 +215,10 @@ Each check below maps to one decision above. A tester can verify each independen
 
 The following points are **not decided** in the Business Case or Charter. I need your answers before building.
 
-1. **Backend & database** — Flutter is decided for the mobile app. What backend language/framework (Node/Express, Django, Laravel, Spring Boot…) and database (PostgreSQL, MySQL, MongoDB, Firebase…) should we use?
-2. **Authentication method** — Email + password only? Or also Google / Facebook social login?
+1. **Backend & database** — ✅ **Confirmed:** Flutter (mobile) + **Node.js / Express** (REST API) + **PostgreSQL** (database).
+2. **Authentication method** — ✅ **Partially confirmed:**
+   - **Homeowner:** Email + password **and** Google Sign-In.
+   - **Independent Technician, Company Owner, Company Technician, Platform Admin:** Email + password only for now. Google/social login under consideration for future sprints.
 3. **Homeowner cancel policy** — Can a homeowner cancel a `confirmed` booking, or only a `pending` one? Is there any cancellation reason field?
 4. **Company technician sign-up** — Does the company admin invite/create technician accounts, or do technicians sign up independently and get linked?
 5. **Provider verification** — The Business Case mentions checking provider identity and experience. Should the prototype include an admin-approval step before a provider's profile goes live?
