@@ -1,18 +1,29 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:service_pilot/core/auth/auth_service.dart';
 import 'package:service_pilot/core/auth/auth_state.dart';
 import 'package:service_pilot/features/auth/mock/mock_auth_service.dart';
 import 'package:service_pilot/features/auth/models/user_model.dart';
 
-/// Provides the single instance of [MockAuthService] for the app.
-final mockAuthServiceProvider = Provider<MockAuthService>(
+/// Provides the active [IAuthService] implementation (currently [MockAuthService]).
+/// In SCRUM-67, this can be swapped with a real `AuthApiService` without changing UI logic.
+final authServiceProvider = Provider<IAuthService>(
   (_) => MockAuthService(),
+);
+
+/// Backwards compatibility alias for [mockAuthServiceProvider].
+final mockAuthServiceProvider = Provider<MockAuthService>(
+  (ref) {
+    final service = ref.watch(authServiceProvider);
+    if (service is MockAuthService) return service;
+    throw UnsupportedError('Current auth service is not MockAuthService');
+  },
 );
 
 /// Manages global authentication state via Riverpod [Notifier].
 ///
 /// Screens should watch [authProvider] to react to state changes.
 class AuthNotifier extends Notifier<AuthState> {
-  MockAuthService get _auth => ref.read(mockAuthServiceProvider);
+  IAuthService get _auth => ref.read(authServiceProvider);
 
   @override
   AuthState build() => const AuthStateUnauthenticated();
@@ -81,6 +92,7 @@ class AuthNotifier extends Notifier<AuthState> {
     required String email,
     required String phoneNumber,
     required String serviceArea,
+    required String password,
   }) async {
     state = const AuthStateLoading();
     try {
@@ -89,6 +101,7 @@ class AuthNotifier extends Notifier<AuthState> {
         email: email,
         phoneNumber: phoneNumber,
         serviceArea: serviceArea,
+        password: password,
       );
       state = const AuthStateUnauthenticated();
       return true;
