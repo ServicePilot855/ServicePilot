@@ -1,26 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/core/auth/auth_state.dart';
 import 'package:service_pilot/core/constants/app_roles.dart';
 import 'package:service_pilot/core/theme/app_theme.dart';
+import 'package:service_pilot/l10n/l10n.dart';
+import 'package:service_pilot/shared/widgets/sp_brand.dart';
 import 'package:service_pilot/shared/widgets/sp_button.dart';
+import 'package:service_pilot/shared/widgets/sp_layout.dart';
 import 'package:service_pilot/shared/widgets/sp_text_field.dart';
 
-/// Screen matching Figma '02 Login / Sign Up'.
-///
-/// Features:
-/// - Dark background `#0A0A0A`
-/// - Top back button (pill button `#1E1F24` with 22px radius)
-/// - Heading: "Welcome back", Subtitle: "Log in to book and track your home services."
-/// - Segmented control `#17181B` with tabs: "Log In" (active `#2A2B31`) and "Sign Up"
-/// - Inputs `#17181B` with 12px radius, phone/email icon, lock icon
-/// - "Remember me" checkbox + "Forgot password?" in orange `#FF5000`
-/// - Primary Action button `#FF5000` (height: 48, radius: 12)
-/// - Google Sign-in option for customers
-/// - Switch link: "New to ServicePilot? Create an account"
+/// Entry screen for returning users: email or phone and password, Google for
+/// homeowners, and one link to create an account.
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -32,7 +24,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _passwordVisible = false;
   bool _rememberMe = true;
 
   @override
@@ -51,48 +42,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _passwordController.text,
     );
 
-    if (!mounted) return;
-
-    final state = ref.read(authProvider);
-    if (state is AuthStateAuthenticated) {
-      context.go(state.user.role.homeRoute);
-    } else if (state is AuthStateError) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            state.message,
-            style: GoogleFonts.inter(color: Colors.white, fontSize: 13),
-          ),
-          backgroundColor: AppTheme.error,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      );
-      ref.read(authProvider.notifier).clearError();
-    }
+    _afterSignIn();
   }
 
   Future<void> _handleGoogleSignIn() async {
     final notifier = ref.read(authProvider.notifier);
     await notifier.signInWithGoogle();
 
+    _afterSignIn();
+  }
+
+  void _afterSignIn() {
     if (!mounted) return;
 
     final state = ref.read(authProvider);
     if (state is AuthStateAuthenticated) {
       context.go(state.user.role.homeRoute);
     } else if (state is AuthStateError) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            state.message,
-            style: GoogleFonts.inter(color: Colors.white, fontSize: 13),
-          ),
-          backgroundColor: AppTheme.error,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      );
+      showSpError(context, state.message);
       ref.read(authProvider.notifier).clearError();
     }
   }
@@ -101,324 +68,144 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final isLoading = authState is AuthStateLoading;
+    final l10n = context.l10n;
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: AppTheme.surface,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── Top Navigation Bar (Figma Nav/Top) ───────────────────────
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: AppTheme.surfaceElevated,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppTheme.border, width: 1),
-                      ),
-                      child: IconButton(
-                        icon: const Icon(Icons.arrow_back_rounded, size: 20),
-                        color: AppTheme.textPrimary,
-                        padding: EdgeInsets.zero,
-                        onPressed: () {
-                          if (context.canPop()) {
-                            context.pop();
-                          } else {
-                            context.go('/role-select');
-                          }
-                        },
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        Container(
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: AppTheme.primary,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: const Icon(
-                            Icons.location_on_rounded,
-                            size: 15,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'ServicePilot',
-                          style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.textPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(width: 44), // Balances the back button
-                  ],
-                ),
-                const SizedBox(height: 28),
+          padding: const EdgeInsets.fromLTRB(
+            AppTheme.gutter,
+            20,
+            AppTheme.gutter,
+            24,
+          ),
+          child: SpContentWidth(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SpWordmark(),
+                  const SizedBox(height: 32),
+                  SpPageHeader(
+                    title: l10n.loginTitle,
+                    subtitle: l10n.loginSubtitle,
+                  ),
+                  const SizedBox(height: 28),
 
-                // ── Heading & Subtitle ───────────────────────────────────────
-                Text(
-                  'Welcome back',
-                  style: GoogleFonts.inter(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary,
-                    letterSpacing: -0.4,
+                  SpTextField(
+                    label: l10n.loginIdentifierLabel,
+                    hint: l10n.loginIdentifierHint,
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    prefixIcon: Icons.mail_outline_rounded,
+                    textInputAction: TextInputAction.next,
+                    autofillHints: const [AutofillHints.username],
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) {
+                        return l10n.loginIdentifierRequired;
+                      }
+                      return null;
+                    },
                   ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Log in to book and track your home services.',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    color: AppTheme.textSecondary,
+                  const SizedBox(height: 16),
+                  SpPasswordField(
+                    label: l10n.commonPasswordLabel,
+                    hint: l10n.loginPasswordHint,
+                    controller: _passwordController,
+                    textInputAction: TextInputAction.done,
+                    autofillHints: const [AutofillHints.password],
+                    onFieldSubmitted: (_) => _handleLogin(),
+                    validator: (v) {
+                      if (v == null || v.isEmpty) {
+                        return l10n.loginPasswordRequired;
+                      }
+                      if (v.length < 8) {
+                        return l10n.loginPasswordMinLength;
+                      }
+                      return null;
+                    },
                   ),
-                ),
-                const SizedBox(height: 24),
+                  const SizedBox(height: 4),
 
-                // ── Segmented Control (Figma Node 576) ───────────────────────
-                Container(
-                  width: double.infinity,
-                  height: 48,
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppTheme.border, width: 1),
-                  ),
-                  child: Row(
+                  // Remember me / forgot password
+                  Row(
                     children: [
                       Expanded(
-                        child: Container(
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF2A2B31),
-                            borderRadius: BorderRadius.circular(9),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            'Log In',
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.textPrimary,
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => context.go('/role-select'),
-                          child: Container(
-                            height: 40,
-                            color: Colors.transparent,
-                            alignment: Alignment.center,
-                            child: Text(
-                              'Sign Up',
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: AppTheme.textSecondary,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Semantics(
+                            checked: _rememberMe,
+                            label: l10n.loginRememberMe,
+                            excludeSemantics: true,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radiusChip,
+                              ),
+                              onTap: () =>
+                                  setState(() => _rememberMe = !_rememberMe),
+                              child: ConstrainedBox(
+                                constraints:
+                                    const BoxConstraints(minHeight: 48),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    SizedBox.square(
+                                      dimension: 24,
+                                      child: Checkbox(
+                                        value: _rememberMe,
+                                        onChanged: (val) => setState(
+                                          () => _rememberMe = val ?? false,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Flexible(
+                                      child: Text(
+                                        l10n.loginRememberMe,
+                                        style: AppTheme.text(size: 15),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
+                      SpTextButton(
+                        label: l10n.loginForgotPassword,
+                        onPressed: () => context.push('/forgot-password'),
+                      ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 24),
+                  const SizedBox(height: 12),
 
-                // ── Form Inputs ─────────────────────────────────────────────
-                SpTextField(
-                  label: 'Phone number or email',
-                  hint: 'you@example.com or 012 345 678',
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  prefixIcon: const Icon(Icons.email_outlined),
-                  textInputAction: TextInputAction.next,
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) {
-                      return 'Please enter your phone number or email';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                SpTextField(
-                  label: 'Password',
-                  hint: '••••••••',
-                  controller: _passwordController,
-                  obscureText: !_passwordVisible,
-                  prefixIcon: const Icon(Icons.lock_outline_rounded),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _passwordVisible
-                          ? Icons.visibility_off_rounded
-                          : Icons.visibility_rounded,
-                      size: 20,
-                    ),
-                    onPressed: () =>
-                        setState(() => _passwordVisible = !_passwordVisible),
+                  SpPrimaryButton(
+                    label: l10n.loginSubmit,
+                    onPressed: _handleLogin,
+                    isLoading: isLoading,
                   ),
-                  textInputAction: TextInputAction.done,
-                  onFieldSubmitted: (_) => _handleLogin(),
-                  validator: (v) {
-                    if (v == null || v.isEmpty) {
-                      return 'Please enter your password';
-                    }
-                    if (v.length < 8) {
-                      return 'Password must be at least 8 characters';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // ── Remember Me & Forgot Password ───────────────────────────
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: Checkbox(
-                            value: _rememberMe,
-                            activeColor: AppTheme.primary,
-                            checkColor: Colors.white,
-                            side: const BorderSide(color: AppTheme.border, width: 1.5),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(5),
-                            ),
-                            onChanged: (val) =>
-                                setState(() => _rememberMe = val ?? false),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Remember me',
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            color: AppTheme.textBody,
-                          ),
-                        ),
-                      ],
-                    ),
-                    GestureDetector(
-                      onTap: () => context.push('/forgot-password'),
-                      child: Text(
-                        'Forgot password?',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.primary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 28),
-
-                // ── Primary Action Button ────────────────────────────────────
-                SpPrimaryButton(
-                  label: 'Log In',
-                  onPressed: _handleLogin,
-                  isLoading: isLoading,
-                ),
-                const SizedBox(height: 16),
-
-                // ── Google Sign In (Homeowner Only Option) ────────────────────
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: OutlinedButton(
+                  const SizedBox(height: 20),
+                  const SpOrDivider(),
+                  const SizedBox(height: 20),
+                  SpGoogleButton(
+                    label: l10n.loginGoogle,
                     onPressed: isLoading ? null : _handleGoogleSignIn,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.textPrimary,
-                      backgroundColor: AppTheme.surface,
-                      side: const BorderSide(color: AppTheme.border, width: 1),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radiusButton),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 22,
-                          height: 22,
-                          alignment: Alignment.center,
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Text(
-                            'G',
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          'Continue with Google (Customer)',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: AppTheme.textPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
-                ),
-                const SizedBox(height: 28),
+                  const SizedBox(height: 16),
 
-                // ── Switch Link (Figma Switch) ───────────────────────────────
-                Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'New to ServicePilot? ',
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          color: AppTheme.textSecondary,
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () => context.go('/role-select'),
-                        child: Text(
-                          'Create an account',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.primary,
-                          ),
-                        ),
-                      ),
-                    ],
+                  Center(
+                    child: SpFooterLink(
+                      prompt: l10n.loginNewPrompt,
+                      action: l10n.loginCreateAccount,
+                      onTap: () => context.go('/role-select'),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-              ],
+                ],
+              ),
             ),
           ),
         ),

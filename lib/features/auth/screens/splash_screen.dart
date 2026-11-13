@@ -1,20 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/core/auth/auth_state.dart';
 import 'package:service_pilot/core/constants/app_roles.dart';
 import 'package:service_pilot/core/theme/app_theme.dart';
+import 'package:service_pilot/l10n/l10n.dart';
+import 'package:service_pilot/shared/widgets/sp_brand.dart';
 
-/// Splash screen matching Figma '01 Welcome' dark aesthetics.
-///
-/// Features:
-/// - Background: `#0A0A0A`
-/// - ServicePilot logo mark: vibrant orange `#FF5000` with map pin/home
-/// - Orbiting home service badges: Plumbing, Electrical, AC, Cleaning
-/// - Tagline: "Home services, booked in one place."
-/// - Description: "Book trusted plumbers, electricians, AC technicians and cleaners across Phnom Penh."
+/// Launch screen: the mark and name on Pipe Blue while the session is
+/// checked. Routes onward after 2.5 seconds.
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
@@ -32,7 +28,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     super.initState();
     _animController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
+      duration: const Duration(milliseconds: 350),
     );
     _fadeIn = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
     _animController.forward();
@@ -62,179 +58,66 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: SafeArea(
-        child: Center(
+    final l10n = context.l10n;
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Scaffold(
+        backgroundColor: AppTheme.primary,
+        body: SafeArea(
           child: FadeTransition(
             opacity: _fadeIn,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 28),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Spacer(),
-
-                  // ── Hero Illustration matching Figma Frame 528 ─────────────
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Orbit glow ring
-                      Container(
-                        width: 140,
-                        height: 140,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppTheme.surface,
-                          border: Border.all(
-                            color: AppTheme.primary.withValues(alpha: 0.25),
-                            width: 1.5,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppTheme.primary.withValues(alpha: 0.15),
-                              blurRadius: 32,
-                              spreadRadius: 4,
+                  Expanded(
+                    child: Center(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const SpLogoMark(size: 88, onBrand: true),
+                            const SizedBox(height: 24),
+                            Text(
+                              l10n.appName,
+                              textAlign: TextAlign.center,
+                              style: AppTheme.display(
+                                size: 40,
+                                weight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              l10n.splashTagline,
+                              textAlign: TextAlign.center,
+                              style: AppTheme.text(
+                                size: 16.5,
+                                weight: FontWeight.w500,
+                                color: Colors.white.withValues(alpha: 0.9),
+                                height: 1.4,
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      // Core logo icon
-                      Container(
-                        width: 68,
-                        height: 68,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppTheme.primary,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppTheme.primary.withValues(alpha: 0.4),
-                              blurRadius: 16,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.home_repair_service_rounded,
-                          size: 34,
-                          color: Colors.white,
-                        ),
-                      ),
-                      // Floating category badge: AC
-                      Positioned(
-                        top: 4,
-                        right: 8,
-                        child: _categoryBadge(Icons.ac_unit_rounded),
-                      ),
-                      // Floating category badge: Electrical
-                      Positioned(
-                        bottom: 6,
-                        left: 8,
-                        child: _categoryBadge(Icons.bolt_rounded),
-                      ),
-                      // Floating category badge: Plumbing
-                      Positioned(
-                        top: 6,
-                        left: 8,
-                        child: _categoryBadge(Icons.water_drop_rounded),
-                      ),
-                      // Floating category badge: Cleaning
-                      Positioned(
-                        bottom: 4,
-                        right: 8,
-                        child: _categoryBadge(Icons.cleaning_services_rounded),
-                      ),
-                    ],
+                    ),
                   ),
-                  const SizedBox(height: 36),
-
-                  // ── Wordmark & Mark ────────────────────────────────────────
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: AppTheme.primary,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.build_rounded,
-                          size: 16,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        'ServicePilot',
-                        style: GoogleFonts.inter(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.textPrimary,
-                          letterSpacing: -0.4,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  // ── Tagline (Figma Copy) ───────────────────────────────────
                   Text(
-                    'Home services, booked in one place.',
+                    l10n.splashFootnote,
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.textPrimary,
+                    style: AppTheme.text(
+                      size: 12.5,
+                      color: Colors.white.withValues(alpha: 0.8),
                     ),
                   ),
-                  const SizedBox(height: 8),
-
-                  // ── Description (Figma Copy) ───────────────────────────────
-                  Text(
-                    'Book trusted plumbers, electricians, AC technicians and cleaners across Phnom Penh.',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w400,
-                      color: AppTheme.textSecondary,
-                      height: 1.45,
-                    ),
-                  ),
-
-                  const Spacer(),
-
-                  // ── Footer Note ───────────────────────────────────────────
-                  Text(
-                    'Student prototype · Phnom Penh · Sample data only',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color: AppTheme.textMuted,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _categoryBadge(IconData icon) {
-    return Container(
-      width: 32,
-      height: 32,
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceElevated,
-        shape: BoxShape.circle,
-        border: Border.all(color: AppTheme.border, width: 1.0),
-      ),
-      child: Icon(
-        icon,
-        size: 16,
-        color: AppTheme.primary,
       ),
     );
   }

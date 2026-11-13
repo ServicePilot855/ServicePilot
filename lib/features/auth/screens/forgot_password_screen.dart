@@ -4,15 +4,14 @@ import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/core/auth/auth_state.dart';
-import 'package:service_pilot/core/theme/app_theme.dart';
+import 'package:service_pilot/l10n/l10n.dart';
 import 'package:service_pilot/shared/widgets/sp_button.dart';
+import 'package:service_pilot/shared/widgets/sp_layout.dart';
 import 'package:service_pilot/shared/widgets/sp_text_field.dart';
 
-/// Forgot password screen.
-/// Styled in Figma Dark Theme (`#0A0A0A`, `#17181B`, `#FF5000`).
+/// Forgot password: ask for the account email, then confirm the link was sent.
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
@@ -78,201 +77,88 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     _startResendTimer();
   }
 
+  void _back() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/login');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final isLoading = authState is AuthStateLoading;
+    final l10n = context.l10n;
 
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      appBar: AppBar(
-        leading: Container(
-          margin: const EdgeInsets.only(left: 12),
-          child: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded, size: 20),
-            color: AppTheme.textPrimary,
-            onPressed: () => context.pop(),
-          ),
+    if (_emailSent) {
+      return SpFlowPage(
+        title: l10n.forgotPasswordTitle,
+        onBack: _back,
+        bottom: SpPrimaryButton(
+          label: l10n.commonBackToLogin,
+          onPressed: () => context.go('/login'),
         ),
-        title: Text(
-          'Reset Password',
-          style: GoogleFonts.inter(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-      ),
-      body: SafeArea(
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 350),
-          child: _emailSent
-              ? _buildEmailSentState()
-              : _buildFormState(isLoading),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFormState(bool isLoading) {
-    return SingleChildScrollView(
-      key: const ValueKey('form_state'),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: AppTheme.primary.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: AppTheme.primary.withValues(alpha: 0.25),
-                  width: 1,
-                ),
-              ),
-              child: const Icon(
-                Icons.lock_reset_rounded,
-                size: 28,
-                color: AppTheme.primary,
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            Text(
-              'Forgot your password?',
-              style: GoogleFonts.inter(
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary,
-                letterSpacing: -0.3,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Enter your registered email address below. We will send you a link to reset your password.',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                color: AppTheme.textSecondary,
-                height: 1.45,
-              ),
-            ),
-            const SizedBox(height: 28),
-
-            SpTextField(
-              label: 'Email Address',
-              hint: 'you@example.com',
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              prefixIcon: const Icon(Icons.email_outlined),
-              textInputAction: TextInputAction.done,
-              onFieldSubmitted: (_) => _handleSubmit(),
-              validator: (v) {
-                if (v == null || v.trim().isEmpty) {
-                  return 'Email is required';
-                }
-                if (!EmailValidator.validate(v.trim())) {
-                  return 'Please enter a valid email address';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 28),
-
-            SpPrimaryButton(
-              label: 'Send Reset Link',
-              onPressed: _handleSubmit,
-              isLoading: isLoading,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmailSentState() {
-    return SingleChildScrollView(
-      key: const ValueKey('sent_state'),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const SizedBox(height: 32),
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: AppTheme.success.withValues(alpha: 0.12),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: AppTheme.success.withValues(alpha: 0.3),
-                width: 1,
-              ),
-            ),
-            child: const Icon(
-              Icons.mark_email_read_outlined,
-              size: 36,
-              color: AppTheme.success,
-            ),
+          const SizedBox(height: 12),
+          SpStatusHero(
+            icon: Icons.mark_email_read_outlined,
+            tone: SpTone.success,
+            title: l10n.forgotPasswordSentTitle,
+            message: l10n.forgotPasswordSentMessage,
+            detail: _sentEmail,
           ),
-          const SizedBox(height: 24),
-
-          Text(
-            'Check your inbox',
-            style: GoogleFonts.inter(
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          Text(
-            'We sent a time-limited password reset link to:',
-            textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              color: AppTheme.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            _sentEmail,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 36),
-
-          SpPrimaryButton(
-            label: 'Back to Login',
-            onPressed: () => context.go('/login'),
-          ),
-          const SizedBox(height: 24),
-
-          TextButton(
-            onPressed: _resendCountdown == 0 ? _handleResend : null,
-            child: Text(
-              _resendCountdown > 0
-                  ? 'Resend email in ${_resendCountdown}s'
-                  : 'Didn\'t get it? Resend email',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: _resendCountdown > 0
-                    ? AppTheme.textMuted
-                    : AppTheme.primary,
-              ),
+          const SizedBox(height: 20),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: SpTextButton(
+              label: _resendCountdown > 0
+                  ? l10n.forgotPasswordResendCountdown(_resendCountdown)
+                  : l10n.forgotPasswordResend,
+              onPressed: _resendCountdown == 0 ? _handleResend : null,
             ),
           ),
         ],
+      );
+    }
+
+    return SpFlowPage(
+      title: l10n.forgotPasswordTitle,
+      onBack: _back,
+      bottom: SpPrimaryButton(
+        label: l10n.forgotPasswordSubmit,
+        onPressed: _handleSubmit,
+        isLoading: isLoading,
       ),
+      children: [
+        SpPageHeader(
+          title: l10n.forgotPasswordHeaderTitle,
+          subtitle: l10n.forgotPasswordHeaderSubtitle,
+        ),
+        const SizedBox(height: 28),
+        Form(
+          key: _formKey,
+          child: SpTextField(
+            label: l10n.commonEmailAddressLabel,
+            hint: l10n.forgotPasswordEmailHint,
+            controller: _emailController,
+            keyboardType: TextInputType.emailAddress,
+            autofillHints: const [AutofillHints.email],
+            prefixIcon: Icons.mail_outline_rounded,
+            textInputAction: TextInputAction.done,
+            onFieldSubmitted: (_) => _handleSubmit(),
+            validator: (v) {
+              if (v == null || v.trim().isEmpty) {
+                return l10n.commonEmailRequired;
+              }
+              if (!EmailValidator.validate(v.trim())) {
+                return l10n.commonEmailInvalid;
+              }
+              return null;
+            },
+          ),
+        ),
+      ],
     );
   }
 }

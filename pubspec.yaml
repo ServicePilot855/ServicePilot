@@ -9,6 +9,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: any
   go_router: ^14.0.0
   riverpod: ^2.5.1
   flutter_riverpod: ^2.5.1
@@ -31,3 +34,4 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:service_pilot/core/firebase/firebase_init.dart';
 import 'package:service_pilot/core/router/app_router.dart';
 import 'package:service_pilot/core/theme/app_theme.dart';
+import 'package:service_pilot/l10n/l10n.dart';
 
 void main() async {
   // Required before any async work in main().
@@ -30,9 +31,11 @@ class ServicePilotApp extends ConsumerWidget {
     final router = ref.watch(appRouterProvider);
 
     return MaterialApp.router(
-      title: 'ServicePilot',
+      onGenerateTitle: (context) => context.l10n.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: appSupportedLocales,
       routerConfig: router,
     );
   }

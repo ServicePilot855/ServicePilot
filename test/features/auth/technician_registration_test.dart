@@ -128,92 +128,87 @@ void main() {
       );
     }
 
-    testWidgets('renders all required form fields and register button', (tester) async {
+    Future<void> pumpScreen(WidgetTester tester) async {
       final service = await createTestFirebaseAuthService();
       await tester.pumpWidget(buildTestableWidget(service));
       await tester.pumpAndSettle();
+    }
+
+    Future<void> tapKey(WidgetTester tester, String key) async {
+      await tester.tap(find.byKey(Key(key)));
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> fillDetailsAndContinue(WidgetTester tester) async {
+      await tester.enterText(find.byKey(const Key('technician_name_field')), 'Rithy Kem');
+      await tester.enterText(find.byKey(const Key('technician_email_field')), 'rithy.kem@test.com');
+      await tester.enterText(find.byKey(const Key('technician_phone_field')), '+855 87 654 321');
+      await tester.enterText(find.byKey(const Key('technician_service_area_field')), 'Toul Kork');
+      await tapKey(tester, 'technician_continue_button');
+    }
+
+    testWidgets('details page shows the four detail fields', (tester) async {
+      await pumpScreen(tester);
 
       expect(find.text('Technician Registration'), findsOneWidget);
       expect(find.text('Offer your skills'), findsOneWidget);
-      expect(find.textContaining('Pending Verification status'), findsOneWidget);
-
       expect(find.byKey(const Key('technician_name_field')), findsOneWidget);
       expect(find.byKey(const Key('technician_email_field')), findsOneWidget);
       expect(find.byKey(const Key('technician_phone_field')), findsOneWidget);
       expect(find.byKey(const Key('technician_service_area_field')), findsOneWidget);
-      expect(find.byKey(const Key('technician_password_field')), findsOneWidget);
-      expect(find.byKey(const Key('technician_confirm_password_field')), findsOneWidget);
-      expect(find.byKey(const Key('technician_register_button')), findsOneWidget);
+      expect(find.byKey(const Key('technician_continue_button')), findsOneWidget);
+      expect(find.byKey(const Key('technician_password_field')), findsNothing);
     });
 
-    testWidgets('shows validation errors when submitting empty form', (tester) async {
-      final service = await createTestFirebaseAuthService();
-      await tester.pumpWidget(buildTestableWidget(service));
-      await tester.pumpAndSettle();
-
-      final registerButton = find.byKey(const Key('technician_register_button'));
-      await tester.ensureVisible(registerButton);
-      await tester.tap(registerButton);
-      await tester.pumpAndSettle();
+    testWidgets('shows validation errors when continuing with empty details', (tester) async {
+      await pumpScreen(tester);
+      await tapKey(tester, 'technician_continue_button');
 
       expect(find.text('Full name is required'), findsOneWidget);
       expect(find.text('Email is required'), findsOneWidget);
       expect(find.text('Phone number is required'), findsOneWidget);
       expect(find.text('Service area is required'), findsOneWidget);
-      expect(find.text('Password is required'), findsOneWidget);
     });
 
     testWidgets('validates Cambodian phone number format correctly', (tester) async {
-      final service = await createTestFirebaseAuthService();
-      await tester.pumpWidget(buildTestableWidget(service));
-      await tester.pumpAndSettle();
-
-      final phoneFinder = find.byKey(const Key('technician_phone_field'));
-      await tester.enterText(phoneFinder, '12345'); // Invalid phone
-      final registerButton = find.byKey(const Key('technician_register_button'));
-      await tester.ensureVisible(registerButton);
-      await tester.tap(registerButton);
-      await tester.pumpAndSettle();
+      await pumpScreen(tester);
+      await tester.enterText(find.byKey(const Key('technician_phone_field')), '12345');
+      await tapKey(tester, 'technician_continue_button');
 
       expect(find.text('Enter a valid Cambodian phone (+855...)'), findsOneWidget);
     });
 
+    testWidgets('password page shows the verification notice and password fields', (tester) async {
+      await pumpScreen(tester);
+      await fillDetailsAndContinue(tester);
+
+      expect(find.textContaining('Pending Verification status'), findsOneWidget);
+      expect(find.byKey(const Key('technician_password_field')), findsOneWidget);
+      expect(find.byKey(const Key('technician_confirm_password_field')), findsOneWidget);
+      expect(find.byKey(const Key('technician_register_button')), findsOneWidget);
+
+      await tapKey(tester, 'technician_register_button');
+      expect(find.text('Password is required'), findsOneWidget);
+    });
+
     testWidgets('validates password mismatch correctly', (tester) async {
-      final service = await createTestFirebaseAuthService();
-      await tester.pumpWidget(buildTestableWidget(service));
-      await tester.pumpAndSettle();
+      await pumpScreen(tester);
+      await fillDetailsAndContinue(tester);
 
-      final passFinder = find.byKey(const Key('technician_password_field'));
-      final confirmPassFinder = find.byKey(const Key('technician_confirm_password_field'));
-
-      await tester.enterText(passFinder, 'password123');
-      await tester.enterText(confirmPassFinder, 'differentPass');
-
-      final registerButton = find.byKey(const Key('technician_register_button'));
-      await tester.ensureVisible(registerButton);
-      await tester.tap(registerButton);
-      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const Key('technician_password_field')), 'password123');
+      await tester.enterText(find.byKey(const Key('technician_confirm_password_field')), 'differentPass');
+      await tapKey(tester, 'technician_register_button');
 
       expect(find.text('Passwords do not match'), findsOneWidget);
     });
 
-    testWidgets('valid form submission displays Pending Review dialog', (tester) async {
-      final service = await createTestFirebaseAuthService();
-      await tester.pumpWidget(buildTestableWidget(service));
-      await tester.pumpAndSettle();
+    testWidgets('valid form submission displays Pending Review sheet', (tester) async {
+      await pumpScreen(tester);
+      await fillDetailsAndContinue(tester);
 
-      await tester.enterText(find.byKey(const Key('technician_name_field')), 'Rithy Kem');
-      await tester.enterText(find.byKey(const Key('technician_email_field')), 'rithy.kem@test.com');
-      await tester.enterText(find.byKey(const Key('technician_phone_field')), '+855 87 654 321');
-      await tester.enterText(find.byKey(const Key('technician_service_area_field')), 'Toul Kork');
       await tester.enterText(find.byKey(const Key('technician_password_field')), 'password123');
       await tester.enterText(find.byKey(const Key('technician_confirm_password_field')), 'password123');
-
-      final registerButton = find.byKey(const Key('technician_register_button'));
-      await tester.ensureVisible(registerButton);
-      await tester.tap(registerButton);
-
-      await tester.pumpAndSettle();
+      await tapKey(tester, 'technician_register_button');
 
       expect(find.text('Pending Review'), findsOneWidget);
       expect(find.byKey(const Key('technician_dialog_ok_button')), findsOneWidget);

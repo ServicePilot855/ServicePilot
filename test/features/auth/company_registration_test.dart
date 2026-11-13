@@ -38,7 +38,7 @@ void main() {
       expect(user.isPendingVerification, isTrue);
     });
 
-    testWidgets('renders all required company registration fields', (tester) async {
+    Future<void> pumpCompanyScreen(WidgetTester tester) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
@@ -50,6 +50,10 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+    }
+
+    testWidgets('details page shows all company fields', (tester) async {
+      await pumpCompanyScreen(tester);
 
       expect(find.text('Company Registration'), findsOneWidget);
       expect(find.text('Manage your team'), findsOneWidget);
@@ -58,27 +62,14 @@ void main() {
       expect(find.text('Company Email Address'), findsOneWidget);
       expect(find.text('Contact Phone Number'), findsOneWidget);
       expect(find.text('Office Address & Service Area'), findsOneWidget);
-      expect(find.text('Password'), findsOneWidget);
-      expect(find.text('Confirm Password'), findsOneWidget);
-      expect(find.text('Register Company'), findsOneWidget);
+      expect(find.text('Continue'), findsOneWidget);
+      expect(find.text('Password'), findsNothing);
     });
 
-    testWidgets('shows validation errors when company form is submitted empty', (tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            authServiceProvider.overrideWithValue(authService),
-          ],
-          child: const MaterialApp(
-            home: RegisterCompanyScreen(),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
+    testWidgets('shows validation errors when continuing with empty details', (tester) async {
+      await pumpCompanyScreen(tester);
 
-      final registerBtn = find.text('Register Company');
-      await tester.ensureVisible(registerBtn);
-      await tester.tap(registerBtn);
+      await tester.tap(find.text('Continue'));
       await tester.pumpAndSettle();
 
       expect(find.text('Owner full name is required'), findsOneWidget);
@@ -86,6 +77,28 @@ void main() {
       expect(find.text('Email is required'), findsOneWidget);
       expect(find.text('Phone number is required'), findsOneWidget);
       expect(find.text('Address and service area are required'), findsOneWidget);
+    });
+
+    testWidgets('valid details lead to the password page', (tester) async {
+      await pumpCompanyScreen(tester);
+
+      final fields = find.byType(TextFormField);
+      await tester.enterText(fields.at(0), 'Sophea Lim');
+      await tester.enterText(fields.at(1), 'CoolAir Service Co.');
+      await tester.enterText(fields.at(2), 'owner@coolair.example');
+      await tester.enterText(fields.at(3), '+85511223344');
+      await tester.enterText(fields.at(4), 'St. 315, Toul Kork');
+      await tester.tap(find.text('Continue'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Set up your password'), findsOneWidget);
+      expect(find.text('Password'), findsOneWidget);
+      expect(find.text('Confirm Password'), findsOneWidget);
+      expect(find.text('Register Company'), findsOneWidget);
+      expect(find.textContaining('business'), findsOneWidget);
+
+      await tester.tap(find.text('Register Company'));
+      await tester.pumpAndSettle();
       expect(find.text('Password is required'), findsOneWidget);
     });
   });

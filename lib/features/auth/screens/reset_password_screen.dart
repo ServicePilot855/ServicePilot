@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/core/auth/auth_state.dart';
 import 'package:service_pilot/core/theme/app_theme.dart';
+import 'package:service_pilot/l10n/l10n.dart';
 import 'package:service_pilot/shared/widgets/sp_button.dart';
+import 'package:service_pilot/shared/widgets/sp_layout.dart';
 import 'package:service_pilot/shared/widgets/sp_text_field.dart';
 
-/// Reset password screen — accessed via `/reset-password?token=...`
-/// Styled in Figma Dark Theme (`#0A0A0A`, `#17181B`, `#FF5000`).
+/// Reset password: set a new password from an emailed link.
 class ResetPasswordScreen extends ConsumerStatefulWidget {
   const ResetPasswordScreen({super.key, required this.token});
 
@@ -24,9 +24,8 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  bool _passwordVisible = false;
-  bool _confirmPasswordVisible = false;
 
+  /// 0 = empty, 1 = weak, 2 = good, 3 = strong.
   int _passwordStrength = 0;
 
   bool get _isTokenValid => widget.token.isNotEmpty;
@@ -49,6 +48,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   Future<void> _handleReset() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final l10n = context.l10n;
     final success = await ref.read(authProvider.notifier).resetPassword(
           token: widget.token,
           newPassword: _passwordController.text,
@@ -57,66 +57,18 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     if (!mounted) return;
 
     if (success) {
-      await showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          backgroundColor: AppTheme.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTheme.radiusCard),
-            side: const BorderSide(color: AppTheme.border, width: 1),
-          ),
-          title: Row(
-            children: [
-              const Icon(Icons.check_circle_rounded, color: AppTheme.success, size: 24),
-              const SizedBox(width: 10),
-              Text(
-                'Password Reset!',
-                style: GoogleFonts.inter(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 18,
-                  color: AppTheme.textPrimary,
-                ),
-              ),
-            ],
-          ),
-          content: Text(
-            'Your password has been successfully updated. You can now log in with your new credentials.',
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              color: AppTheme.textSecondary,
-              height: 1.45,
-            ),
-          ),
-          actions: [
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusButton),
-                ),
-              ),
-              child: const Text('Go to Login'),
-            ),
-          ],
-        ),
+      await showSpResultSheet(
+        context,
+        icon: Icons.check_circle_outline_rounded,
+        title: l10n.resetPasswordSuccessTitle,
+        message: l10n.resetPasswordSuccessMessage,
+        actionLabel: l10n.resetPasswordGoToLogin,
       );
       if (mounted) context.go('/login');
     } else {
       final state = ref.read(authProvider);
       if (state is AuthStateError) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              state.message,
-              style: GoogleFonts.inter(color: Colors.white, fontSize: 13),
-            ),
-            backgroundColor: AppTheme.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
-        );
+        showSpError(context, state.message);
         ref.read(authProvider.notifier).clearError();
       }
     }
@@ -126,218 +78,153 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final isLoading = authState is AuthStateLoading;
+    final l10n = context.l10n;
 
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      appBar: AppBar(
-        leading: Container(
-          margin: const EdgeInsets.only(left: 12),
-          child: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded, size: 20),
-            color: AppTheme.textPrimary,
-            onPressed: () => context.go('/login'),
-          ),
-        ),
-        title: Text(
-          'Create New Password',
-          style: GoogleFonts.inter(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: _isTokenValid ? _buildForm(isLoading) : _buildInvalidTokenState(),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInvalidTokenState() {
-    return Column(
-      children: [
-        const SizedBox(height: 48),
-        Container(
-          width: 72,
-          height: 72,
-          decoration: BoxDecoration(
-            color: AppTheme.error.withValues(alpha: 0.12),
-            shape: BoxShape.circle,
-            border: Border.all(color: AppTheme.error.withValues(alpha: 0.3), width: 1),
-          ),
-          child: const Icon(
-            Icons.link_off_rounded,
-            size: 36,
-            color: AppTheme.error,
-          ),
-        ),
-        const SizedBox(height: 24),
-        Text(
-          'Invalid or Expired Link',
-          style: GoogleFonts.inter(
-            fontSize: 22,
-            fontWeight: FontWeight.w700,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'This password reset link is invalid or has already been used. Please request a new link.',
-          textAlign: TextAlign.center,
-          style: GoogleFonts.inter(
-            fontSize: 14,
-            color: AppTheme.textSecondary,
-            height: 1.45,
-          ),
-        ),
-        const SizedBox(height: 36),
-        SpPrimaryButton(
-          label: 'Request New Link',
+    if (!_isTokenValid) {
+      return SpFlowPage(
+        title: l10n.resetPasswordTitle,
+        onBack: () => context.go('/login'),
+        bottom: SpPrimaryButton(
+          label: l10n.resetPasswordRequestNewLink,
           onPressed: () => context.push('/forgot-password'),
+        ),
+        children: [
+          const SizedBox(height: 12),
+          SpStatusHero(
+            icon: Icons.link_off_rounded,
+            tone: SpTone.danger,
+            title: l10n.commonInvalidLinkTitle,
+            message: l10n.resetPasswordInvalidLinkMessage,
+          ),
+        ],
+      );
+    }
+
+    return SpFlowPage(
+      title: l10n.resetPasswordTitle,
+      onBack: () => context.go('/login'),
+      bottom: SpPrimaryButton(
+        label: l10n.resetPasswordSubmit,
+        onPressed: _handleReset,
+        isLoading: isLoading,
+      ),
+      children: [
+        SpPageHeader(
+          title: l10n.resetPasswordHeaderTitle,
+          subtitle: l10n.resetPasswordHeaderSubtitle,
+        ),
+        const SizedBox(height: 28),
+        Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SpPasswordField(
+                label: l10n.resetPasswordNewPasswordLabel,
+                hint: l10n.commonPasswordHint,
+                controller: _passwordController,
+                textInputAction: TextInputAction.next,
+                autofillHints: const [AutofillHints.newPassword],
+                onChanged: _updatePasswordStrength,
+                validator: (v) {
+                  if (v == null || v.isEmpty) {
+                    return l10n.commonPasswordRequired;
+                  }
+                  if (v.length < 8) return l10n.commonPasswordMinLength;
+                  return null;
+                },
+              ),
+              const SizedBox(height: 10),
+              _StrengthMeter(level: _passwordStrength),
+              const SizedBox(height: 16),
+              SpPasswordField(
+                label: l10n.resetPasswordConfirmLabel,
+                hint: l10n.resetPasswordConfirmHint,
+                controller: _confirmPasswordController,
+                textInputAction: TextInputAction.done,
+                autofillHints: const [AutofillHints.newPassword],
+                onFieldSubmitted: (_) => _handleReset(),
+                validator: (v) {
+                  if (v != _passwordController.text) {
+                    return l10n.commonPasswordsDoNotMatch;
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
         ),
       ],
     );
   }
+}
 
-  Widget _buildForm(bool isLoading) {
-    return Form(
-      key: _formKey,
+/// Three flat segments plus the level in words, so strength never relies on
+/// colour alone.
+class _StrengthMeter extends StatelessWidget {
+  const _StrengthMeter({required this.level});
+
+  final int level;
+
+  static const _fills = [
+    AppTheme.border,
+    AppTheme.error,
+    AppTheme.accent,
+    AppTheme.success,
+  ];
+  static const _textColors = [
+    AppTheme.textSecondary,
+    AppTheme.errorDeep,
+    AppTheme.accentDeep,
+    AppTheme.successDeep,
+  ];
+
+  String _label(AppLocalizations l10n) => switch (level) {
+        1 => l10n.resetPasswordStrengthWeak,
+        2 => l10n.resetPasswordStrengthGood,
+        3 => l10n.resetPasswordStrengthStrong,
+        _ => l10n.resetPasswordStrengthHint,
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final text = _label(context.l10n);
+
+    return Semantics(
+      liveRegion: true,
+      label: text,
+      excludeSemantics: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            children: [
+              for (var i = 0; i < 3; i++) ...[
+                if (i > 0) const SizedBox(width: 6),
+                Expanded(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: i < level ? _fills[level] : AppTheme.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 8),
           Text(
-            'Set new password',
-            style: GoogleFonts.inter(
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary,
-              letterSpacing: -0.3,
+            text,
+            style: AppTheme.text(
+              size: 13,
+              weight: level == 0 ? FontWeight.w400 : FontWeight.w600,
+              color: _textColors[level],
             ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Your new password must be at least 8 characters long.',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              color: AppTheme.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // ── New Password ──────────────────────────────────────────
-          SpTextField(
-            label: 'New Password',
-            hint: 'Min. 8 characters',
-            controller: _passwordController,
-            obscureText: !_passwordVisible,
-            prefixIcon: const Icon(Icons.lock_outline_rounded),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _passwordVisible
-                    ? Icons.visibility_off_rounded
-                    : Icons.visibility_rounded,
-                size: 20,
-              ),
-              onPressed: () =>
-                  setState(() => _passwordVisible = !_passwordVisible),
-            ),
-            textInputAction: TextInputAction.next,
-            validator: (v) {
-              if (v == null || v.isEmpty) return 'Password is required';
-              if (v.length < 8) return 'Must be at least 8 characters';
-              return null;
-            },
-            onFieldSubmitted: _updatePasswordStrength,
-          ),
-          const SizedBox(height: 10),
-
-          // ── Password Strength Indicator ───────────────────────────
-          _buildStrengthBar(),
-          const SizedBox(height: 20),
-
-          // ── Confirm Password ──────────────────────────────────────
-          SpTextField(
-            label: 'Confirm New Password',
-            hint: 'Repeat your new password',
-            controller: _confirmPasswordController,
-            obscureText: !_confirmPasswordVisible,
-            prefixIcon: const Icon(Icons.lock_outline_rounded),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _confirmPasswordVisible
-                    ? Icons.visibility_off_rounded
-                    : Icons.visibility_rounded,
-                size: 20,
-              ),
-              onPressed: () => setState(
-                  () => _confirmPasswordVisible = !_confirmPasswordVisible),
-            ),
-            textInputAction: TextInputAction.done,
-            onFieldSubmitted: (_) => _handleReset(),
-            validator: (v) {
-              if (v != _passwordController.text) {
-                return 'Passwords do not match';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 32),
-
-          // ── Submit Button ─────────────────────────────────────────
-          SpPrimaryButton(
-            label: 'Reset Password',
-            onPressed: _handleReset,
-            isLoading: isLoading,
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildStrengthBar() {
-    final colors = [
-      AppTheme.border,
-      AppTheme.error,
-      const Color(0xFFF4B700),
-      AppTheme.success,
-    ];
-    final labels = ['', 'Weak', 'Good', 'Strong'];
-    final color = colors[_passwordStrength];
-    final label = labels[_passwordStrength];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: List.generate(3, (index) {
-            final active = index < _passwordStrength;
-            return Expanded(
-              child: Container(
-                height: 4,
-                margin: EdgeInsets.only(right: index < 2 ? 6 : 0),
-                decoration: BoxDecoration(
-                  color: active ? color : AppTheme.surfaceElevated,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            );
-          }),
-        ),
-        if (label.isNotEmpty) ...[
-          const SizedBox(height: 6),
-          Text(
-            'Strength: $label',
-            style: GoogleFonts.inter(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w500,
-              color: color,
-            ),
-          ),
-        ],
-      ],
     );
   }
 }
