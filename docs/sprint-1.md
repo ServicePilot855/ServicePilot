@@ -8,15 +8,15 @@
 
 | Ticket | User Story | Points | Assignee | Status |
 |--------|-----------|--------|----------|--------|
-| SCRUM-40 | US-01: Customer Registration | 5 | YD | To Do |
-| SCRUM-47 | US-02: Independent Technician Registration | 8 | TC | To Do |
-| SCRUM-48 | US-03: Service Provider Company Registration | 8 | YD | To Do |
-| SCRUM-49 | US-04: Company Technician Account Activation | 8 | YD | To Do |
-| SCRUM-50 | US-06: User Login | 3 | YD | To Do |
-| SCRUM-51 | US-05: User Logout | 1 | YD | To Do |
-| SCRUM-52 | US-07: Reset Forgotten Password | 3 | YD | To Do |
-| SCRUM-53 | US-08: Platform Administrator Access | 5 | YD | To Do |
-| SCRUM-56 | Design Mockup Prototype | — | KS | In Review |
+| SCRUM-40 | US-01: Customer Registration | 5 | YD | Done |
+| SCRUM-47 | US-02: Independent Technician Registration | 8 | TC | Done |
+| SCRUM-48 | US-03: Service Provider Company Registration | 8 | YD | Done |
+| SCRUM-49 | US-04: Company Technician Account Activation | 8 | YD | Done |
+| SCRUM-50 | US-06: User Login | 3 | YD | Done |
+| SCRUM-51 | US-05: User Logout | 1 | YD | Done |
+| SCRUM-52 | US-07: Reset Forgotten Password | 3 | YD | Done |
+| SCRUM-53 | US-08: Platform Administrator Access | 5 | YD | Done |
+| SCRUM-56 | Design Mockup Prototype | — | KS | Done |
 
 **Total Story Points:** 41
 

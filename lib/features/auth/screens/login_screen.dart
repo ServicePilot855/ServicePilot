@@ -42,6 +42,36 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
+  void _fillDemoAccount(String email) {
+    setState(() {
+      _emailController.text = email;
+      _passwordController.text = 'password123';
+    });
+  }
+
+  Widget _buildDemoChip(String label, String email) {
+    return InkWell(
+      onTap: () => _fillDemoAccount(email),
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceElevated,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: AppTheme.border, width: 1),
+        ),
+        child: Text(
+          '$label ($email)',
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            color: AppTheme.primary,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -50,6 +80,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _emailController.text.trim(),
       _passwordController.text,
     );
+
+    if (!mounted) return;
+
+    final state = ref.read(authProvider);
+    if (state is AuthStateAuthenticated) {
+      context.go(state.user.role.homeRoute);
+    } else if (state is AuthStateError) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            state.message,
+            style: GoogleFonts.inter(color: Colors.white, fontSize: 13),
+          ),
+          backgroundColor: AppTheme.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+      ref.read(authProvider.notifier).clearError();
+    }
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    final notifier = ref.read(authProvider.notifier);
+    await notifier.signInWithGoogle();
 
     if (!mounted) return;
 
@@ -332,24 +387,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Quick demo accounts (password: password123)',
+                              'Quick demo accounts (tap to auto-fill, password: password123)',
                               style: GoogleFonts.inter(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
                                 color: AppTheme.textPrimary,
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '• Customer: customer@test.com\n'
-                              '• Technician: technician@test.com\n'
-                              '• Company: company@test.com\n'
-                              '• Admin: admin@servicepilot.com',
-                              style: GoogleFonts.inter(
-                                fontSize: 11.5,
-                                color: AppTheme.textSecondary,
-                                height: 1.45,
-                              ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 6,
+                              children: [
+                                _buildDemoChip('Customer', 'customer@test.com'),
+                                _buildDemoChip('Technician', 'technician@test.com'),
+                                _buildDemoChip('Company', 'company@test.com'),
+                                _buildDemoChip('Company Tech', 'tech@company.com'),
+                                _buildDemoChip('Admin', 'admin@servicepilot.com'),
+                              ],
                             ),
                           ],
                         ),
@@ -372,11 +427,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   width: double.infinity,
                   height: 48,
                   child: OutlinedButton(
-                    onPressed: () {
-                      _emailController.text = 'customer@test.com';
-                      _passwordController.text = 'password123';
-                      _handleLogin();
-                    },
+                    onPressed: isLoading ? null : _handleGoogleSignIn,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppTheme.textPrimary,
                       backgroundColor: AppTheme.surface,

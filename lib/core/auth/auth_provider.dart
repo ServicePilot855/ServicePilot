@@ -1,23 +1,34 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:service_pilot/core/auth/auth_service.dart';
 import 'package:service_pilot/core/auth/auth_state.dart';
+import 'package:service_pilot/core/auth/firebase_auth_service.dart';
 import 'package:service_pilot/features/auth/mock/mock_auth_service.dart';
 import 'package:service_pilot/features/auth/models/user_model.dart';
 
-/// Provides the active [IAuthService] implementation (currently [MockAuthService]).
-/// In SCRUM-67, this can be swapped with a real `AuthApiService` without changing UI logic.
+/// Provides the active [IAuthService] implementation.
+///
+/// Automatically uses [FirebaseAuthService] when Firebase is initialized.
+/// Falls back to [MockAuthService] when running in non-Firebase unit/widget tests.
 final authServiceProvider = Provider<IAuthService>(
-  (_) => MockAuthService(),
+  (_) {
+    if (Firebase.apps.isEmpty) {
+      return MockAuthService();
+    }
+    return FirebaseAuthService();
+  },
 );
 
 /// Backwards compatibility alias for [mockAuthServiceProvider].
-final mockAuthServiceProvider = Provider<MockAuthService>(
-  (ref) {
-    final service = ref.watch(authServiceProvider);
-    if (service is MockAuthService) return service;
-    throw UnsupportedError('Current auth service is not MockAuthService');
-  },
+final mockAuthServiceProvider = Provider<IAuthService>(
+  (ref) => ref.watch(authServiceProvider),
 );
+
+/// Convenient selector provider for the current authenticated user.
+final currentUserProvider = Provider<UserModel?>((ref) {
+  final authState = ref.watch(authProvider);
+  return authState is AuthStateAuthenticated ? authState.user : null;
+});
 
 /// Manages global authentication state via Riverpod [Notifier].
 ///
@@ -37,6 +48,18 @@ class AuthNotifier extends Notifier<AuthState> {
 
   bool get isAuthenticated => state is AuthStateAuthenticated;
 
+  /// Restores any existing authenticated Firebase session on app startup.
+  Future<void> checkAuthStatus() async {
+    try {
+      final user = await _auth.getCurrentUser();
+      if (user != null) {
+        state = AuthStateAuthenticated(user);
+      }
+    } catch (_) {
+      // Remain unauthenticated on error
+    }
+  }
+
   // ── Login / Logout ────────────────────────────────────────────────────────
 
   Future<void> login(String email, String password) async {
@@ -51,8 +74,24 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  void logout() {
-    state = const AuthStateUnauthenticated();
+  Future<void> signInWithGoogle() async {
+    state = const AuthStateLoading();
+    try {
+      final user = await _auth.signInWithGoogle();
+      state = AuthStateAuthenticated(user);
+    } on AuthException catch (e) {
+      state = AuthStateError(e.message);
+    } catch (_) {
+      state = const AuthStateError('Google sign in failed. Please try again.');
+    }
+  }
+
+  Future<void> logout() async {
+    try {
+      await _auth.logout();
+    } finally {
+      state = const AuthStateUnauthenticated();
+    }
   }
 
   void clearError() {
@@ -75,6 +114,7 @@ class AuthNotifier extends Notifier<AuthState> {
         fullName: fullName,
         email: email,
         phoneNumber: phoneNumber,
+        password: password,
       );
       state = const AuthStateUnauthenticated();
       return true;
@@ -120,6 +160,7 @@ class AuthNotifier extends Notifier<AuthState> {
     required String phoneNumber,
     required String companyName,
     required String serviceArea,
+    String? password,
   }) async {
     state = const AuthStateLoading();
     try {
@@ -129,6 +170,7 @@ class AuthNotifier extends Notifier<AuthState> {
         phoneNumber: phoneNumber,
         companyName: companyName,
         serviceArea: serviceArea,
+        password: password,
       );
       state = const AuthStateUnauthenticated();
       return true;
@@ -170,6 +212,9 @@ class AuthNotifier extends Notifier<AuthState> {
       await _auth.requestPasswordReset(email);
       state = const AuthStateUnauthenticated();
       return true;
+    } on AuthException catch (e) {
+      state = AuthStateError(e.message);
+      return false;
     } catch (_) {
       state = const AuthStateError('Could not send reset email.');
       return false;
@@ -185,6 +230,9 @@ class AuthNotifier extends Notifier<AuthState> {
       await _auth.resetPassword(token: token, newPassword: newPassword);
       state = const AuthStateUnauthenticated();
       return true;
+    } on AuthException catch (e) {
+      state = AuthStateError(e.message);
+      return false;
     } catch (_) {
       state = const AuthStateError('Password reset failed.');
       return false;

@@ -1,1 +1,34 @@
-{"dataconnect":{"source":"dataconnect"},"emulators":{"dataconnect":{"port":9399}},"flutter":{"platforms":{"android":{"default":{"projectId":"servicepilot-855","appId":"1:884827034482:android:89b1293bde7bc60c6bc3eb","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"servicepilot-855","configurations":{"android":"1:884827034482:android:89b1293bde7bc60c6bc3eb","ios":"1:884827034482:ios:c21f465fae4de1de6bc3eb","web":"1:884827034482:web:8c809eea122e10f16bc3eb"}}}}}}
+{
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "dataconnect": {
+      "port": 9399
+    }
+  },
+  "dataconnect": {
+    "source": "dataconnect"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "servicepilot-855",
+          "appId": "1:884827034482:android:89b1293bde7bc60c6bc3eb",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "servicepilot-855",
+          "configurations": {
+            "android": "1:884827034482:android:89b1293bde7bc60c6bc3eb",
+            "ios": "1:884827034482:ios:c21f465fae4de1de6bc3eb",
+            "web": "1:884827034482:web:8c809eea122e10f16bc3eb"
+          }
+        }
+      }
+    }
+  }
+}

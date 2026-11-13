@@ -11,6 +11,8 @@ class MockAuthService implements IAuthService {
   static const _mockPassword = 'password123';
   static const _fakeDelayMs = 1200;
 
+  static final Map<String, String> _userPasswords = {};
+
   // Mutable in-memory user list — starts with seed data.
   static final List<UserModel> _users = [
     const UserModel(
@@ -59,6 +61,7 @@ class MockAuthService implements IAuthService {
   ];
 
   int _nextId = 6;
+  UserModel? _currentUser;
 
   /// Simulates a network round-trip delay.
   Future<void> _delay() =>
@@ -66,22 +69,38 @@ class MockAuthService implements IAuthService {
 
   // ── Authentication ────────────────────────────────────────────────────────
 
+  @override
+  Future<UserModel?> getCurrentUser() async {
+    return _currentUser;
+  }
+
   /// Finds a user by [email] and validates the [password].
   ///
   /// Throws [AuthException] if credentials are invalid.
   @override
   Future<UserModel> login(String email, String password) async {
     await _delay();
-    final user = _users.where((u) => u.email == email).firstOrNull;
-    if (user == null || password != _mockPassword) {
+    final cleanEmail = email.trim().toLowerCase();
+    final user = _users.where((u) => u.email.toLowerCase() == cleanEmail).firstOrNull;
+    final expectedPassword = _userPasswords[cleanEmail] ?? _mockPassword;
+    if (user == null || password != expectedPassword) {
       throw const AuthException('Invalid email or password.');
     }
+    _currentUser = user;
+    return user;
+  }
+
+  @override
+  Future<UserModel> signInWithGoogle() async {
+    await _delay();
+    final user = _users.first; // Dara Sok (Customer)
+    _currentUser = user;
     return user;
   }
 
   @override
   Future<void> logout() async {
-    // Nothing to clear in mock — state lives in Riverpod.
+    _currentUser = null;
   }
 
   // ── Registration ─────────────────────────────────────────────────────────
@@ -109,6 +128,7 @@ class MockAuthService implements IAuthService {
       createdAt: DateTime.now(),
     );
     _users.add(user);
+    _userPasswords[user.email.toLowerCase()] = password ?? _mockPassword;
     return user;
   }
 
@@ -146,6 +166,7 @@ class MockAuthService implements IAuthService {
       createdAt: DateTime.now(),
     );
     _users.add(user);
+    _userPasswords[user.email.toLowerCase()] = password;
     return user;
   }
 
@@ -173,6 +194,7 @@ class MockAuthService implements IAuthService {
       createdAt: DateTime.now(),
     );
     _users.add(user);
+    _userPasswords[user.email.toLowerCase()] = password ?? _mockPassword;
     return user;
   }
 
@@ -212,6 +234,7 @@ class MockAuthService implements IAuthService {
       createdAt: DateTime.now(),
     );
     _users.add(user);
+    _userPasswords[user.email.toLowerCase()] = password;
     return user;
   }
 

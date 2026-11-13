@@ -53,6 +53,9 @@ class _RegisterCompanyScreenState
           phoneNumber: _phoneController.text.trim(),
           companyName: _companyNameController.text.trim(),
           serviceArea: _serviceAreaController.text.trim(),
+          password: _passwordController.text.isNotEmpty
+              ? _passwordController.text
+              : null,
         );
 
     if (!mounted) return;

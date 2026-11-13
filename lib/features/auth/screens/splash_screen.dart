@@ -37,6 +37,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     _fadeIn = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
     _animController.forward();
 
+    // Check if user session already exists in Firebase
+    ref.read(authProvider.notifier).checkAuthStatus();
+
     // Auto navigate after 2.5 seconds
     Future.delayed(const Duration(milliseconds: 2500), _navigate);
   }

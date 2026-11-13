@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/core/auth/auth_state.dart';
+import 'package:service_pilot/core/constants/app_roles.dart';
 import 'package:service_pilot/core/theme/app_theme.dart';
 import 'package:service_pilot/shared/widgets/sp_button.dart';
 import 'package:service_pilot/shared/widgets/sp_text_field.dart';
@@ -115,6 +116,31 @@ class _RegisterCustomerScreenState
         );
         ref.read(authProvider.notifier).clearError();
       }
+    }
+  }
+
+  Future<void> _handleGoogleSignUp() async {
+    final notifier = ref.read(authProvider.notifier);
+    await notifier.signInWithGoogle();
+
+    if (!mounted) return;
+
+    final state = ref.read(authProvider);
+    if (state is AuthStateAuthenticated) {
+      context.go(state.user.role.homeRoute);
+    } else if (state is AuthStateError) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            state.message,
+            style: GoogleFonts.inter(color: Colors.white, fontSize: 13),
+          ),
+          backgroundColor: AppTheme.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+      ref.read(authProvider.notifier).clearError();
     }
   }
 
@@ -299,14 +325,7 @@ class _RegisterCustomerScreenState
                   width: double.infinity,
                   height: 48,
                   child: OutlinedButton(
-                    onPressed: () {
-                      _nameController.text = 'Google User';
-                      _emailController.text = 'google.user@example.com';
-                      _phoneController.text = '+85512345678';
-                      _passwordController.text = 'password123';
-                      _confirmPasswordController.text = 'password123';
-                      _handleRegister();
-                    },
+                    onPressed: isLoading ? null : _handleGoogleSignUp,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppTheme.textPrimary,
                       backgroundColor: AppTheme.surface,

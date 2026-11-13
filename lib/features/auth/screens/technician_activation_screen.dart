@@ -35,7 +35,7 @@ class _TechnicianActivationScreenState
   void initState() {
     super.initState();
     _isTokenValid =
-        ref.read(mockAuthServiceProvider).validateInviteToken(widget.token);
+        ref.read(authServiceProvider).validateInviteToken(widget.token);
   }
 
   @override

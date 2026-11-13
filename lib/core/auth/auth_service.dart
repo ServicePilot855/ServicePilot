@@ -14,8 +14,14 @@ class AuthException implements Exception {
 /// Both [MockAuthService] (Sprint 1 prototype) and future `AuthApiService`
 /// (Node.js/Express + PostgreSQL backend in SCRUM-67) implement this interface.
 abstract class IAuthService {
+  /// Returns the currently authenticated user, or null if unauthenticated.
+  Future<UserModel?> getCurrentUser();
+
   /// Authenticates a user with email and password.
   Future<UserModel> login(String email, String password);
+
+  /// Authenticates or registers a customer via Google Auth Provider.
+  Future<UserModel> signInWithGoogle();
 
   /// Clears the authenticated session.
   Future<void> logout();
