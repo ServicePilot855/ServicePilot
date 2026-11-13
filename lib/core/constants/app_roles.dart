@@ -55,4 +55,12 @@ extension AppRoleExtension on AppRole {
         return '/home/admin';
     }
   }
+
+  /// Parses a backend string value to an [AppRole]. Defaults to [AppRole.homeowner].
+  static AppRole fromValue(String? value) {
+    return AppRole.values.firstWhere(
+      (r) => r.value == value,
+      orElse: () => AppRole.homeowner,
+    );
+  }
 }

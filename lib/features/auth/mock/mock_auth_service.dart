@@ -1,20 +1,12 @@
+import 'package:service_pilot/core/auth/auth_service.dart';
 import 'package:service_pilot/core/constants/app_roles.dart';
 import 'package:service_pilot/features/auth/models/user_model.dart';
 
-/// Exception thrown when mock authentication fails.
-class AuthException implements Exception {
-  final String message;
-  const AuthException(this.message);
-
-  @override
-  String toString() => message;
-}
-
 /// In-memory mock authentication service.
 ///
-/// This replaces a real API/backend during Sprint 1.
+/// Implements [IAuthService] to replace a real API/backend during Sprint 1.
 /// All operations run with a simulated network delay.
-class MockAuthService {
+class MockAuthService implements IAuthService {
   static const _mockInviteToken = 'INVITE-2024-MOCK';
   static const _mockPassword = 'password123';
   static const _fakeDelayMs = 1200;
@@ -36,6 +28,7 @@ class MockAuthService {
       phoneNumber: '+85587654321',
       role: AppRole.independentProvider,
       status: 'pending_verification',
+      serviceArea: 'Toul Kork, Phnom Penh',
     ),
     const UserModel(
       id: '3',
@@ -76,6 +69,7 @@ class MockAuthService {
   /// Finds a user by [email] and validates the [password].
   ///
   /// Throws [AuthException] if credentials are invalid.
+  @override
   Future<UserModel> login(String email, String password) async {
     await _delay();
     final user = _users.where((u) => u.email == email).firstOrNull;
@@ -85,6 +79,7 @@ class MockAuthService {
     return user;
   }
 
+  @override
   Future<void> logout() async {
     // Nothing to clear in mock — state lives in Riverpod.
   }
@@ -92,64 +87,90 @@ class MockAuthService {
   // ── Registration ─────────────────────────────────────────────────────────
 
   /// Creates a new homeowner account.
+  @override
   Future<UserModel> registerCustomer({
     required String fullName,
     required String email,
     required String phoneNumber,
+    String? password,
   }) async {
     await _delay();
     _assertEmailAvailable(email);
+    if (password != null && password.length < 8) {
+      throw const AuthException('Password must be at least 8 characters long.');
+    }
     final user = UserModel(
       id: '${_nextId++}',
-      fullName: fullName,
-      email: email,
-      phoneNumber: phoneNumber,
+      fullName: fullName.trim(),
+      email: email.trim(),
+      phoneNumber: phoneNumber.trim(),
       role: AppRole.homeowner,
       status: 'active',
+      createdAt: DateTime.now(),
     );
     _users.add(user);
     return user;
   }
 
   /// Creates a new independent technician account (pending approval).
+  @override
   Future<UserModel> registerTechnician({
     required String fullName,
     required String email,
     required String phoneNumber,
     required String serviceArea,
+    required String password,
   }) async {
     await _delay();
     _assertEmailAvailable(email);
+    if (fullName.trim().isEmpty) {
+      throw const AuthException('Full name is required.');
+    }
+    if (phoneNumber.trim().isEmpty) {
+      throw const AuthException('Phone number is required.');
+    }
+    if (serviceArea.trim().isEmpty) {
+      throw const AuthException('Service area is required.');
+    }
+    if (password.length < 8) {
+      throw const AuthException('Password must be at least 8 characters long.');
+    }
     final user = UserModel(
       id: '${_nextId++}',
-      fullName: fullName,
-      email: email,
-      phoneNumber: phoneNumber,
+      fullName: fullName.trim(),
+      email: email.trim(),
+      phoneNumber: phoneNumber.trim(),
       role: AppRole.independentProvider,
       status: 'pending_verification',
+      serviceArea: serviceArea.trim(),
+      createdAt: DateTime.now(),
     );
     _users.add(user);
     return user;
   }
 
   /// Creates a new company account (pending approval).
+  @override
   Future<UserModel> registerCompany({
     required String ownerFullName,
     required String email,
     required String phoneNumber,
     required String companyName,
     required String serviceArea,
+    String? password,
   }) async {
     await _delay();
     _assertEmailAvailable(email);
     final user = UserModel(
       id: '${_nextId++}',
-      fullName: ownerFullName,
-      email: email,
-      phoneNumber: phoneNumber,
+      fullName: ownerFullName.trim(),
+      email: email.trim(),
+      phoneNumber: phoneNumber.trim(),
       role: AppRole.company,
       status: 'pending_verification',
-      companyName: companyName,
+      companyName: companyName.trim(),
+      serviceArea: serviceArea.trim(),
+      createdAt: DateTime.now(),
     );
     _users.add(user);
     return user;
@@ -160,11 +181,13 @@ class MockAuthService {
   /// Validates a company invite token.
   ///
   /// Returns `true` if the token is the known mock token.
+  @override
   bool validateInviteToken(String token) => token == _mockInviteToken;
 
   /// Activates a company technician account using an invite token.
   ///
   /// Throws [AuthException] if the token is invalid.
+  @override
   Future<UserModel> activateTechnicianAccount({
     required String token,
     required String fullName,
@@ -174,15 +197,19 @@ class MockAuthService {
     if (token != _mockInviteToken) {
       throw const AuthException('Invalid or expired invitation token.');
     }
+    if (password.length < 8) {
+      throw const AuthException('Password must be at least 8 characters long.');
+    }
     final user = UserModel(
       id: '${_nextId++}',
-      fullName: fullName,
+      fullName: fullName.trim(),
       email: 'tech.activated@company.com',
       phoneNumber: '+85500000099',
       role: AppRole.companyTechnician,
       status: 'active',
       companyId: 'c1',
       companyName: 'Phnom Penh Fix Co.',
+      createdAt: DateTime.now(),
     );
     _users.add(user);
     return user;
@@ -191,6 +218,7 @@ class MockAuthService {
   // ── Password Reset ────────────────────────────────────────────────────────
 
   /// Simulates sending a password-reset email.
+  @override
   Future<bool> requestPasswordReset(String email) async {
     await _delay();
     // In production this triggers a backend email send.
@@ -200,6 +228,7 @@ class MockAuthService {
   }
 
   /// Simulates resetting a password with a token.
+  @override
   Future<bool> resetPassword({
     required String token,
     required String newPassword,
