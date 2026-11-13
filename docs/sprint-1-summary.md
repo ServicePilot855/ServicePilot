@@ -28,13 +28,13 @@ All nine backlog items planned for Sprint 1 have reached the Definition of Done.
 |---|---|:---:|---|:---:|---|
 | **SCRUM-40** | US-01: Customer Registration | 5 | Yeat David | **Done** | Homeowner registration flow, field validation, Google Sign-in integration points |
 | **SCRUM-47** | US-02: Independent Technician Registration | 8 | Tiek Chhunhour | **Done** | Independent provider signup, pending verification status, PR #1 merged |
-| **SCRUM-48** | US-03: Service Provider Company Registration | 8 | Yeat David | **Done** | Company owner & business profile creation, pending approval flow |
-| **SCRUM-49** | US-04: Company Technician Activation | 8 | Yeat David | **Done** | Invitation token validation, technician account activation & password setup |
-| **SCRUM-50** | US-06: User Login | 3 | Yeat David | **Done** | Unified credential authentication, role-based redirection, error handling |
-| **SCRUM-51** | US-05: User Logout | 1 | Yeat David | **Done** | Session termination, secure token clearance, redirect to login guard |
+| **SCRUM-48** | US-03: Service Provider Company Registration | 8 | Taing Sothyvan | **Done** | Company owner & business profile creation, pending approval flow |
+| **SCRUM-49** | US-04: Company Technician Activation | 8 | Hem Eamsocheat | **Done** | Invitation token validation, technician account activation & password setup |
+| **SCRUM-51** | US-05: User Logout | 1 | Thang Saoly | **Done** | Session termination, secure token clearance, redirect to login guard |
+| **SCRUM-50** | US-06: User Login | 3 | Kheng Sokthearith | **Done** | Unified credential authentication, role-based redirection, error handling |
 | **SCRUM-52** | US-07: Reset Forgotten Password | 3 | Yeat David | **Done** | Password reset email trigger, reset confirmation flow, token invalidation |
-| **SCRUM-53** | US-08: Platform Administrator Access | 5 | Yeat David | **Done** | Seeded admin access, non-admin 403 access barriers, admin console route |
-| **SCRUM-56** | Design Mockup Prototype | — | Kheng Sothearith | **Done** | High-fidelity Figma mobile prototype covering all screens and states |
+| **SCRUM-53** | US-08: Platform Administrator Access | 5 | Hem Eamsocheat | **Done** | Seeded admin access, non-admin 403 access barriers, admin console route |
+| **SCRUM-56** | Design Mockup Prototype | — | Kheng Sokthearith | **Done** | High-fidelity Figma mobile prototype covering all screens and states |
 
 ---
 
@@ -89,12 +89,12 @@ A test-driven and regression-safe development cycle was maintained throughout th
 
 | Member | Scrum Role | Primary Contributions in Sprint 1 |
 |---|---|---|
-| **Taing Sothyvan** | Product Owner | Defined product vision, established acceptance criteria for US-01 through US-08, and approved sprint increments against prototype requirements. |
-| **Thang Saoly** | Scrum Master | Facilitated Scrum ceremonies, monitored sprint backlog progress, tracked blockers, managed documentation, and oversaw test verification. |
-| **Yeat David** | Developer | Implemented US-01, US-03, US-04, US-05, US-06, US-07, and US-08; built Firebase Auth integration and authored automated test suites. |
-| **Tiek Chhunhour** | Developer | Implemented US-02 (Independent Technician Registration), built custom registration UI and validation, managed Pull Request #1. |
-| **Kheng Sothearith** | Developer / UI Designer | Delivered high-fidelity Figma mobile mockups (SCRUM-56), established visual design tokens, and guided UI compliance. |
-| **Hem Eamsocheat** | Developer | Supported backend infrastructure setup, Firebase environment configuration, and test scenario planning. |
+| **Taing Sothyvan** | Product Owner / Developer | Defined product vision and acceptance criteria; implemented US-03 (Service Provider Company Registration). |
+| **Thang Saoly** | Scrum Master / Lead Dev | Facilitated Scrum events and board tracking; implemented US-05 (User Logout); architected Firebase Auth integration, secure storage, and authored automated test suites. |
+| **Yeat David** | Developer | Implemented US-01 (Customer Registration) and US-07 (Reset Forgotten Password). |
+| **Tiek Chhunhour** | Developer | Implemented US-02 (Independent Technician Registration) with validation rules; delivered Pull Request #1. |
+| **Hem Eamsocheat** | Developer | Implemented US-04 (Company Technician Activation) and US-08 (Platform Administrator Access); assisted backend setup. |
+| **Kheng Sokthearith** | Developer / UI Designer | Delivered high-fidelity Figma mobile prototype (SCRUM-56); implemented US-06 (User Login) and design system tokens. |
 
 ---
 

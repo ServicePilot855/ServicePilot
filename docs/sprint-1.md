@@ -8,15 +8,15 @@
 
 | Ticket | User Story | Points | Assignee | Status |
 |--------|-----------|--------|----------|--------|
-| SCRUM-40 | US-01: Customer Registration | 5 | YD | Done |
-| SCRUM-47 | US-02: Independent Technician Registration | 8 | TC | Done |
-| SCRUM-48 | US-03: Service Provider Company Registration | 8 | YD | Done |
-| SCRUM-49 | US-04: Company Technician Account Activation | 8 | YD | Done |
-| SCRUM-50 | US-06: User Login | 3 | YD | Done |
-| SCRUM-51 | US-05: User Logout | 1 | YD | Done |
-| SCRUM-52 | US-07: Reset Forgotten Password | 3 | YD | Done |
-| SCRUM-53 | US-08: Platform Administrator Access | 5 | YD | Done |
-| SCRUM-56 | Design Mockup Prototype | — | KS | Done |
+| SCRUM-40 | US-01: Customer Registration | 5 | YD (Yeat David) | Done |
+| SCRUM-47 | US-02: Independent Technician Registration | 8 | TC (Tiek Chhunhour) | Done |
+| SCRUM-48 | US-03: Service Provider Company Registration | 8 | TS (Taing Sothyvan) | Done |
+| SCRUM-49 | US-04: Company Technician Account Activation | 8 | HE (Hem Eamsocheat) | Done |
+| SCRUM-51 | US-05: User Logout | 1 | TS (Thang Saoly) | Done |
+| SCRUM-50 | US-06: User Login | 3 | KS (Kheng Sokthearith) | Done |
+| SCRUM-52 | US-07: Reset Forgotten Password | 3 | YD (Yeat David) | Done |
+| SCRUM-53 | US-08: Platform Administrator Access | 5 | HE (Hem Eamsocheat) | Done |
+| SCRUM-56 | Design Mockup Prototype | — | KS (Kheng Sokthearith) | Done |
 
 **Total Story Points:** 41
 
@@ -114,7 +114,7 @@
 ---
 
 ### US-03 · Service Provider Company Registration
-**SCRUM-48 · 8 pts · Assignee: YD**
+**SCRUM-48 · 8 pts · Assignee: TS (Taing Sothyvan)**
 
 > As a repair company owner, I want to register my company on ServicePilot so that I can manage my technicians and receive repair bookings from customers.
 
@@ -141,7 +141,7 @@
 ---
 
 ### US-04 · Company Technician Account Activation
-**SCRUM-49 · 8 pts · Assignee: YD**
+**SCRUM-49 · 8 pts · Assignee: HE (Hem Eamsocheat)**
 
 > As a company technician, I want to activate an account invited by my company's administrator so that I can log in and manage jobs assigned to me.
 
@@ -168,7 +168,7 @@
 ---
 
 ### US-05 · User Logout
-**SCRUM-51 · 1 pt · Assignee: YD**
+**SCRUM-51 · 1 pt · Assignee: TS (Thang Saoly)**
 
 > As a logged-in ServicePilot user, I want to log out of my account so that other people cannot access my account through my current session.
 
@@ -193,7 +193,7 @@
 ---
 
 ### US-06 · User Login
-**SCRUM-50 · 3 pts · Assignee: YD**
+**SCRUM-50 · 3 pts · Assignee: KS (Kheng Sokthearith)**
 
 > As a registered ServicePilot user, I want to log in securely so that I can access the features available to my account.
 
@@ -220,7 +220,7 @@
 ---
 
 ### US-07 · Reset Forgotten Password
-**SCRUM-52 · 3 pts · Assignee: YD**
+**SCRUM-52 · 3 pts · Assignee: YD (Yeat David)**
 
 > As a registered ServicePilot user, I want to reset my forgotten password so that I can regain access to my account.
 
@@ -247,7 +247,7 @@
 ---
 
 ### US-08 · Platform Administrator Access
-**SCRUM-53 · 5 pts · Assignee: YD**
+**SCRUM-53 · 5 pts · Assignee: HE (Hem Eamsocheat)**
 
 > As a ServicePilot Platform Admin, I want to securely access the platform administration area so that I can manage platform operations and review service provider accounts.
 
@@ -363,12 +363,12 @@ Company Admin Home ──► Invite Technician (email input) ──► [email se
 
 | Member | Role | Sprint 1 Focus |
 |--------|------|---------------|
-| **Taing Sothyvan** | Product Owner | Backlog ordering, AC clarification, sprint review |
-| **Thang Saoly** | Scrum Master | Facilitate events, remove blockers, track board |
-| **Yeat David** | Developer | US-01, US-03, US-04, US-05, US-06, US-07, US-08 |
-| **Tiek Chhunhour** | Developer | US-02 |
-| **Kheng Sothearith** | Developer | SCRUM-56 Design mockup (In Review) |
-| **Hem Eamsocheat** | Developer | Support — testing & backend setup |
+| **Taing Sothyvan** | Product Owner / Developer | US-03 (SCRUM-48), Backlog ordering, AC clarification, sprint review |
+| **Thang Saoly** | Scrum Master / Lead Dev | US-05 (SCRUM-51), Firebase Auth integration, test architecture, sprint tracking |
+| **Yeat David** | Developer | US-01 (SCRUM-40), US-07 (SCRUM-52) |
+| **Tiek Chhunhour** | Developer | US-02 (SCRUM-47) |
+| **Kheng Sokthearith** | Developer / UI Designer | US-06 (SCRUM-50), SCRUM-56 Design mockup prototype |
+| **Hem Eamsocheat** | Developer | US-04 (SCRUM-49), US-08 (SCRUM-53) |
 
 ---
 
