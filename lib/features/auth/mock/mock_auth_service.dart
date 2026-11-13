@@ -242,7 +242,8 @@ class MockAuthService implements IAuthService {
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   void _assertEmailAvailable(String email) {
-    final exists = _users.any((u) => u.email == email);
+    final normalized = email.trim().toLowerCase();
+    final exists = _users.any((u) => u.email.toLowerCase() == normalized);
     if (exists) {
       throw const AuthException(
           'An account with this email already exists.');
