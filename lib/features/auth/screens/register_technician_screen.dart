@@ -50,6 +50,7 @@ class _RegisterTechnicianScreenState
           email: _emailController.text.trim(),
           phoneNumber: _phoneController.text.trim(),
           serviceArea: _serviceAreaController.text.trim(),
+          password: _passwordController.text,
         );
 
     if (!mounted) return;
@@ -87,6 +88,7 @@ class _RegisterTechnicianScreenState
           ),
           actions: [
             ElevatedButton(
+              key: const Key('technician_dialog_ok_button'),
               onPressed: () => Navigator.of(context).pop(),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primary,
@@ -209,6 +211,7 @@ class _RegisterTechnicianScreenState
 
                 // ── Full Name ─────────────────────────────────────────────
                 SpTextField(
+                  key: const Key('technician_name_field'),
                   label: 'Full Name',
                   hint: 'Virak Chan',
                   controller: _nameController,
@@ -218,6 +221,9 @@ class _RegisterTechnicianScreenState
                     if (v == null || v.trim().isEmpty) {
                       return 'Full name is required';
                     }
+                    if (v.trim().length > 100) {
+                      return 'Full name must not exceed 100 characters';
+                    }
                     return null;
                   },
                 ),
@@ -225,6 +231,7 @@ class _RegisterTechnicianScreenState
 
                 // ── Email ─────────────────────────────────────────────────
                 SpTextField(
+                  key: const Key('technician_email_field'),
                   label: 'Email Address',
                   hint: 'technician@test.com',
                   controller: _emailController,
@@ -245,8 +252,9 @@ class _RegisterTechnicianScreenState
 
                 // ── Phone ─────────────────────────────────────────────────
                 SpTextField(
+                  key: const Key('technician_phone_field'),
                   label: 'Phone Number (Cambodia)',
-                  hint: '+855 87 654 321',
+                  hint: '+855 87 654 321 or 087 654 321',
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
                   prefixIcon: const Icon(Icons.phone_outlined),
@@ -255,6 +263,10 @@ class _RegisterTechnicianScreenState
                     if (v == null || v.trim().isEmpty) {
                       return 'Phone number is required';
                     }
+                    final cleaned = v.replaceAll(RegExp(r'[\s\-]'), '');
+                    if (!RegExp(r'^(\+855|0)[0-9]{8,9}$').hasMatch(cleaned)) {
+                      return 'Enter a valid Cambodian phone (+855...)';
+                    }
                     return null;
                   },
                 ),
@@ -262,6 +274,7 @@ class _RegisterTechnicianScreenState
 
                 // ── Service Area ──────────────────────────────────────────
                 SpTextField(
+                  key: const Key('technician_service_area_field'),
                   label: 'Service Area / Sangkat',
                   hint: 'e.g. Toul Kork, Sen Sok, Daun Penh',
                   controller: _serviceAreaController,
@@ -271,6 +284,9 @@ class _RegisterTechnicianScreenState
                     if (v == null || v.trim().isEmpty) {
                       return 'Service area is required';
                     }
+                    if (v.trim().length > 300) {
+                      return 'Service area must not exceed 300 characters';
+                    }
                     return null;
                   },
                 ),
@@ -278,6 +294,7 @@ class _RegisterTechnicianScreenState
 
                 // ── Password ──────────────────────────────────────────────
                 SpTextField(
+                  key: const Key('technician_password_field'),
                   label: 'Password',
                   hint: 'Min. 8 characters',
                   controller: _passwordController,
@@ -304,6 +321,7 @@ class _RegisterTechnicianScreenState
 
                 // ── Confirm Password ──────────────────────────────────────
                 SpTextField(
+                  key: const Key('technician_confirm_password_field'),
                   label: 'Confirm Password',
                   hint: 'Repeat your password',
                   controller: _confirmPasswordController,
@@ -322,6 +340,7 @@ class _RegisterTechnicianScreenState
                   textInputAction: TextInputAction.done,
                   onFieldSubmitted: (_) => _handleRegister(),
                   validator: (v) {
+                    if (v == null || v.isEmpty) return 'Please confirm your password';
                     if (v != _passwordController.text) {
                       return 'Passwords do not match';
                     }
@@ -332,6 +351,7 @@ class _RegisterTechnicianScreenState
 
                 // ── Register Button ───────────────────────────────────────
                 SpPrimaryButton(
+                  key: const Key('technician_register_button'),
                   label: 'Register as Technician',
                   onPressed: _handleRegister,
                   isLoading: isLoading,
