@@ -42,6 +42,9 @@ class UserModel {
   bool get isPendingVerification => status == 'pending_verification';
   bool get isSuspended => status == 'suspended';
   bool get isIndependentTechnician => role == AppRole.independentProvider;
+  bool get isAdmin => role == AppRole.admin;
+  bool get isHomeowner => role == AppRole.homeowner;
+  bool get isCompany => role == AppRole.company;
 
   UserModel copyWith({
     String? id,
