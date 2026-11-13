@@ -1,0 +1,177 @@
+# ============================================================
+# ServicePilot — Mutations
+# ============================================================
+
+# ── User Profile ────────────────────────────────────────────
+
+# Create or update the authenticated user's profile (upsert on login)
+mutation UpsertMyProfile(
+  $email: String!
+  $displayName: String!
+  $phone: String
+  $avatarUrl: String
+  $role: UserRole
+) @auth(level: USER) {
+  user_upsert(data: {
+    uid_expr: "auth.uid"
+    email: $email
+    displayName: $displayName
+    phone: $phone
+    avatarUrl: $avatarUrl
+    role: $role
+  })
+}
+
+mutation UpdateMyProfile(
+  $displayName: String
+  $phone: String
+  $avatarUrl: String
+) @auth(level: USER) {
+  user_update(
+    uid: { eq_expr: "auth.uid" }
+    data: { displayName: $displayName, phone: $phone, avatarUrl: $avatarUrl }
+  )
+}
+
+# ── Service Categories (Admin only) ──────────────────────────
+
+mutation CreateCategory(
+  $name: String!
+  $description: String
+  $iconUrl: String
+) @auth(level: USER) {
+  serviceCategory_insert(data: {
+    name: $name
+    description: $description
+    iconUrl: $iconUrl
+  })
+}
+
+# ── Services ─────────────────────────────────────────────────
+
+# A provider lists a new service offering
+mutation CreateService(
+  $categoryId: UUID!
+  $title: String!
+  $description: String!
+  $pricePerHour: Float!
+  $location: String!
+) @auth(level: USER) {
+  service_insert(data: {
+    provider: { uid_expr: "auth.uid" }
+    category: { id: $categoryId }
+    title: $title
+    description: $description
+    pricePerHour: $pricePerHour
+    location: $location
+    isActive: true
+  })
+}
+
+# Update a service (must be owner)
+mutation UpdateService(
+  $id: UUID!
+  $title: String
+  $description: String
+  $pricePerHour: Float
+  $location: String
+  $isActive: Boolean
+) @auth(level: USER) {
+  service_update(
+    first: { where: {
+      id: { eq: $id }
+      provider: { uid: { eq_expr: "auth.uid" } }
+    }}
+    data: {
+      title: $title
+      description: $description
+      pricePerHour: $pricePerHour
+      location: $location
+      isActive: $isActive
+    }
+  )
+}
+
+# Deactivate / soft-delete a service (must be owner)
+mutation DeactivateService($id: UUID!) @auth(level: USER) {
+  service_update(
+    first: { where: {
+      id: { eq: $id }
+      provider: { uid: { eq_expr: "auth.uid" } }
+    }}
+    data: { isActive: false }
+  )
+}
+
+# ── Bookings ─────────────────────────────────────────────────
+
+# A customer books a service
+mutation CreateBooking(
+  $serviceId: UUID!
+  $scheduledAt: Timestamp!
+  $durationHours: Float!
+  $totalPrice: Float!
+  $address: String!
+  $notes: String
+) @auth(level: USER) {
+  booking_insert(data: {
+    customer: { uid_expr: "auth.uid" }
+    service: { id: $serviceId }
+    status: PENDING
+    scheduledAt: $scheduledAt
+    durationHours: $durationHours
+    totalPrice: $totalPrice
+    address: $address
+    notes: $notes
+  })
+}
+
+# A provider confirms or updates the status of a booking (job)
+mutation UpdateBookingStatus(
+  $id: UUID!
+  $status: BookingStatus!
+) @auth(level: USER) {
+  booking_update(
+    first: { where: {
+      id: { eq: $id }
+      service: { provider: { uid: { eq_expr: "auth.uid" } } }
+    }}
+    data: {
+      status: $status
+      updatedAt_expr: "request.time"
+    }
+  )
+}
+
+# A customer cancels their own booking (only if PENDING)
+mutation CancelMyBooking($id: UUID!) @auth(level: USER) {
+  booking_update(
+    first: { where: {
+      id: { eq: $id }
+      customer: { uid: { eq_expr: "auth.uid" } }
+      status: { eq: PENDING }
+    }}
+    data: {
+      status: CANCELLED
+      updatedAt_expr: "request.time"
+    }
+  )
+}
+
+# ── Reviews ──────────────────────────────────────────────────
+
+# A customer leaves a review after a COMPLETED booking
+mutation CreateReview(
+  $bookingId: UUID!
+  $serviceId: UUID!
+  $rating: Int!
+  $comment: String
+) @auth(level: USER) {
+  review_insert(data: {
+    booking: { id: $bookingId }
+    reviewer: { uid_expr: "auth.uid" }
+    service: { id: $serviceId }
+    rating: $rating
+    comment: $comment
+  })
+}

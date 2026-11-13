@@ -1,0 +1,5 @@
+connectorId: "servicepilot-connector"
+generate:
+  dartSdk:
+    outputDir: "../../lib/dataconnect"
+    package: "servicepilot_dataconnect"

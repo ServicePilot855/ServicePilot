@@ -1,0 +1,552 @@
+extend type Mutation {
+  """
+  ✨ Insert a single `Booking` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  booking_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: Booking_Data!
+  ): Booking_KeyOutput! @fdc_generated(from: "Booking", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert a single `Review` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  review_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: Review_Data!
+  ): Review_KeyOutput! @fdc_generated(from: "Review", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert a single `Service` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  service_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: Service_Data!
+  ): Service_KeyOutput! @fdc_generated(from: "Service", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert a single `ServiceCategory` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  serviceCategory_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: ServiceCategory_Data!
+  ): ServiceCategory_KeyOutput! @fdc_generated(from: "ServiceCategory", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert a single `User` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  user_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: User_Data!
+  ): User_KeyOutput! @fdc_generated(from: "User", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert `Booking` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  booking_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [Booking_Data!]!
+  ): [Booking_KeyOutput!]! @fdc_generated(from: "Booking", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert `Review` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  review_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [Review_Data!]!
+  ): [Review_KeyOutput!]! @fdc_generated(from: "Review", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert `Service` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  service_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [Service_Data!]!
+  ): [Service_KeyOutput!]! @fdc_generated(from: "Service", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert `ServiceCategory` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  serviceCategory_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [ServiceCategory_Data!]!
+  ): [ServiceCategory_KeyOutput!]! @fdc_generated(from: "ServiceCategory", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert `User` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  user_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [User_Data!]!
+  ): [User_KeyOutput!]! @fdc_generated(from: "User", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert or update a single `Booking` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Booking`.
+  """
+  booking_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: Booking_Data!
+  ): Booking_KeyOutput! @fdc_generated(from: "Booking", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update a single `Review` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Review`.
+  """
+  review_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: Review_Data!
+  ): Review_KeyOutput! @fdc_generated(from: "Review", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update a single `Service` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Service`.
+  """
+  service_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: Service_Data!
+  ): Service_KeyOutput! @fdc_generated(from: "Service", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update a single `ServiceCategory` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `ServiceCategory`.
+  """
+  serviceCategory_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: ServiceCategory_Data!
+  ): ServiceCategory_KeyOutput! @fdc_generated(from: "ServiceCategory", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update a single `User` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `User`.
+  """
+  user_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: User_Data!
+  ): User_KeyOutput! @fdc_generated(from: "User", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update `Booking` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Booking`.
+  """
+  booking_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [Booking_Data!]!
+  ): [Booking_KeyOutput!]! @fdc_generated(from: "Booking", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Insert or update `Review` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Review`.
+  """
+  review_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [Review_Data!]!
+  ): [Review_KeyOutput!]! @fdc_generated(from: "Review", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Insert or update `Service` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Service`.
+  """
+  service_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [Service_Data!]!
+  ): [Service_KeyOutput!]! @fdc_generated(from: "Service", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Insert or update `ServiceCategory` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `ServiceCategory`.
+  """
+  serviceCategory_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [ServiceCategory_Data!]!
+  ): [ServiceCategory_KeyOutput!]! @fdc_generated(from: "ServiceCategory", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Insert or update `User` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `User`.
+  """
+  user_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [User_Data!]!
+  ): [User_KeyOutput!]! @fdc_generated(from: "User", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Update a single `Booking` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `Booking` or `null` if not found.
+  """
+  booking_update(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Booking_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Booking_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: Booking_Data!
+  ): Booking_KeyOutput @fdc_generated(from: "Booking", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update a single `Review` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `Review` or `null` if not found.
+  """
+  review_update(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Review_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Review_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: Review_Data!
+  ): Review_KeyOutput @fdc_generated(from: "Review", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update a single `Service` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `Service` or `null` if not found.
+  """
+  service_update(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Service_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Service_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: Service_Data!
+  ): Service_KeyOutput @fdc_generated(from: "Service", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update a single `ServiceCategory` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `ServiceCategory` or `null` if not found.
+  """
+  serviceCategory_update(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: ServiceCategory_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: ServiceCategory_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: ServiceCategory_Data!
+  ): ServiceCategory_KeyOutput @fdc_generated(from: "ServiceCategory", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update a single `User` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `User` or `null` if not found.
+  """
+  user_update(
+    """
+    The key used to identify the object.
+    """
+    key: User_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: User_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: User_Data!
+  ): User_KeyOutput @fdc_generated(from: "User", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update `Booking` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  booking_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: Booking_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: Booking_Data!
+  ): Int! @fdc_generated(from: "Booking", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Update `Review` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  review_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: Review_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: Review_Data!
+  ): Int! @fdc_generated(from: "Review", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Update `Service` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  service_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: Service_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: Service_Data!
+  ): Int! @fdc_generated(from: "Service", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Update `ServiceCategory` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  serviceCategory_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: ServiceCategory_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: ServiceCategory_Data!
+  ): Int! @fdc_generated(from: "ServiceCategory", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Update `User` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  user_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: User_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: User_Data!
+  ): Int! @fdc_generated(from: "User", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Delete a single `Booking` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  booking_delete(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Booking_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Booking_FirstRow
+  ): Booking_KeyOutput @fdc_generated(from: "Booking", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete a single `Review` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  review_delete(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Review_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Review_FirstRow
+  ): Review_KeyOutput @fdc_generated(from: "Review", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete a single `Service` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  service_delete(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Service_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Service_FirstRow
+  ): Service_KeyOutput @fdc_generated(from: "Service", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete a single `ServiceCategory` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  serviceCategory_delete(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: ServiceCategory_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: ServiceCategory_FirstRow
+  ): ServiceCategory_KeyOutput @fdc_generated(from: "ServiceCategory", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete a single `User` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  user_delete(
+    """
+    The key used to identify the object.
+    """
+    key: User_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: User_FirstRow
+  ): User_KeyOutput @fdc_generated(from: "User", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete `Booking` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  booking_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: Booking_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "Booking", purpose: DELETE_MULTIPLE)
+  """
+  ✨ Delete `Review` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  review_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: Review_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "Review", purpose: DELETE_MULTIPLE)
+  """
+  ✨ Delete `Service` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  service_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: Service_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "Service", purpose: DELETE_MULTIPLE)
+  """
+  ✨ Delete `ServiceCategory` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  serviceCategory_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: ServiceCategory_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "ServiceCategory", purpose: DELETE_MULTIPLE)
+  """
+  ✨ Delete `User` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  user_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: User_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "User", purpose: DELETE_MULTIPLE)
+}

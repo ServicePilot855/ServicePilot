@@ -1,0 +1,76 @@
+# ============================================================
+# ServicePilot — Data Model
+# Home repair & maintenance booking app
+# ============================================================
+
+# Authenticated user profile (keyed by Firebase Auth UID)
+type User @table(key: "uid") {
+  uid: String! @default(expr: "auth.uid")
+  email: String! @unique
+  displayName: String!
+  phone: String
+  avatarUrl: String
+  role: UserRole! @default(value: CUSTOMER)
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+enum UserRole {
+  CUSTOMER
+  PROVIDER
+  ADMIN
+}
+
+# Service category (e.g., Plumbing, Electrical, Cleaning)
+type ServiceCategory @table {
+  id: UUID! @default(expr: "uuidV4()")
+  name: String! @unique
+  description: String
+  iconUrl: String
+}
+
+# A service provider's listed offering
+type Service @table {
+  id: UUID! @default(expr: "uuidV4()")
+  provider: User!
+  category: ServiceCategory!
+  title: String!
+  description: String!
+  pricePerHour: Float!
+  location: String!
+  isActive: Boolean! @default(value: true)
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# A booking made by a customer for a service
+type Booking @table {
+  id: UUID! @default(expr: "uuidV4()")
+  customer: User!
+  service: Service!
+  status: BookingStatus! @default(value: PENDING)
+  scheduledAt: Timestamp!
+  durationHours: Float!
+  totalPrice: Float!
+  notes: String
+  address: String!
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+# A review left by a customer after a completed booking
+type Review @table {
+  id: UUID! @default(expr: "uuidV4()")
+  booking: Booking! @unique
+  reviewer: User!
+  service: Service!
+  rating: Int!   # 1–5 stars
+  comment: String
+  createdAt: Timestamp! @default(expr: "request.time")
+}

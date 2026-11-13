@@ -1,0 +1,34 @@
+extend type Booking {
+  """
+  ✨ Implicit foreign key field based on `Booking`.`customer`. It must match the value of `User`.`uid`. See `@ref` for how to customize it.
+  """
+  customerUid: String! @fdc_generated(from: "Booking.customer", purpose: IMPLICIT_REF_FIELD)
+  """
+  ✨ Implicit foreign key field based on `Booking`.`service`. It must match the value of `Service`.`id`. See `@ref` for how to customize it.
+  """
+  serviceId: UUID! @fdc_generated(from: "Booking.service", purpose: IMPLICIT_REF_FIELD)
+}
+extend type Review {
+  """
+  ✨ Implicit foreign key field based on `Review`.`booking`. It must match the value of `Booking`.`id`. See `@ref` for how to customize it.
+  """
+  bookingId: UUID! @fdc_generated(from: "Review.booking", purpose: IMPLICIT_REF_FIELD)
+  """
+  ✨ Implicit foreign key field based on `Review`.`reviewer`. It must match the value of `User`.`uid`. See `@ref` for how to customize it.
+  """
+  reviewerUid: String! @fdc_generated(from: "Review.reviewer", purpose: IMPLICIT_REF_FIELD)
+  """
+  ✨ Implicit foreign key field based on `Review`.`service`. It must match the value of `Service`.`id`. See `@ref` for how to customize it.
+  """
+  serviceId: UUID! @fdc_generated(from: "Review.service", purpose: IMPLICIT_REF_FIELD)
+}
+extend type Service {
+  """
+  ✨ Implicit foreign key field based on `Service`.`category`. It must match the value of `ServiceCategory`.`id`. See `@ref` for how to customize it.
+  """
+  categoryId: UUID! @fdc_generated(from: "Service.category", purpose: IMPLICIT_REF_FIELD)
+  """
+  ✨ Implicit foreign key field based on `Service`.`provider`. It must match the value of `User`.`uid`. See `@ref` for how to customize it.
+  """
+  providerUid: String! @fdc_generated(from: "Service.provider", purpose: IMPLICIT_REF_FIELD)
+}

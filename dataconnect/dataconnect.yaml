@@ -1,0 +1,12 @@
+specVersion: "v1"
+serviceId: "servicepilot-service"
+location: "us-central1"
+schema:
+  source: "./schema"
+  datasource:
+    postgresql:
+      database: "servicepilotdb"
+      cloudSql:
+        instanceId: "servicepilot-db-instance"
+      schemaValidation: "COMPATIBLE"
+connectorDirs: ["./connector"]

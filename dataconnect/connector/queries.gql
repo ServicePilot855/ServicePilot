@@ -1,0 +1,105 @@
+# ============================================================
+# ServicePilot — Queries
+# ============================================================
+
+# ── User Profile ────────────────────────────────────────────
+
+# Get the currently authenticated user's profile
+query GetMyProfile @auth(level: USER) {
+  user(uid: { eq_expr: "auth.uid" }) {
+    uid email displayName phone avatarUrl role createdAt
+  }
+}
+
+# ── Service Categories ───────────────────────────────────────
+
+# List all service categories (public)
+query ListCategories @auth(level: PUBLIC) {
+  serviceCategories(orderBy: [{ name: ASC }]) {
+    id name description iconUrl
+  }
+}
+
+# ── Services ─────────────────────────────────────────────────
+
+# Browse all active services, optionally filtered by category
+query ListServices($categoryId: UUID) @auth(level: PUBLIC) {
+  services(
+    where: {
+      isActive: { eq: true }
+      category: { id: { eq: $categoryId } }
+    }
+    orderBy: [{ createdAt: DESC }]
+  ) {
+    id title description pricePerHour location createdAt
+    provider { uid displayName avatarUrl }
+    category { id name iconUrl }
+  }
+}
+
+# Get a single service's full details
+query GetService($id: UUID!) @auth(level: PUBLIC) {
+  service(id: $id) {
+    id title description pricePerHour location isActive createdAt
+    provider { uid displayName phone avatarUrl }
+    category { id name iconUrl }
+  }
+}
+
+# List services owned by the currently logged-in provider
+query MyServices @auth(level: USER) {
+  services(
+    where: { provider: { uid: { eq_expr: "auth.uid" } } }
+    orderBy: [{ createdAt: DESC }]
+  ) {
+    id title description pricePerHour location isActive createdAt
+    category { id name }
+  }
+}
+
+# ── Bookings ─────────────────────────────────────────────────
+
+# A customer's own bookings (all statuses)
+query MyBookings @auth(level: USER) {
+  bookings(
+    where: { customer: { uid: { eq_expr: "auth.uid" } } }
+    orderBy: [{ scheduledAt: DESC }]
+  ) {
+    id status scheduledAt durationHours totalPrice address notes createdAt
+    service { id title pricePerHour provider { uid displayName avatarUrl } }
+  }
+}
+
+# A provider's incoming bookings (jobs)
+query MyJobs @auth(level: USER) {
+  bookings(
+    where: { service: { provider: { uid: { eq_expr: "auth.uid" } } } }
+    orderBy: [{ scheduledAt: ASC }]
+  ) {
+    id status scheduledAt durationHours totalPrice address notes
+    customer { uid displayName phone }
+    service { id title }
+  }
+}
+
+# Single booking detail (accessible by customer or the service provider)
+query GetBooking($id: UUID!) @auth(level: USER) {
+  booking(id: $id) {
+    id status scheduledAt durationHours totalPrice address notes createdAt updatedAt
+    customer { uid displayName phone avatarUrl }
+    service { id title pricePerHour provider { uid displayName } }
+  }
+}
+
+# ── Reviews ──────────────────────────────────────────────────
+
+# Reviews for a specific service
+query GetServiceReviews($serviceId: UUID!) @auth(level: PUBLIC) {
+  reviews(
+    where: { service: { id: { eq: $serviceId } } }
+    orderBy: [{ createdAt: DESC }]
+  ) {
+    id rating comment createdAt
+    reviewer { uid displayName avatarUrl }
+  }
+}

@@ -1,0 +1,38 @@
+# ============================================================
+# ServicePilot — Seed Data (LOCAL EMULATOR ONLY)
+# Do NOT deploy this file to production.
+# ============================================================
+
+# Seed service categories
+mutation SeedCategories @auth(level: NO_ACCESS) {
+  plumbing: serviceCategory_insert(data: {
+    id: "11111111-0000-0000-0000-000000000001"
+    name: "Plumbing"
+    description: "Pipe repairs, leaks, installations"
+    iconUrl: "https://cdn.example.com/icons/plumbing.svg"
+  })
+  electrical: serviceCategory_insert(data: {
+    id: "11111111-0000-0000-0000-000000000002"
+    name: "Electrical"
+    description: "Wiring, outlets, panel upgrades"
+    iconUrl: "https://cdn.example.com/icons/electrical.svg"
+  })
+  cleaning: serviceCategory_insert(data: {
+    id: "11111111-0000-0000-0000-000000000003"
+    name: "Cleaning"
+    description: "Deep cleaning, regular housekeeping"
+    iconUrl: "https://cdn.example.com/icons/cleaning.svg"
+  })
+  painting: serviceCategory_insert(data: {
+    id: "11111111-0000-0000-0000-000000000004"
+    name: "Painting"
+    description: "Interior and exterior painting"
+    iconUrl: "https://cdn.example.com/icons/painting.svg"
+  })
+  hvac: serviceCategory_insert(data: {
+    id: "11111111-0000-0000-0000-000000000005"
+    name: "HVAC"
+    description: "Heating, ventilation, and air conditioning"
+    iconUrl: "https://cdn.example.com/icons/hvac.svg"
+  })
+}

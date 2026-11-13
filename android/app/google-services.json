@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "884827034482",
+    "project_id": "servicepilot-855",
+    "storage_bucket": "servicepilot-855.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:884827034482:android:89b1293bde7bc60c6bc3eb",
+        "android_client_info": {
+          "package_name": "com.servicepilot.service_pilot"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAMTrUgIvNXj8nTM3vf09Vf39PxKvT3zyU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
