@@ -6,7 +6,7 @@ import 'package:service_pilot/core/auth/firebase_auth_service.dart';
 import 'package:service_pilot/core/constants/app_roles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'firebase_auth_service_test.dart';
+import '../../helpers/test_firebase_helper.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -162,7 +162,7 @@ void main() {
     test('activateTechnicianAccount activates user with valid invite token', () async {
       final notifier = container.read(authProvider.notifier);
       final success = await notifier.activateTechnicianAccount(
-        token: 'INVITE-2024-MOCK',
+        token: 'INVITE-TEST-123',
         fullName: 'Activated Tech',
         password: 'password123',
       );

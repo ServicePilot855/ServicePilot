@@ -1,75 +1,24 @@
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:service_pilot/core/auth/auth_service.dart';
 import 'package:service_pilot/core/constants/app_roles.dart';
 import 'package:service_pilot/features/auth/models/user_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Production-ready, resilient Firebase Authentication service implementation of [IAuthService].
+/// Production Firebase Authentication service implementation of [IAuthService].
 ///
 /// Features:
-/// - Real [FirebaseAuth] integration for production cloud identity, session tokens, and security.
-/// - Resilient local development fallback: if Firebase Auth is not yet enabled in the Firebase Console
-///   (e.g. CONFIGURATION_NOT_FOUND) or running offline, operations seamlessly persist user profiles
-///   and credentials locally in [SharedPreferences], enabling a fully functional end-to-end dev experience.
-/// - Pre-seeded demo accounts (Dara Sok, Virak Chan, Sophea Lim, Borey Nhem, Admin User) with 'password123'.
-/// - Persistent sessions across browser refreshes and app restarts.
+/// - Real [FirebaseAuth] integration for user identity, sessions, and security.
+/// - Extended user profile persistence via [SharedPreferences] keyed by Firebase UID.
+/// - Full role-based user management across Customers, Technicians, Companies, and Admins.
+/// - Comprehensive [FirebaseAuthException] mapping to user-friendly messages.
 class FirebaseAuthService implements IAuthService {
   static const String _tokenPrefix = 'INVITE-';
-  static const String _defaultMockToken = 'INVITE-2024-MOCK';
 
   final FirebaseAuth? _injectedAuth;
   final SharedPreferences? _injectedPrefs;
-
-  /// In-memory cache of demo users for rapid development & testing.
-  static final List<UserModel> _seedDemoUsers = [
-    const UserModel(
-      id: 'demo-customer-1',
-      fullName: 'Dara Sok',
-      email: 'customer@test.com',
-      phoneNumber: '+85512345678',
-      role: AppRole.homeowner,
-      status: 'active',
-    ),
-    const UserModel(
-      id: 'demo-technician-2',
-      fullName: 'Virak Chan',
-      email: 'technician@test.com',
-      phoneNumber: '+85587654321',
-      role: AppRole.independentProvider,
-      status: 'pending_verification',
-      serviceArea: 'Toul Kork, Phnom Penh',
-    ),
-    const UserModel(
-      id: 'demo-company-3',
-      fullName: 'Sophea Lim',
-      email: 'company@test.com',
-      phoneNumber: '+85511223344',
-      role: AppRole.company,
-      status: 'pending_verification',
-      companyName: 'Phnom Penh Fix Co.',
-      serviceArea: 'Phnom Penh',
-    ),
-    const UserModel(
-      id: 'demo-tech-4',
-      fullName: 'Borey Nhem',
-      email: 'tech@company.com',
-      phoneNumber: '+85599887766',
-      role: AppRole.companyTechnician,
-      status: 'active',
-      companyId: 'c1',
-      companyName: 'Phnom Penh Fix Co.',
-    ),
-    const UserModel(
-      id: 'demo-admin-5',
-      fullName: 'Admin User',
-      email: 'admin@servicepilot.com',
-      phoneNumber: '+85500000001',
-      role: AppRole.admin,
-      status: 'active',
-    ),
-  ];
 
   FirebaseAuthService({
     FirebaseAuth? firebaseAuth,
@@ -77,7 +26,16 @@ class FirebaseAuthService implements IAuthService {
   })  : _injectedAuth = firebaseAuth,
         _injectedPrefs = prefs;
 
-  FirebaseAuth get _auth => _injectedAuth ?? FirebaseAuth.instance;
+  FirebaseAuth get _auth {
+    final injected = _injectedAuth;
+    if (injected != null) return injected;
+    if (Firebase.apps.isEmpty) {
+      throw const AuthException(
+        'Firebase is not initialized. Please ensure Firebase.initializeApp() has run.',
+      );
+    }
+    return FirebaseAuth.instance;
+  }
 
   Future<SharedPreferences> _getPrefs() async {
     final prefs = _injectedPrefs;
@@ -89,25 +47,18 @@ class FirebaseAuthService implements IAuthService {
 
   @override
   Future<UserModel?> getCurrentUser() async {
-    // 1. Check real Firebase Auth session
     try {
+      if (_injectedAuth == null && Firebase.apps.isEmpty) {
+        return null;
+      }
+
       final fbUser = _auth.currentUser;
       if (fbUser != null) {
         return await _loadOrCreateUserModel(fbUser);
       }
     } catch (e) {
-      debugPrint('[FirebaseAuth] Notice: checking local session ($e)');
+      debugPrint('[FirebaseAuth] Session check failed: $e');
     }
-
-    // 2. Check local persistent session (web refresh / dev mode)
-    final prefs = await _getPrefs();
-    final activeId = prefs.getString('sp_active_user_id');
-    if (activeId != null) {
-      final cached = await _loadCachedProfile(activeId);
-      if (cached != null) return cached;
-      return _seedDemoUsers.where((u) => u.id == activeId).firstOrNull;
-    }
-
     return null;
   }
 
@@ -123,7 +74,6 @@ class FirebaseAuthService implements IAuthService {
       throw const AuthException('Password is required.');
     }
 
-    // 1. Try production Firebase Auth first
     try {
       final credential = await _auth.signInWithEmailAndPassword(
         email: cleanEmail,
@@ -131,70 +81,19 @@ class FirebaseAuthService implements IAuthService {
       );
 
       final fbUser = credential.user;
-      if (fbUser != null) {
-        final user = await _loadOrCreateUserModel(fbUser, email: cleanEmail);
-        await _recordActiveSession(user.id);
-        return user;
+      if (fbUser == null) {
+        throw const AuthException('Login failed. Please verify your credentials.');
       }
+
+      final user = await _loadOrCreateUserModel(fbUser, email: cleanEmail);
+      await _recordActiveSession(user.id);
+      return user;
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'wrong-password') {
-        final local = await _findUserLocally(cleanEmail);
-        if (local != null) {
-          final valid = await _validatePasswordLocally(cleanEmail, password);
-          if (!valid) throw const AuthException('Invalid email or password.');
-          await _recordActiveSession(local.id);
-          return local;
-        }
-        throw const AuthException('Invalid email or password.');
-      }
-
-      if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
-        // Auto-provision demo account if requested
-        if (_isKnownDemoEmail(cleanEmail) && password == 'password123') {
-          try {
-            return await _provisionDemoUser(cleanEmail, password);
-          } catch (_) {
-            final localDemo = await _findUserLocally(cleanEmail);
-            if (localDemo != null) {
-              await _recordActiveSession(localDemo.id);
-              return localDemo;
-            }
-          }
-        }
-
-        // Check if user was registered locally in development mode
-        final local = await _findUserLocally(cleanEmail);
-        if (local != null) {
-          final valid = await _validatePasswordLocally(cleanEmail, password);
-          if (!valid) throw const AuthException('Invalid email or password.');
-          await _recordActiveSession(local.id);
-          return local;
-        }
-        throw const AuthException('Invalid email or password.');
-      }
-
-      if (!_isFirebaseUnavailable(e)) {
-        throw AuthException(_mapFirebaseError(e));
-      }
-      debugPrint('[FirebaseAuth] Firebase Auth unconfigured (${e.code}); using local development auth.');
+      throw AuthException(_mapFirebaseError(e));
     } catch (e) {
       if (e is AuthException) rethrow;
-      debugPrint('[FirebaseAuth] Firebase sign-in caught: $e');
+      throw AuthException('An unexpected error occurred during login: $e');
     }
-
-    // 2. Resilient local development fallback
-    final localUser = await _findUserLocally(cleanEmail);
-    if (localUser == null) {
-      throw const AuthException('Invalid email or password.');
-    }
-
-    final isValid = await _validatePasswordLocally(cleanEmail, password);
-    if (!isValid) {
-      throw const AuthException('Invalid email or password.');
-    }
-
-    await _recordActiveSession(localUser.id);
-    return localUser;
   }
 
   @override
@@ -210,29 +109,31 @@ class FirebaseAuthService implements IAuthService {
       }
 
       final fbUser = credential.user;
-      if (fbUser != null) {
-        final user = await _loadOrCreateUserModel(
-          fbUser,
-          defaultRole: AppRole.homeowner,
-          defaultName: fbUser.displayName ?? 'Google Customer',
-        );
-        await _recordActiveSession(user.id);
-        return user;
+      if (fbUser == null) {
+        throw const AuthException('Google sign-in was cancelled or failed.');
       }
-    } catch (e) {
-      debugPrint('[FirebaseAuth] Google Sign-In fallback in development: $e');
-    }
 
-    // Seamless development fallback to demo customer
-    final demoCustomer = _seedDemoUsers.first; // Dara Sok
-    await _recordActiveSession(demoCustomer.id);
-    return demoCustomer;
+      final user = await _loadOrCreateUserModel(
+        fbUser,
+        defaultRole: AppRole.homeowner,
+        defaultName: fbUser.displayName ?? 'Google Customer',
+      );
+      await _recordActiveSession(user.id);
+      return user;
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(_mapFirebaseError(e));
+    } catch (e) {
+      if (e is AuthException) rethrow;
+      throw AuthException('Google sign-in failed: $e');
+    }
   }
 
   @override
   Future<void> logout() async {
     try {
-      await _auth.signOut();
+      if (_injectedAuth != null || Firebase.apps.isNotEmpty) {
+        await _auth.signOut();
+      }
     } catch (e) {
       debugPrint('[FirebaseAuth] Error during signOut: $e');
     } finally {
@@ -252,7 +153,7 @@ class FirebaseAuthService implements IAuthService {
     final cleanEmail = email.trim();
     final cleanName = fullName.trim();
     final cleanPhone = phoneNumber.trim();
-    final effectivePassword = password ?? 'password123';
+    final effectivePassword = password ?? '';
 
     if (cleanName.isEmpty) {
       throw const AuthException('Full name is required.');
@@ -267,13 +168,6 @@ class FirebaseAuthService implements IAuthService {
       throw const AuthException('Password must be at least 8 characters long.');
     }
 
-    // Check duplicate email in local store / demo data
-    final existing = await _findUserLocally(cleanEmail);
-    if (existing != null) {
-      throw const AuthException('An account with this email already exists.');
-    }
-
-    // 1. Attempt real Firebase registration
     try {
       final credential = await _auth.createUserWithEmailAndPassword(
         email: cleanEmail,
@@ -281,48 +175,29 @@ class FirebaseAuthService implements IAuthService {
       );
 
       final fbUser = credential.user;
-      if (fbUser != null) {
-        await fbUser.updateDisplayName(cleanName);
-        final user = UserModel(
-          id: fbUser.uid,
-          fullName: cleanName,
-          email: cleanEmail,
-          phoneNumber: cleanPhone,
-          role: AppRole.homeowner,
-          status: 'active',
-          createdAt: fbUser.metadata.creationTime ?? DateTime.now(),
-        );
-
-        await _saveUserProfile(user);
-        await _saveUserPassword(cleanEmail, effectivePassword);
-        return user;
+      if (fbUser == null) {
+        throw const AuthException('Could not create account. Please try again.');
       }
+
+      await fbUser.updateDisplayName(cleanName);
+      final user = UserModel(
+        id: fbUser.uid,
+        fullName: cleanName,
+        email: cleanEmail,
+        phoneNumber: cleanPhone,
+        role: AppRole.homeowner,
+        status: 'active',
+        createdAt: fbUser.metadata.creationTime ?? DateTime.now(),
+      );
+
+      await _saveUserProfile(user);
+      return user;
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'email-already-in-use') {
-        throw const AuthException('An account with this email already exists.');
-      }
-      if (!_isFirebaseUnavailable(e)) {
-        throw AuthException(_mapFirebaseError(e));
-      }
-      debugPrint('[FirebaseAuth] Firebase unconfigured (${e.code}); registering customer locally.');
+      throw AuthException(_mapFirebaseError(e));
     } catch (e) {
-      debugPrint('[FirebaseAuth] Firebase createUser exception: $e');
+      if (e is AuthException) rethrow;
+      throw AuthException('Registration failed: $e');
     }
-
-    // 2. Resilient local creation fallback
-    final localUser = UserModel(
-      id: 'local_usr_${DateTime.now().millisecondsSinceEpoch}',
-      fullName: cleanName,
-      email: cleanEmail,
-      phoneNumber: cleanPhone,
-      role: AppRole.homeowner,
-      status: 'active',
-      createdAt: DateTime.now(),
-    );
-
-    await _saveUserProfile(localUser);
-    await _saveUserPassword(cleanEmail, effectivePassword);
-    return localUser;
   }
 
   // ── Technician Registration ───────────────────────────────────────────────
@@ -356,11 +231,6 @@ class FirebaseAuthService implements IAuthService {
       throw const AuthException('Password must be at least 8 characters long.');
     }
 
-    final existing = await _findUserLocally(cleanEmail);
-    if (existing != null) {
-      throw const AuthException('An account with this email already exists.');
-    }
-
     try {
       final credential = await _auth.createUserWithEmailAndPassword(
         email: cleanEmail,
@@ -368,49 +238,30 @@ class FirebaseAuthService implements IAuthService {
       );
 
       final fbUser = credential.user;
-      if (fbUser != null) {
-        await fbUser.updateDisplayName(cleanName);
-        final user = UserModel(
-          id: fbUser.uid,
-          fullName: cleanName,
-          email: cleanEmail,
-          phoneNumber: cleanPhone,
-          role: AppRole.independentProvider,
-          status: 'pending_verification',
-          serviceArea: cleanArea,
-          createdAt: fbUser.metadata.creationTime ?? DateTime.now(),
-        );
-
-        await _saveUserProfile(user);
-        await _saveUserPassword(cleanEmail, password);
-        return user;
+      if (fbUser == null) {
+        throw const AuthException('Could not create technician account.');
       }
+
+      await fbUser.updateDisplayName(cleanName);
+      final user = UserModel(
+        id: fbUser.uid,
+        fullName: cleanName,
+        email: cleanEmail,
+        phoneNumber: cleanPhone,
+        role: AppRole.independentProvider,
+        status: 'pending_verification',
+        serviceArea: cleanArea,
+        createdAt: fbUser.metadata.creationTime ?? DateTime.now(),
+      );
+
+      await _saveUserProfile(user);
+      return user;
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'email-already-in-use') {
-        throw const AuthException('An account with this email already exists.');
-      }
-      if (!_isFirebaseUnavailable(e)) {
-        throw AuthException(_mapFirebaseError(e));
-      }
-      debugPrint('[FirebaseAuth] Firebase unconfigured; registering technician locally.');
+      throw AuthException(_mapFirebaseError(e));
     } catch (e) {
-      debugPrint('[FirebaseAuth] Firebase tech createUser caught: $e');
+      if (e is AuthException) rethrow;
+      throw AuthException('Technician registration failed: $e');
     }
-
-    final localUser = UserModel(
-      id: 'local_tech_${DateTime.now().millisecondsSinceEpoch}',
-      fullName: cleanName,
-      email: cleanEmail,
-      phoneNumber: cleanPhone,
-      role: AppRole.independentProvider,
-      status: 'pending_verification',
-      serviceArea: cleanArea,
-      createdAt: DateTime.now(),
-    );
-
-    await _saveUserProfile(localUser);
-    await _saveUserPassword(cleanEmail, password);
-    return localUser;
   }
 
   // ── Company Registration ──────────────────────────────────────────────────
@@ -429,7 +280,7 @@ class FirebaseAuthService implements IAuthService {
     final cleanPhone = phoneNumber.trim();
     final cleanCompany = companyName.trim();
     final cleanArea = serviceArea.trim();
-    final effectivePassword = password ?? 'password123';
+    final effectivePassword = password ?? '';
 
     if (cleanOwner.isEmpty) {
       throw const AuthException('Owner full name is required.');
@@ -450,11 +301,6 @@ class FirebaseAuthService implements IAuthService {
       throw const AuthException('Password must be at least 8 characters long.');
     }
 
-    final existing = await _findUserLocally(cleanEmail);
-    if (existing != null) {
-      throw const AuthException('An account with this email already exists.');
-    }
-
     try {
       final credential = await _auth.createUserWithEmailAndPassword(
         email: cleanEmail,
@@ -462,51 +308,31 @@ class FirebaseAuthService implements IAuthService {
       );
 
       final fbUser = credential.user;
-      if (fbUser != null) {
-        await fbUser.updateDisplayName(cleanOwner);
-        final user = UserModel(
-          id: fbUser.uid,
-          fullName: cleanOwner,
-          email: cleanEmail,
-          phoneNumber: cleanPhone,
-          role: AppRole.company,
-          status: 'pending_verification',
-          companyName: cleanCompany,
-          serviceArea: cleanArea,
-          createdAt: fbUser.metadata.creationTime ?? DateTime.now(),
-        );
-
-        await _saveUserProfile(user);
-        await _saveUserPassword(cleanEmail, effectivePassword);
-        return user;
+      if (fbUser == null) {
+        throw const AuthException('Could not create company account.');
       }
+
+      await fbUser.updateDisplayName(cleanOwner);
+      final user = UserModel(
+        id: fbUser.uid,
+        fullName: cleanOwner,
+        email: cleanEmail,
+        phoneNumber: cleanPhone,
+        role: AppRole.company,
+        status: 'pending_verification',
+        companyName: cleanCompany,
+        serviceArea: cleanArea,
+        createdAt: fbUser.metadata.creationTime ?? DateTime.now(),
+      );
+
+      await _saveUserProfile(user);
+      return user;
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'email-already-in-use') {
-        throw const AuthException('An account with this email already exists.');
-      }
-      if (!_isFirebaseUnavailable(e)) {
-        throw AuthException(_mapFirebaseError(e));
-      }
-      debugPrint('[FirebaseAuth] Firebase unconfigured; registering company locally.');
+      throw AuthException(_mapFirebaseError(e));
     } catch (e) {
-      debugPrint('[FirebaseAuth] Firebase company createUser caught: $e');
+      if (e is AuthException) rethrow;
+      throw AuthException('Company registration failed: $e');
     }
-
-    final localUser = UserModel(
-      id: 'local_comp_${DateTime.now().millisecondsSinceEpoch}',
-      fullName: cleanOwner,
-      email: cleanEmail,
-      phoneNumber: cleanPhone,
-      role: AppRole.company,
-      status: 'pending_verification',
-      companyName: cleanCompany,
-      serviceArea: cleanArea,
-      createdAt: DateTime.now(),
-    );
-
-    await _saveUserProfile(localUser);
-    await _saveUserPassword(cleanEmail, effectivePassword);
-    return localUser;
   }
 
   // ── Password Management ───────────────────────────────────────────────────
@@ -521,13 +347,11 @@ class FirebaseAuthService implements IAuthService {
       await _auth.sendPasswordResetEmail(email: cleanEmail);
       return true;
     } on FirebaseAuthException catch (e) {
-      if (!_isFirebaseUnavailable(e)) {
-        throw AuthException(_mapFirebaseError(e));
-      }
+      throw AuthException(_mapFirebaseError(e));
     } catch (e) {
-      debugPrint('[FirebaseAuth] Reset email caught: $e');
+      if (e is AuthException) rethrow;
+      throw AuthException('Could not send password reset email: $e');
     }
-    return true; // Graceful dev success
   }
 
   @override
@@ -535,7 +359,8 @@ class FirebaseAuthService implements IAuthService {
     required String token,
     required String newPassword,
   }) async {
-    if (token.trim().isEmpty) {
+    final cleanToken = token.trim();
+    if (cleanToken.isEmpty) {
       throw const AuthException('Password reset token is missing or invalid.');
     }
     if (newPassword.length < 8) {
@@ -543,18 +368,16 @@ class FirebaseAuthService implements IAuthService {
     }
     try {
       await _auth.confirmPasswordReset(
-        code: token.trim(),
+        code: cleanToken,
         newPassword: newPassword,
       );
       return true;
     } on FirebaseAuthException catch (e) {
-      if (!_isFirebaseUnavailable(e)) {
-        throw AuthException(_mapFirebaseError(e));
-      }
+      throw AuthException(_mapFirebaseError(e));
     } catch (e) {
-      debugPrint('[FirebaseAuth] Reset confirm caught: $e');
+      if (e is AuthException) rethrow;
+      throw AuthException('Password reset failed: $e');
     }
-    return true; // Graceful dev success
   }
 
   // ── Technician Activation ─────────────────────────────────────────────────
@@ -562,7 +385,8 @@ class FirebaseAuthService implements IAuthService {
   @override
   bool validateInviteToken(String token) {
     final trimmed = token.trim();
-    return trimmed == _defaultMockToken || trimmed.startsWith(_tokenPrefix);
+    if (trimmed.isEmpty) return false;
+    return trimmed.startsWith(_tokenPrefix) || trimmed.length >= 6;
   }
 
   @override
@@ -570,6 +394,7 @@ class FirebaseAuthService implements IAuthService {
     required String token,
     required String fullName,
     required String password,
+    String? email,
   }) async {
     if (!validateInviteToken(token)) {
       throw const AuthException('Invalid or expired invitation token.');
@@ -579,20 +404,26 @@ class FirebaseAuthService implements IAuthService {
     }
 
     final cleanName = fullName.trim();
+    if (cleanName.isEmpty) {
+      throw const AuthException('Full name is required.');
+    }
+
     final sanitizedToken = token.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
-    final email = 'tech.$sanitizedToken@company.com';
+    final effectiveEmail = (email != null && email.trim().isNotEmpty)
+        ? email.trim().toLowerCase()
+        : 'tech.$sanitizedToken@servicepilot.app';
 
     try {
       UserCredential credential;
       try {
         credential = await _auth.createUserWithEmailAndPassword(
-          email: email,
+          email: effectiveEmail,
           password: password,
         );
       } on FirebaseAuthException catch (e) {
         if (e.code == 'email-already-in-use') {
           credential = await _auth.signInWithEmailAndPassword(
-            email: email,
+            email: effectiveEmail,
             password: password,
           );
         } else {
@@ -601,51 +432,33 @@ class FirebaseAuthService implements IAuthService {
       }
 
       final fbUser = credential.user;
-      if (fbUser != null) {
-        await fbUser.updateDisplayName(cleanName);
-        final user = UserModel(
-          id: fbUser.uid,
-          fullName: cleanName,
-          email: email,
-          phoneNumber: '+85500000099',
-          role: AppRole.companyTechnician,
-          status: 'active',
-          companyId: 'c1',
-          companyName: 'Phnom Penh Fix Co.',
-          createdAt: fbUser.metadata.creationTime ?? DateTime.now(),
-        );
-
-        await _saveUserProfile(user);
-        await _saveUserPassword(email, password);
-        return user;
+      if (fbUser == null) {
+        throw const AuthException('Could not activate technician account.');
       }
+
+      await fbUser.updateDisplayName(cleanName);
+      final user = UserModel(
+        id: fbUser.uid,
+        fullName: cleanName,
+        email: effectiveEmail,
+        phoneNumber: fbUser.phoneNumber ?? '+85500000099',
+        role: AppRole.companyTechnician,
+        status: 'active',
+        companyName: 'Service Partner Company',
+        createdAt: fbUser.metadata.creationTime ?? DateTime.now(),
+      );
+
+      await _saveUserProfile(user);
+      return user;
     } on FirebaseAuthException catch (e) {
-      if (!_isFirebaseUnavailable(e)) {
-        throw AuthException(_mapFirebaseError(e));
-      }
-      debugPrint('[FirebaseAuth] Firebase unconfigured; activating technician locally.');
+      throw AuthException(_mapFirebaseError(e));
     } catch (e) {
-      debugPrint('[FirebaseAuth] Tech activation caught: $e');
+      if (e is AuthException) rethrow;
+      throw AuthException('Technician activation failed: $e');
     }
-
-    final localUser = UserModel(
-      id: 'local_act_tech_${DateTime.now().millisecondsSinceEpoch}',
-      fullName: cleanName,
-      email: email,
-      phoneNumber: '+85500000099',
-      role: AppRole.companyTechnician,
-      status: 'active',
-      companyId: 'c1',
-      companyName: 'Phnom Penh Fix Co.',
-      createdAt: DateTime.now(),
-    );
-
-    await _saveUserProfile(localUser);
-    await _saveUserPassword(email, password);
-    return localUser;
   }
 
-  // ── Local Storage & Persistence Helpers ───────────────────────────────────
+  // ── Profile Persistence Helpers ───────────────────────────────────────────
 
   Future<void> _saveUserProfile(UserModel user) async {
     final prefs = await _getPrefs();
@@ -653,40 +466,6 @@ class FirebaseAuthService implements IAuthService {
     await prefs.setString('sp_user_profile_${user.id}', jsonStr);
     await prefs.setString('sp_user_profile_email_${user.email.toLowerCase().trim()}', jsonStr);
     await prefs.setString('sp_active_user_id', user.id);
-  }
-
-  Future<void> _saveUserPassword(String email, String password) async {
-    final prefs = await _getPrefs();
-    await prefs.setString('sp_user_pwd_${email.toLowerCase().trim()}', password);
-  }
-
-  Future<UserModel?> _findUserLocally(String email) async {
-    final clean = email.toLowerCase().trim();
-    final seed = _seedDemoUsers.where((u) => u.email.toLowerCase() == clean).firstOrNull;
-    if (seed != null) return seed;
-
-    final prefs = await _getPrefs();
-    final emailJson = prefs.getString('sp_user_profile_email_$clean');
-    if (emailJson != null) {
-      try {
-        return UserModel.fromJson(jsonDecode(emailJson) as Map<String, dynamic>);
-      } catch (_) {}
-    }
-    return null;
-  }
-
-  Future<bool> _validatePasswordLocally(String email, String password) async {
-    final clean = email.toLowerCase().trim();
-    if (_isKnownDemoEmail(clean)) {
-      return password == 'password123';
-    }
-    final prefs = await _getPrefs();
-    final storedPwd = prefs.getString('sp_user_pwd_$clean');
-    if (storedPwd != null) {
-      return storedPwd == password;
-    }
-    // Default fallback in development
-    return password == 'password123';
   }
 
   Future<UserModel?> _loadCachedProfile(String uid, {String? email}) async {
@@ -730,8 +509,8 @@ class FirebaseAuthService implements IAuthService {
     final user = UserModel(
       id: fbUser.uid,
       fullName: name,
-      email: userEmail.isEmpty ? '${fbUser.uid}@servicepilot.local' : userEmail,
-      phoneNumber: fbUser.phoneNumber ?? '+85512345678',
+      email: userEmail.isEmpty ? '${fbUser.uid}@servicepilot.app' : userEmail,
+      phoneNumber: fbUser.phoneNumber ?? '',
       role: role,
       status: 'active',
       createdAt: fbUser.metadata.creationTime ?? DateTime.now(),
@@ -751,100 +530,9 @@ class FirebaseAuthService implements IAuthService {
     await prefs.remove('sp_active_user_id');
   }
 
-  bool _isKnownDemoEmail(String email) {
-    const demoEmails = {
-      'customer@test.com',
-      'technician@test.com',
-      'company@test.com',
-      'tech@company.com',
-      'admin@servicepilot.com',
-    };
-    return demoEmails.contains(email.toLowerCase().trim());
-  }
-
-  Future<UserModel> _provisionDemoUser(String email, String password) async {
-    final role = _inferRoleFromEmail(email);
-    String name = 'Demo User';
-    String phone = '+85512345678';
-    String? serviceArea;
-    String? companyName;
-    String status = 'active';
-
-    switch (email.toLowerCase().trim()) {
-      case 'customer@test.com':
-        name = 'Dara Sok';
-        phone = '+85512345678';
-        status = 'active';
-        break;
-      case 'technician@test.com':
-        name = 'Virak Chan';
-        phone = '+85587654321';
-        status = 'pending_verification';
-        serviceArea = 'Toul Kork, Phnom Penh';
-        break;
-      case 'company@test.com':
-        name = 'Sophea Lim';
-        phone = '+85511223344';
-        status = 'pending_verification';
-        companyName = 'Phnom Penh Fix Co.';
-        break;
-      case 'tech@company.com':
-        name = 'Borey Nhem';
-        phone = '+85599887766';
-        status = 'active';
-        companyName = 'Phnom Penh Fix Co.';
-        break;
-      case 'admin@servicepilot.com':
-        name = 'Admin User';
-        phone = '+85500000001';
-        status = 'active';
-        break;
-    }
-
-    try {
-      final credential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      final fbUser = credential.user!;
-      await fbUser.updateDisplayName(name);
-
-      final user = UserModel(
-        id: fbUser.uid,
-        fullName: name,
-        email: email,
-        phoneNumber: phone,
-        role: role,
-        status: status,
-        serviceArea: serviceArea,
-        companyName: companyName,
-        createdAt: fbUser.metadata.creationTime ?? DateTime.now(),
-      );
-
-      await _saveUserProfile(user);
-      return user;
-    } catch (_) {
-      // Fallback to local user
-      final user = UserModel(
-        id: 'demo_${email.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}',
-        fullName: name,
-        email: email,
-        phoneNumber: phone,
-        role: role,
-        status: status,
-        serviceArea: serviceArea,
-        companyName: companyName,
-        createdAt: DateTime.now(),
-      );
-      await _saveUserProfile(user);
-      return user;
-    }
-  }
-
   AppRole _inferRoleFromEmail(String email) {
     final lower = email.toLowerCase();
-    if (lower.contains('tech@company')) return AppRole.companyTechnician;
+    if (lower.contains('tech@') || lower.contains('.tech@')) return AppRole.companyTechnician;
     if (lower.contains('technician') || lower.contains('provider')) return AppRole.independentProvider;
     if (lower.contains('company') || lower.contains('business')) return AppRole.company;
     if (lower.contains('admin')) return AppRole.admin;
@@ -860,27 +548,6 @@ class FirebaseAuthService implements IAuthService {
   }
 
   // ── Error Detection & Mapping ─────────────────────────────────────────────
-
-  bool _isFirebaseUnavailable(dynamic e) {
-    if (e is FirebaseAuthException) {
-      final code = e.code.toLowerCase();
-      if (code == 'configuration-not-found' ||
-          code == 'operation-not-allowed' ||
-          code == 'network-request-failed' ||
-          code == 'unknown' ||
-          code == 'internal-error' ||
-          code == 'app-not-authorized') {
-        return true;
-      }
-    }
-    final str = e.toString().toLowerCase();
-    return str.contains('configuration_not_found') ||
-        str.contains('configuration-not-found') ||
-        str.contains('operation-not-allowed') ||
-        str.contains('network') ||
-        str.contains('failed to load resource') ||
-        str == 'error';
-  }
 
   String _mapFirebaseError(FirebaseAuthException e) {
     switch (e.code) {
@@ -902,6 +569,10 @@ class FirebaseAuthService implements IAuthService {
         return 'Email/password sign-in is not enabled in Firebase Console.';
       case 'network-request-failed':
         return 'Network connection error. Please check your internet connection.';
+      case 'expired-action-code':
+        return 'The password reset link has expired.';
+      case 'invalid-action-code':
+        return 'The password reset link is invalid or has already been used.';
       default:
         final msg = e.message;
         if (msg == null || msg.isEmpty || msg == 'Error' || msg == '[object Object]') {

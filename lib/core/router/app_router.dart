@@ -86,7 +86,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/activate',
         builder: (_, state) {
           final token = state.uri.queryParameters['token'] ?? '';
-          return TechnicianActivationScreen(token: token);
+          final email = state.uri.queryParameters['email'];
+          final company = state.uri.queryParameters['company'];
+          return TechnicianActivationScreen(
+            token: token,
+            email: email,
+            companyName: company,
+          );
         },
       ),
       GoRoute(

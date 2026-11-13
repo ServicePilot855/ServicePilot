@@ -164,7 +164,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
             SpTextField(
               label: 'Email Address',
-              hint: 'customer@test.com',
+              hint: 'you@example.com',
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
               prefixIcon: const Icon(Icons.email_outlined),
@@ -186,14 +186,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               label: 'Send Reset Link',
               onPressed: _handleSubmit,
               isLoading: isLoading,
-            ),
-            const SizedBox(height: 16),
-
-            SpSecondaryButton(
-              label: 'Simulate Click on Reset Link (Dev)',
-              onPressed: () {
-                context.push('/reset-password?token=RESET-MOCK-TOKEN');
-              },
             ),
           ],
         ),
@@ -259,14 +251,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           const SizedBox(height: 36),
 
           SpPrimaryButton(
-            label: 'Open Reset Link (Dev Demo)',
-            onPressed: () {
-              context.push('/reset-password?token=RESET-MOCK-TOKEN');
-            },
-          ),
-          const SizedBox(height: 12),
-
-          SpSecondaryButton(
             label: 'Back to Login',
             onPressed: () => context.go('/login'),
           ),

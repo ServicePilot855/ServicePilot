@@ -1,27 +1,12 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:service_pilot/core/auth/auth_service.dart';
 import 'package:service_pilot/core/auth/auth_state.dart';
 import 'package:service_pilot/core/auth/firebase_auth_service.dart';
-import 'package:service_pilot/features/auth/mock/mock_auth_service.dart';
 import 'package:service_pilot/features/auth/models/user_model.dart';
 
-/// Provides the active [IAuthService] implementation.
-///
-/// Automatically uses [FirebaseAuthService] when Firebase is initialized.
-/// Falls back to [MockAuthService] when running in non-Firebase unit/widget tests.
+/// Provides the active [IAuthService] implementation via [FirebaseAuthService].
 final authServiceProvider = Provider<IAuthService>(
-  (_) {
-    if (Firebase.apps.isEmpty) {
-      return MockAuthService();
-    }
-    return FirebaseAuthService();
-  },
-);
-
-/// Backwards compatibility alias for [mockAuthServiceProvider].
-final mockAuthServiceProvider = Provider<IAuthService>(
-  (ref) => ref.watch(authServiceProvider),
+  (_) => FirebaseAuthService(),
 );
 
 /// Convenient selector provider for the current authenticated user.
@@ -187,6 +172,7 @@ class AuthNotifier extends Notifier<AuthState> {
     required String token,
     required String fullName,
     required String password,
+    String? email,
   }) async {
     state = const AuthStateLoading();
     try {
@@ -194,6 +180,7 @@ class AuthNotifier extends Notifier<AuthState> {
         token: token,
         fullName: fullName,
         password: password,
+        email: email,
       );
       state = const AuthStateUnauthenticated();
       return true;

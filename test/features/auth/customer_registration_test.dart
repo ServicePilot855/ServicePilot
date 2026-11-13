@@ -1,18 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/core/auth/auth_service.dart';
+import 'package:service_pilot/core/auth/firebase_auth_service.dart';
 import 'package:service_pilot/core/constants/app_roles.dart';
-import 'package:service_pilot/features/auth/mock/mock_auth_service.dart';
 import 'package:service_pilot/features/auth/models/user_model.dart';
 import 'package:service_pilot/features/auth/screens/register_customer_screen.dart';
 
-void main() {
-  group('SCRUM-40 / US-01: Customer Model & Auth Service Unit Tests', () {
-    late MockAuthService authService;
+import '../../helpers/test_firebase_helper.dart';
 
-    setUp(() {
-      authService = MockAuthService();
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  group('SCRUM-40 / US-01: Customer Model & Auth Service Unit Tests', () {
+    late FakeFirebaseAuth fakeAuth;
+    late FirebaseAuthService authService;
+
+    setUp(() async {
+      fakeAuth = FakeFirebaseAuth();
+      authService = await createTestFirebaseAuthService(fakeAuth: fakeAuth);
     });
 
     test('UserModel supports Customer/Homeowner role and JSON serialization', () {
@@ -101,16 +108,21 @@ void main() {
   });
 
   group('SCRUM-58 & SCRUM-62: Customer Registration UI & Validation Widget Tests', () {
-    Widget createWidgetUnderTest() {
-      return const ProviderScope(
-        child: MaterialApp(
+    Widget createWidgetUnderTest([FirebaseAuthService? service]) {
+      return ProviderScope(
+        overrides: [
+          if (service != null)
+            authServiceProvider.overrideWithValue(service),
+        ],
+        child: const MaterialApp(
           home: RegisterCustomerScreen(),
         ),
       );
     }
 
     testWidgets('renders all required form elements and buttons', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
+      final service = await createTestFirebaseAuthService();
+      await tester.pumpWidget(createWidgetUnderTest(service));
       await tester.pumpAndSettle();
 
       expect(find.text('Customer Registration'), findsOneWidget);
@@ -125,7 +137,8 @@ void main() {
     });
 
     testWidgets('shows validation errors when fields are empty upon submission', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
+      final service = await createTestFirebaseAuthService();
+      await tester.pumpWidget(createWidgetUnderTest(service));
       await tester.pumpAndSettle();
 
       final createAccountBtn = find.text('Create Account');
@@ -140,11 +153,11 @@ void main() {
     });
 
     testWidgets('shows error for invalid email format', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
+      final service = await createTestFirebaseAuthService();
+      await tester.pumpWidget(createWidgetUnderTest(service));
       await tester.pumpAndSettle();
 
       final emailField = find.widgetWithText(TextFormField, '');
-      // Enter invalid email in email field
       await tester.enterText(emailField.at(1), 'not-an-email');
 
       final createAccountBtn = find.text('Create Account');
@@ -156,7 +169,8 @@ void main() {
     });
 
     testWidgets('shows error for invalid Cambodian phone format', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
+      final service = await createTestFirebaseAuthService();
+      await tester.pumpWidget(createWidgetUnderTest(service));
       await tester.pumpAndSettle();
 
       final fields = find.byType(TextFormField);
@@ -175,7 +189,8 @@ void main() {
     });
 
     testWidgets('shows error when passwords do not match', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
+      final service = await createTestFirebaseAuthService();
+      await tester.pumpWidget(createWidgetUnderTest(service));
       await tester.pumpAndSettle();
 
       final fields = find.byType(TextFormField);
@@ -194,7 +209,8 @@ void main() {
     });
 
     testWidgets('shows success dialog upon submitting valid registration info', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
+      final service = await createTestFirebaseAuthService();
+      await tester.pumpWidget(createWidgetUnderTest(service));
       await tester.pumpAndSettle();
 
       final fields = find.byType(TextFormField);
@@ -207,10 +223,6 @@ void main() {
       final createAccountBtn = find.text('Create Account');
       await tester.ensureVisible(createAccountBtn);
       await tester.tap(createAccountBtn);
-      
-      // Pump past simulated network latency (1200ms)
-      await tester.pump(const Duration(milliseconds: 500));
-      await tester.pump(const Duration(milliseconds: 1000));
       await tester.pumpAndSettle();
 
       expect(find.text('Account Created!'), findsOneWidget);

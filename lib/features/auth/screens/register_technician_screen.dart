@@ -233,7 +233,7 @@ class _RegisterTechnicianScreenState
                 SpTextField(
                   key: const Key('technician_email_field'),
                   label: 'Email Address',
-                  hint: 'technician@test.com',
+                  hint: 'virak.chan@example.com',
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   prefixIcon: const Icon(Icons.email_outlined),

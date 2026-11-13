@@ -11,9 +11,16 @@ import 'package:service_pilot/shared/widgets/sp_text_field.dart';
 /// Screen for company technicians activating their account via invite link.
 /// Styled in Figma Dark Theme (`#0A0A0A`, `#17181B`, `#FF5000`).
 class TechnicianActivationScreen extends ConsumerStatefulWidget {
-  const TechnicianActivationScreen({super.key, required this.token});
+  const TechnicianActivationScreen({
+    super.key,
+    required this.token,
+    this.email,
+    this.companyName,
+  });
 
   final String token;
+  final String? email;
+  final String? companyName;
 
   @override
   ConsumerState<TechnicianActivationScreen> createState() =>
@@ -54,6 +61,7 @@ class _TechnicianActivationScreenState
               token: widget.token,
               fullName: _nameController.text.trim(),
               password: _passwordController.text,
+              email: widget.email,
             );
 
     if (!mounted) return;
@@ -239,7 +247,7 @@ class _TechnicianActivationScreenState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Phnom Penh Fix Co.',
+                        widget.companyName ?? 'Service Partner Company',
                         style: GoogleFonts.inter(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
@@ -281,11 +289,11 @@ class _TechnicianActivationScreenState
           const SizedBox(height: 24),
 
           // ── Pre-filled email ───────────────────────────────────────
-          const SpTextField(
+          SpTextField(
             label: 'Email Address (From invitation)',
-            initialValue: 'tech.invited@company.com',
+            initialValue: widget.email ?? 'tech.invited@servicepilot.app',
             readOnly: true,
-            prefixIcon: Icon(Icons.email_outlined),
+            prefixIcon: const Icon(Icons.email_outlined),
           ),
           const SizedBox(height: 16),
 

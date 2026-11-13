@@ -251,7 +251,7 @@ class _RegisterCompanyScreenState
                 // ── Email ─────────────────────────────────────────────────
                 SpTextField(
                   label: 'Company Email Address',
-                  hint: 'company@test.com',
+                  hint: 'contact@company.com',
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   prefixIcon: const Icon(Icons.email_outlined),

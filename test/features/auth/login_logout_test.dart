@@ -4,16 +4,34 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/core/auth/auth_service.dart';
 import 'package:service_pilot/core/auth/auth_state.dart';
+import 'package:service_pilot/core/auth/firebase_auth_service.dart';
 import 'package:service_pilot/core/constants/app_roles.dart';
-import 'package:service_pilot/features/auth/mock/mock_auth_service.dart';
 import 'package:service_pilot/features/auth/screens/login_screen.dart';
 
-void main() {
-  group('SCRUM-50, SCRUM-51, SCRUM-53: Login, Logout, Admin Access Tests', () {
-    late MockAuthService authService;
+import '../../helpers/test_firebase_helper.dart';
 
-    setUp(() {
-      authService = MockAuthService();
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  group('SCRUM-50, SCRUM-51, SCRUM-53: Login, Logout, Admin Access Tests', () {
+    late FakeFirebaseAuth fakeAuth;
+    late FirebaseAuthService authService;
+
+    setUp(() async {
+      fakeAuth = FakeFirebaseAuth();
+      fakeAuth.seedUser(
+        uid: 'cust-1',
+        email: 'customer@test.com',
+        password: 'password123',
+        displayName: 'Customer User',
+      );
+      fakeAuth.seedUser(
+        uid: 'adm-1',
+        email: 'admin@servicepilot.com',
+        password: 'password123',
+        displayName: 'Admin User',
+      );
+      authService = await createTestFirebaseAuthService(fakeAuth: fakeAuth);
     });
 
     test('login succeeds with valid customer credentials', () async {
@@ -41,10 +59,13 @@ void main() {
       );
     });
 
-    testWidgets('renders login screen with inputs, buttons, and demo hints', (tester) async {
+    testWidgets('renders login screen with inputs and buttons', (tester) async {
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
+        ProviderScope(
+          overrides: [
+            authServiceProvider.overrideWithValue(authService),
+          ],
+          child: const MaterialApp(
             home: LoginScreen(),
           ),
         ),
@@ -62,8 +83,11 @@ void main() {
 
     testWidgets('shows validation errors when login submitted with empty fields', (tester) async {
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
+        ProviderScope(
+          overrides: [
+            authServiceProvider.overrideWithValue(authService),
+          ],
+          child: const MaterialApp(
             home: LoginScreen(),
           ),
         ),
@@ -80,7 +104,11 @@ void main() {
     });
 
     test('AuthNotifier logout clears authenticated user state', () async {
-      final container = ProviderContainer();
+      final container = ProviderContainer(
+        overrides: [
+          authServiceProvider.overrideWithValue(authService),
+        ],
+      );
       final notifier = container.read(authProvider.notifier);
 
       await notifier.login('customer@test.com', 'password123');

@@ -1,18 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/core/auth/auth_service.dart';
+import 'package:service_pilot/core/auth/firebase_auth_service.dart';
 import 'package:service_pilot/core/constants/app_roles.dart';
-import 'package:service_pilot/features/auth/mock/mock_auth_service.dart';
 import 'package:service_pilot/features/auth/models/user_model.dart';
 import 'package:service_pilot/features/auth/screens/register_technician_screen.dart';
 
-void main() {
-  group('SCRUM-64 & SCRUM-65: Technician Model & Auth Service Unit Tests', () {
-    late MockAuthService authService;
+import '../../helpers/test_firebase_helper.dart';
 
-    setUp(() {
-      authService = MockAuthService();
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  group('SCRUM-64 & SCRUM-65: Technician Model & Auth Service Unit Tests', () {
+    late FakeFirebaseAuth fakeAuth;
+    late FirebaseAuthService authService;
+
+    setUp(() async {
+      fakeAuth = FakeFirebaseAuth();
+      authService = await createTestFirebaseAuthService(fakeAuth: fakeAuth);
     });
 
     test('UserModel supports technician fields and JSON serialization', () {
@@ -109,16 +116,21 @@ void main() {
   });
 
   group('SCRUM-66 & SCRUM-67: RegisterTechnicianScreen Widget Tests', () {
-    Widget buildTestableWidget() {
-      return const ProviderScope(
-        child: MaterialApp(
+    Widget buildTestableWidget([FirebaseAuthService? service]) {
+      return ProviderScope(
+        overrides: [
+          if (service != null)
+            authServiceProvider.overrideWithValue(service),
+        ],
+        child: const MaterialApp(
           home: RegisterTechnicianScreen(),
         ),
       );
     }
 
     testWidgets('renders all required form fields and register button', (tester) async {
-      await tester.pumpWidget(buildTestableWidget());
+      final service = await createTestFirebaseAuthService();
+      await tester.pumpWidget(buildTestableWidget(service));
       await tester.pumpAndSettle();
 
       expect(find.text('Technician Registration'), findsOneWidget);
@@ -135,7 +147,8 @@ void main() {
     });
 
     testWidgets('shows validation errors when submitting empty form', (tester) async {
-      await tester.pumpWidget(buildTestableWidget());
+      final service = await createTestFirebaseAuthService();
+      await tester.pumpWidget(buildTestableWidget(service));
       await tester.pumpAndSettle();
 
       final registerButton = find.byKey(const Key('technician_register_button'));
@@ -151,7 +164,8 @@ void main() {
     });
 
     testWidgets('validates Cambodian phone number format correctly', (tester) async {
-      await tester.pumpWidget(buildTestableWidget());
+      final service = await createTestFirebaseAuthService();
+      await tester.pumpWidget(buildTestableWidget(service));
       await tester.pumpAndSettle();
 
       final phoneFinder = find.byKey(const Key('technician_phone_field'));
@@ -165,7 +179,8 @@ void main() {
     });
 
     testWidgets('validates password mismatch correctly', (tester) async {
-      await tester.pumpWidget(buildTestableWidget());
+      final service = await createTestFirebaseAuthService();
+      await tester.pumpWidget(buildTestableWidget(service));
       await tester.pumpAndSettle();
 
       final passFinder = find.byKey(const Key('technician_password_field'));
@@ -183,7 +198,8 @@ void main() {
     });
 
     testWidgets('valid form submission displays Pending Review dialog', (tester) async {
-      await tester.pumpWidget(buildTestableWidget());
+      final service = await createTestFirebaseAuthService();
+      await tester.pumpWidget(buildTestableWidget(service));
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byKey(const Key('technician_name_field')), 'Rithy Kem');
@@ -197,9 +213,6 @@ void main() {
       await tester.ensureVisible(registerButton);
       await tester.tap(registerButton);
 
-      // Fast-forward past simulated mock delay (1200ms)
-      await tester.pump(const Duration(milliseconds: 100));
-      await tester.pump(const Duration(milliseconds: 1500));
       await tester.pumpAndSettle();
 
       expect(find.text('Pending Review'), findsOneWidget);

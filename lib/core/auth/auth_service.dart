@@ -11,8 +11,7 @@ class AuthException implements Exception {
 
 /// Abstract contract for authentication and user account services.
 ///
-/// Both [MockAuthService] (Sprint 1 prototype) and future `AuthApiService`
-/// (Node.js/Express + PostgreSQL backend in SCRUM-67) implement this interface.
+/// Implemented by [FirebaseAuthService] for production Firebase Authentication.
 abstract class IAuthService {
   /// Returns the currently authenticated user, or null if unauthenticated.
   Future<UserModel?> getCurrentUser();
@@ -53,10 +52,10 @@ abstract class IAuthService {
     String? password,
   });
 
-  /// Simulates/sends a password-reset request for the given email.
+  /// Sends a password-reset email for the given address via Firebase Auth.
   Future<bool> requestPasswordReset(String email);
 
-  /// Resets a password using a valid reset token.
+  /// Resets a password using a valid reset action code / token.
   Future<bool> resetPassword({
     required String token,
     required String newPassword,
@@ -70,5 +69,6 @@ abstract class IAuthService {
     required String token,
     required String fullName,
     required String password,
+    String? email,
   });
 }

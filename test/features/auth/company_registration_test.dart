@@ -1,16 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:service_pilot/core/auth/auth_provider.dart';
+import 'package:service_pilot/core/auth/firebase_auth_service.dart';
 import 'package:service_pilot/core/constants/app_roles.dart';
-import 'package:service_pilot/features/auth/mock/mock_auth_service.dart';
 import 'package:service_pilot/features/auth/screens/register_company_screen.dart';
 
-void main() {
-  group('SCRUM-48 / US-03: Company Registration Unit & Widget Tests', () {
-    late MockAuthService authService;
+import '../../helpers/test_firebase_helper.dart';
 
-    setUp(() {
-      authService = MockAuthService();
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  group('SCRUM-48 / US-03: Company Registration Unit & Widget Tests', () {
+    late FakeFirebaseAuth fakeAuth;
+    late FirebaseAuthService authService;
+
+    setUp(() async {
+      fakeAuth = FakeFirebaseAuth();
+      authService = await createTestFirebaseAuthService(fakeAuth: fakeAuth);
     });
 
     test('registerCompany creates company account with pending_verification status', () async {
@@ -33,8 +40,11 @@ void main() {
 
     testWidgets('renders all required company registration fields', (tester) async {
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
+        ProviderScope(
+          overrides: [
+            authServiceProvider.overrideWithValue(authService),
+          ],
+          child: const MaterialApp(
             home: RegisterCompanyScreen(),
           ),
         ),
@@ -55,8 +65,11 @@ void main() {
 
     testWidgets('shows validation errors when company form is submitted empty', (tester) async {
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
+        ProviderScope(
+          overrides: [
+            authServiceProvider.overrideWithValue(authService),
+          ],
+          child: const MaterialApp(
             home: RegisterCompanyScreen(),
           ),
         ),

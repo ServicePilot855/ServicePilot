@@ -18,8 +18,8 @@ import 'package:service_pilot/shared/widgets/sp_text_field.dart';
 /// - Segmented control `#17181B` with tabs: "Log In" (active `#2A2B31`) and "Sign Up"
 /// - Inputs `#17181B` with 12px radius, phone/email icon, lock icon
 /// - "Remember me" checkbox + "Forgot password?" in orange `#FF5000`
-/// - Hint box `#17181B` with info icon: "Demo: any phone number works..."
 /// - Primary Action button `#FF5000` (height: 48, radius: 12)
+/// - Google Sign-in option for customers
 /// - Switch link: "New to ServicePilot? Create an account"
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -40,36 +40,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
-  }
-
-  void _fillDemoAccount(String email) {
-    setState(() {
-      _emailController.text = email;
-      _passwordController.text = 'password123';
-    });
-  }
-
-  Widget _buildDemoChip(String label, String email) {
-    return InkWell(
-      onTap: () => _fillDemoAccount(email),
-      borderRadius: BorderRadius.circular(6),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: AppTheme.surfaceElevated,
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: AppTheme.border, width: 1),
-        ),
-        child: Text(
-          '$label ($email)',
-          style: GoogleFonts.inter(
-            fontSize: 11,
-            color: AppTheme.primary,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ),
-    );
   }
 
   Future<void> _handleLogin() async {
@@ -274,7 +244,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 // ── Form Inputs ─────────────────────────────────────────────
                 SpTextField(
                   label: 'Phone number or email',
-                  hint: 'customer@test.com or 012 345 678',
+                  hint: 'you@example.com or 012 345 678',
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   prefixIcon: const Icon(Icons.email_outlined),
@@ -361,56 +331,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 20),
-
-                // ── Demo Hint Box (Figma Node 605) ───────────────────────────
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppTheme.border, width: 1),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(
-                        Icons.info_outline_rounded,
-                        size: 18,
-                        color: AppTheme.primary,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Quick demo accounts (tap to auto-fill, password: password123)',
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Wrap(
-                              spacing: 6,
-                              runSpacing: 6,
-                              children: [
-                                _buildDemoChip('Customer', 'customer@test.com'),
-                                _buildDemoChip('Technician', 'technician@test.com'),
-                                _buildDemoChip('Company', 'company@test.com'),
-                                _buildDemoChip('Company Tech', 'tech@company.com'),
-                                _buildDemoChip('Admin', 'admin@servicepilot.com'),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
                 const SizedBox(height: 28),
 
