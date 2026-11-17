@@ -13,6 +13,9 @@ import 'package:service_pilot/features/auth/screens/register_company_screen.dart
 import 'package:service_pilot/features/auth/screens/technician_activation_screen.dart';
 import 'package:service_pilot/features/auth/screens/forgot_password_screen.dart';
 import 'package:service_pilot/features/auth/screens/reset_password_screen.dart';
+import 'package:service_pilot/features/providers/screens/provider_list_screen.dart';
+import 'package:service_pilot/features/services/models/category_model.dart';
+import 'package:service_pilot/features/services/screens/categories_screen.dart';
 import 'package:service_pilot/shared/home/customer_home.dart';
 import 'package:service_pilot/shared/home/technician_home.dart';
 import 'package:service_pilot/shared/home/company_home.dart';
@@ -38,14 +41,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (BuildContext context, GoRouterState state) {
       final authState = authNotifier.value;
       final isAuthenticated = authState is AuthStateAuthenticated;
-      final isGoingToHome = state.matchedLocation.startsWith('/home');
+      final isGoingToHome = state.matchedLocation.startsWith('/home') ||
+          state.matchedLocation.startsWith('/categories');
       final isGoingToLogin = state.matchedLocation == '/login';
       final isGoingToSplash = state.matchedLocation == '/splash';
 
       // Let the splash screen handle its own routing.
       if (isGoingToSplash) return null;
 
-      // Unauthenticated users cannot access home screens.
+      // Unauthenticated users cannot access home or category screens.
       if (!isAuthenticated && isGoingToHome) return '/login';
 
       // Authenticated users are redirected away from /login to their home.
@@ -104,6 +108,23 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, state) {
           final token = state.uri.queryParameters['token'] ?? '';
           return ResetPasswordScreen(token: token);
+        },
+      ),
+
+      // ── Categories & Services (US-09) ──────────────────────────────────
+      GoRoute(
+        path: '/categories',
+        builder: (_, __) => const CategoriesScreen(),
+      ),
+      GoRoute(
+        path: '/categories/:categoryId/providers',
+        builder: (_, state) {
+          final categoryId = state.pathParameters['categoryId'] ?? '';
+          final category = state.extra as CategoryModel?;
+          return ProviderListScreen(
+            categoryId: categoryId,
+            category: category,
+          );
         },
       ),
 
