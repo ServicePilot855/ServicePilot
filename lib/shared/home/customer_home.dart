@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/core/theme/app_theme.dart';
+import 'package:service_pilot/features/bookings/models/booking_model.dart';
+import 'package:service_pilot/features/bookings/providers/booking_provider.dart';
 import 'package:service_pilot/features/services/models/category_model.dart';
 import 'package:service_pilot/features/services/providers/category_provider.dart';
 import 'package:service_pilot/features/services/widgets/category_card.dart';
@@ -10,6 +12,7 @@ import 'package:service_pilot/l10n/l10n.dart';
 import 'package:service_pilot/shared/widgets/sp_brand.dart';
 import 'package:service_pilot/shared/widgets/sp_button.dart';
 import 'package:service_pilot/shared/widgets/sp_layout.dart';
+import 'package:service_pilot/shared/widgets/status_badge.dart';
 
 /// Customer Home Dashboard.
 ///
@@ -104,6 +107,7 @@ class CustomerHome extends ConsumerWidget {
     final name = user?.fullName ?? l10n.homeFallbackName;
     final firstName = name.trim().split(RegExp(r'\s+')).first;
     final categoriesAsync = ref.watch(categoriesListProvider);
+    final bookingsAsync = ref.watch(customerBookingsProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -292,8 +296,138 @@ class CustomerHome extends ConsumerWidget {
                     tone: SpTone.danger,
                   ),
                 ),
+                const SizedBox(height: 24),
+
+                // My Repair Bookings Section (US-13 / US-14)
+                Text(
+                  'My Repair Bookings',
+                  style: AppTheme.display(size: 18),
+                ),
+                const SizedBox(height: 10),
+                bookingsAsync.when(
+                  data: (bookings) {
+                    if (bookings.isEmpty) {
+                      return const SpNotice(
+                        icon: Icons.event_note_rounded,
+                        message: 'You have no repair bookings yet.',
+                        tone: SpTone.neutral,
+                      );
+                    }
+                    return Column(
+                      children: bookings.map((booking) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _CustomerBookingCard(
+                            key: Key('home_booking_${booking.id}'),
+                            booking: booking,
+                            onTap: () => context.push(
+                              '/bookings/${booking.id}',
+                              extra: booking,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  },
+                  loading: () => const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: CircularProgressIndicator(
+                        color: AppTheme.primary,
+                      ),
+                    ),
+                  ),
+                  error: (err, _) => SpNotice(
+                    icon: Icons.error_outline_rounded,
+                    message: 'Could not load bookings: $err',
+                    tone: SpTone.danger,
+                  ),
+                ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CustomerBookingCard extends StatelessWidget {
+  final BookingModel booking;
+  final VoidCallback onTap;
+
+  const _CustomerBookingCard({
+    super.key,
+    required this.booking,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppTheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.radiusCard),
+        side: const BorderSide(color: AppTheme.border),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      booking.serviceTitle,
+                      style: AppTheme.text(
+                        size: 15.5,
+                        weight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  StatusBadge(status: booking.status),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                booking.providerName,
+                style: AppTheme.text(
+                  size: 13.5,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.location_on_outlined,
+                    size: 14,
+                    color: AppTheme.textSecondary,
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      booking.address,
+                      style: AppTheme.text(
+                        size: 12.5,
+                        color: AppTheme.textSecondary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),

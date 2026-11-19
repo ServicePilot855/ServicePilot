@@ -58,10 +58,12 @@ type Booking @table {
 
 enum BookingStatus {
   PENDING
+  ASSIGNED
   CONFIRMED
   IN_PROGRESS
   COMPLETED
   CANCELLED
+  DECLINED
 }
 
 # A review left by a customer after a completed booking
