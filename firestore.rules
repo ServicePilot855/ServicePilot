@@ -427,11 +427,13 @@ service cloud.firestore {
                                )
                              ) ||
                              // Provider or assigned technician: progress status transitions
+                             // US-14 (SCRUM-45) AC: Cancelled bookings cannot be accepted, assigned, or started afterward.
                              (
                                (
                                  resource.data.providerId == request.auth.uid ||
                                  ('technicianId' in resource.data && resource.data.technicianId == request.auth.uid)
                                ) &&
+                               !(resource.data.status in ['cancelled', 'completed', 'declined']) &&
                                request.resource.data.status in [
                                  'pending', 'confirmed', 'assigned', 'in_progress', 'completed', 'declined'
                                ]

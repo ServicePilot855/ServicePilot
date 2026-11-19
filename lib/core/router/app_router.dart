@@ -13,6 +13,8 @@ import 'package:service_pilot/features/auth/screens/register_company_screen.dart
 import 'package:service_pilot/features/auth/screens/technician_activation_screen.dart';
 import 'package:service_pilot/features/auth/screens/forgot_password_screen.dart';
 import 'package:service_pilot/features/auth/screens/reset_password_screen.dart';
+import 'package:service_pilot/features/bookings/models/booking_model.dart';
+import 'package:service_pilot/features/bookings/screens/booking_tracking_screen.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
 import 'package:service_pilot/features/providers/screens/provider_detail_screen.dart';
 import 'package:service_pilot/features/providers/screens/provider_list_screen.dart';
@@ -45,7 +47,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isAuthenticated = authState is AuthStateAuthenticated;
       final isGoingToHome = state.matchedLocation.startsWith('/home') ||
           state.matchedLocation.startsWith('/categories') ||
-          state.matchedLocation.startsWith('/providers');
+          state.matchedLocation.startsWith('/providers') ||
+          state.matchedLocation.startsWith('/bookings');
       final isGoingToLogin = state.matchedLocation == '/login';
       final isGoingToSplash = state.matchedLocation == '/splash';
 
@@ -138,6 +141,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return ProviderDetailScreen(
             providerId: providerId,
             provider: provider,
+          );
+        },
+      ),
+
+      // ── Bookings & Cancellation (US-13 / US-14) ───────────────────────
+      GoRoute(
+        path: '/bookings/:bookingId',
+        builder: (_, state) {
+          final bookingId = state.pathParameters['bookingId'] ?? '';
+          final booking = state.extra as BookingModel?;
+          return BookingTrackingScreen(
+            bookingId: bookingId,
+            initialBooking: booking,
           );
         },
       ),
