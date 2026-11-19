@@ -13,7 +13,7 @@
 | SCRUM-54 | US-11: View service provider details | 5 | TIEK Chhunhour (`TC`) | Done |
 | SCRUM-43 | US-12: Submit a repair booking request | 13 | KHENG Sokthearith (`KS`) | To Do |
 | SCRUM-44 | US-13: Track repair booking status | 8 | YEAT David (`YD`) | To Do |
-| SCRUM-45 | US-14: Cancel a repair booking | 3 | HEM Eamsocheat (`HE`) | To Do |
+| SCRUM-45 | US-14: Cancel a repair booking | 3 | HEM Eamsocheat (`HE`) | Done |
 | SCRUM-46 | US-15: View repair booking history | 5 | YEAT David (`YD`) | To Do |
 
 **Total Story Points:** 55 pts
@@ -182,19 +182,19 @@
 > As a customer, I want to cancel my repair booking so that I can withdraw my request when I no longer need the repair service.
 
 #### Acceptance Criteria
-- [ ] Customers can cancel bookings with `Pending`, `Assigned`, or `Confirmed` status.
-- [ ] Customers must confirm their decision before cancellation (confirmation modal).
-- [ ] Successfully cancelled bookings change to `Cancelled` status.
-- [ ] Customers cannot cancel bookings that are `In Progress`, `Completed`, `Cancelled`, or `Declined`.
-- [ ] Cancelled bookings cannot be accepted, assigned, or started afterward.
-- [ ] Only the customer who created the booking can cancel it.
+- [x] Customers can cancel bookings with `Pending`, `Assigned`, or `Confirmed` status.
+- [x] Customers must confirm their decision before cancellation (confirmation modal).
+- [x] Successfully cancelled bookings change to `Cancelled` status.
+- [x] Customers cannot cancel bookings that are `In Progress`, `Completed`, `Cancelled`, or `Declined`.
+- [x] Cancelled bookings cannot be accepted, assigned, or started afterward.
+- [x] Only the customer who created the booking can cancel it.
 
 #### Definition of Done
-- [ ] Booking cancellation functionality and confirmation dialog are implemented.
-- [ ] Booking status is correctly updated in the database.
-- [ ] Cancellation restrictions (only before work starts) are enforced by service layer & backend rules.
-- [ ] Valid and invalid cancellation scenarios are tested.
-- [ ] Code is peer-reviewed and the cancellation workflow is demonstrated.
+- [x] Booking cancellation functionality and confirmation dialog are implemented.
+- [x] Booking status is correctly updated in the database.
+- [x] Cancellation restrictions (only before work starts) are enforced by service layer & backend rules.
+- [x] Valid and invalid cancellation scenarios are tested.
+- [x] Code is peer-reviewed and the cancellation workflow is demonstrated.
 
 #### Technical Notes
 - Guard condition:

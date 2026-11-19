@@ -1,0 +1,449 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// This security rules file assumes the following data structures:
+//
+// Collection: users
+// Document ID: {userId} (matches Firebase Auth UID)
+// Fields:
+//   - id: string (required, 1-128 chars, immutable) - Firebase Auth UID
+//   - fullName: string (required, 1-100 chars) - Full name of the user
+//   - email: string (required, valid email pattern, max 150 chars) - User's email
+//   - phoneNumber: string (required, max 30 chars) - Phone number
+//   - role: string (required) - One of ['homeowner', 'independent_provider', 'company', 'company_technician', 'admin']
+//   - status: string (required) - One of ['active', 'pending_verification', 'suspended']
+//   - serviceArea: string (optional, max 300 chars) - Service coverage area
+//   - companyId: string (optional, max 100 chars) - Associated company ID
+//   - companyName: string (optional, max 100 chars) - Associated company name
+//   - createdAt: timestamp | string (optional, immutable) - Account creation timestamp
+//   - updatedAt: timestamp | string (optional) - Last update timestamp
+//
+// Collection: providers
+// Document ID: {providerId} (matches Firebase Auth UID of provider)
+// Fields:
+//   - id: string (required, 1-128 chars, immutable) - Provider UID
+//   - name / fullName / businessName: string (required, 1-150 chars) - Provider or business name
+//   - email: string (optional, valid email pattern, max 150 chars) - Provider email
+//   - phoneNumber: string (optional, max 30 chars) - Provider phone
+//   - providerType: string (optional, max 50 chars) - 'independent_provider', 'company', etc.
+//   - status: string (required) - One of ['active', 'pending_verification', 'suspended', 'inactive']
+//   - serviceArea: string (optional, max 300 chars) - Service area description
+//   - serviceAreas: list of strings (optional, max 20 items) - Specific coverage areas
+//   - categoryIds: list of strings (optional, max 20 items) - Categories of service offered
+//   - categories: list of strings (optional, max 20 items) - Category display names
+//   - rating: number (optional, 0.0 - 5.0, immutable for provider) - Customer satisfaction rating
+//   - reviewCount: number (optional, >= 0, immutable for provider) - Total customer reviews
+//   - description / bio: string (optional, max 2000 chars) - Bio or company description
+//   - avatarUrl / photoUrl: string (optional, max 500 chars) - Avatar or logo URL
+//   - isAvailable: bool (optional) - Real-time availability flag
+//   - createdAt: timestamp | string (optional, immutable)
+//   - updatedAt: timestamp | string (optional)
+//
+// Collection: categories
+// Document ID: {categoryId} (e.g. 'cat-ac', 'cat-plumbing')
+// Fields:
+//   - id: string (required, 1-50 chars, immutable) - Unique category slug
+//   - name: string (required, 1-100 chars) - Category name
+//   - description: string (required, 1-500 chars) - Services covered
+//   - iconName: string (required, 1-50 chars) - Material icon identifier
+//   - providerCount: number (optional, >= 0) - Count of verified providers
+//   - isActive: bool (required) - Active visibility flag
+//   - popularServices: list of strings (optional, max 20 items) - Popular service tags
+//   - createdAt: timestamp | string (optional, immutable)
+//   - updatedAt: timestamp | string (optional)
+//
+// Collection: bookings
+// Document ID: {bookingId}
+// Fields:
+//   - id: string (optional, max 128 chars, immutable) - Booking ID
+//   - customerId: string (required, 1-128 chars, immutable) - Homeowner UID
+//   - providerId: string (required, 1-128 chars, immutable) - Provider UID
+//   - providerName: string (optional, max 150 chars) - Denormalized provider name
+//   - customerName: string (optional, max 100 chars) - Denormalized customer name
+//   - customerPhone: string (optional, max 30 chars) - Contact phone number
+//   - categoryId: string (optional, max 50 chars) - Service category ID
+//   - categoryName: string (optional, max 100 chars) - Service category name
+//   - serviceType: string (optional, max 100 chars) - Specific service requested
+//   - services: list of strings (optional, max 20 items) - Selected services
+//   - status: string (required) - 'pending', 'confirmed', 'assigned', 'in_progress', 'completed', 'cancelled', 'declined'
+//   - appointmentDate: timestamp | string (optional) - Scheduled date & time
+//   - timeSlot: string (optional, max 50 chars) - Preferred time slot
+//   - address: string (optional, max 300 chars) - Service address in Phnom Penh
+//   - serviceArea / district: string (optional, max 100 chars) - District location
+//   - notes / description: string (optional, max 1000 chars) - Customer issue notes
+//   - photos: list of strings (optional, max 10 items) - Photo URLs/paths of issue
+//   - totalPrice / price: number (optional, >= 0) - Quoted or final price
+//   - technicianId: string (optional, max 128 chars) - Assigned technician UID
+//   - technicianName: string (optional, max 100 chars) - Assigned technician name
+//   - cancellationReason: string (optional, max 300 chars) - Reason for cancellation
+//   - declinedReason: string (optional, max 300 chars) - Reason for decline
+//   - createdAt: timestamp | string (optional, immutable)
+//   - updatedAt: timestamp | string (optional)
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    // Check if user is authenticated with Firebase Auth
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if the authenticated user matches the specified user ID
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Derive admin authority strictly from verified token claims or bootstrap admin identity
+    function isAdmin() {
+      return isAuthenticated() &&
+        (
+          request.auth.token.admin == true ||
+          request.auth.token.role == 'admin' ||
+          (
+            request.auth.token.email != null &&
+            request.auth.token.email_verified == true &&
+            (
+              request.auth.token.email.matches('.*admin.*@servicepilot\\.app') ||
+              request.auth.token.email.matches('.*admin@.*')
+            )
+          )
+        );
+    }
+
+    // Validate map key restrictions: ensure only declared fields are stored
+    function hasOnlyAllowedFields(data, fields) {
+      return data.keys().hasOnly(fields);
+    }
+
+    // Validate presence of required fields
+    function hasRequiredFields(data, fields) {
+      return data.keys().hasAll(fields);
+    }
+
+    // Validate email format and bounded length
+    function isValidEmail(email) {
+      return email is string &&
+        email.size() >= 5 &&
+        email.size() <= 150 &&
+        email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
+    }
+
+    // Validate web URL or storage path format and bounded length
+    function isValidUrl(url) {
+      return url is string &&
+        url.size() <= 500 &&
+        (url.matches('^https?://.*') || url.matches('^gs://.*'));
+    }
+
+    // Validate that sensitive / immutable fields have not been altered on update
+    function areImmutableFieldsUnchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators (Applied to both create and update operations)
+    // ===============================================================
+
+    // Validate /users/{userId} document schema and field constraints
+    function isValidUser(data) {
+      return hasOnlyAllowedFields(data, [
+          'id', 'fullName', 'email', 'phoneNumber', 'role', 'status',
+          'serviceArea', 'companyId', 'companyName', 'createdAt', 'updatedAt'
+        ]) &&
+        hasRequiredFields(data, ['id', 'fullName', 'email', 'phoneNumber', 'role', 'status']) &&
+        data.id is string && data.id.size() >= 1 && data.id.size() <= 128 &&
+        data.fullName is string && data.fullName.size() >= 1 && data.fullName.size() <= 100 &&
+        isValidEmail(data.email) &&
+        data.phoneNumber is string && data.phoneNumber.size() <= 30 &&
+        data.role in [
+          'homeowner', 'independent_provider', 'independentProvider',
+          'company', 'company_technician', 'companyTechnician', 'admin'
+        ] &&
+        data.status in ['active', 'pending_verification', 'suspended'] &&
+        (!('serviceArea' in data) || (data.serviceArea is string && data.serviceArea.size() <= 300)) &&
+        (!('companyId' in data) || (data.companyId is string && data.companyId.size() <= 100)) &&
+        (!('companyName' in data) || (data.companyName is string && data.companyName.size() <= 100)) &&
+        (!('createdAt' in data) || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp || (data.updatedAt is string && data.updatedAt.size() <= 50));
+    }
+
+    // Validate /providers/{providerId} document schema and field constraints
+    function isValidProvider(data) {
+      return hasOnlyAllowedFields(data, [
+          'id', 'name', 'fullName', 'businessName', 'email', 'phoneNumber',
+          'providerType', 'status', 'serviceArea', 'serviceAreas',
+          'categoryIds', 'categories', 'rating', 'reviewCount',
+          'description', 'bio', 'avatarUrl', 'photoUrl', 'isAvailable',
+          'createdAt', 'updatedAt'
+        ]) &&
+        hasRequiredFields(data, ['id', 'status']) &&
+        data.id is string && data.id.size() >= 1 && data.id.size() <= 128 &&
+        data.status in ['active', 'pending_verification', 'suspended', 'inactive'] &&
+        (
+          ('name' in data && data.name is string && data.name.size() >= 1 && data.name.size() <= 150) ||
+          ('fullName' in data && data.fullName is string && data.fullName.size() >= 1 && data.fullName.size() <= 150) ||
+          ('businessName' in data && data.businessName is string && data.businessName.size() >= 1 && data.businessName.size() <= 150)
+        ) &&
+        (!('email' in data) || isValidEmail(data.email)) &&
+        (!('phoneNumber' in data) || (data.phoneNumber is string && data.phoneNumber.size() <= 30)) &&
+        (!('providerType' in data) || (data.providerType is string && data.providerType.size() <= 50)) &&
+        (!('serviceArea' in data) || (data.serviceArea is string && data.serviceArea.size() <= 300)) &&
+        (!('serviceAreas' in data) || (data.serviceAreas is list && data.serviceAreas.size() <= 20)) &&
+        (!('categoryIds' in data) || (data.categoryIds is list && data.categoryIds.size() <= 20)) &&
+        (!('categories' in data) || (data.categories is list && data.categories.size() <= 20)) &&
+        (!('rating' in data) || (data.rating is number && data.rating >= 0 && data.rating <= 5)) &&
+        (!('reviewCount' in data) || (data.reviewCount is number && data.reviewCount >= 0)) &&
+        (!('description' in data) || (data.description is string && data.description.size() <= 2000)) &&
+        (!('bio' in data) || (data.bio is string && data.bio.size() <= 2000)) &&
+        (!('avatarUrl' in data) || isValidUrl(data.avatarUrl)) &&
+        (!('photoUrl' in data) || isValidUrl(data.photoUrl)) &&
+        (!('isAvailable' in data) || data.isAvailable is bool) &&
+        (!('createdAt' in data) || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp || (data.updatedAt is string && data.updatedAt.size() <= 50));
+    }
+
+    // Validate /categories/{categoryId} document schema and field constraints
+    function isValidCategory(data) {
+      return hasOnlyAllowedFields(data, [
+          'id', 'name', 'description', 'iconName', 'providerCount',
+          'isActive', 'popularServices', 'createdAt', 'updatedAt'
+        ]) &&
+        hasRequiredFields(data, ['id', 'name', 'description', 'iconName', 'isActive']) &&
+        data.id is string && data.id.size() >= 1 && data.id.size() <= 50 &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+        data.description is string && data.description.size() >= 1 && data.description.size() <= 500 &&
+        data.iconName is string && data.iconName.size() >= 1 && data.iconName.size() <= 50 &&
+        data.isActive is bool &&
+        (!('providerCount' in data) || (data.providerCount is number && data.providerCount >= 0)) &&
+        (!('popularServices' in data) || (data.popularServices is list && data.popularServices.size() <= 20)) &&
+        (!('createdAt' in data) || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp || (data.updatedAt is string && data.updatedAt.size() <= 50));
+    }
+
+    // Validate /bookings/{bookingId} document schema and field constraints
+    function isValidBooking(data) {
+      return hasOnlyAllowedFields(data, [
+          'id', 'customerId', 'providerId', 'providerName', 'customerName', 'customerPhone',
+          'categoryId', 'categoryName', 'serviceType', 'services', 'status',
+          'appointmentDate', 'timeSlot', 'address', 'serviceArea', 'district',
+          'notes', 'description', 'photos', 'totalPrice', 'price',
+          'technicianId', 'technicianName', 'cancellationReason', 'declinedReason',
+          'createdAt', 'updatedAt'
+        ]) &&
+        hasRequiredFields(data, ['customerId', 'providerId', 'status']) &&
+        data.customerId is string && data.customerId.size() >= 1 && data.customerId.size() <= 128 &&
+        data.providerId is string && data.providerId.size() >= 1 && data.providerId.size() <= 128 &&
+        data.status in [
+          'pending', 'confirmed', 'assigned', 'in_progress',
+          'completed', 'cancelled', 'declined'
+        ] &&
+        (!('id' in data) || (data.id is string && data.id.size() <= 128)) &&
+        (!('providerName' in data) || (data.providerName is string && data.providerName.size() <= 150)) &&
+        (!('customerName' in data) || (data.customerName is string && data.customerName.size() <= 100)) &&
+        (!('customerPhone' in data) || (data.customerPhone is string && data.customerPhone.size() <= 30)) &&
+        (!('categoryId' in data) || (data.categoryId is string && data.categoryId.size() <= 50)) &&
+        (!('categoryName' in data) || (data.categoryName is string && data.categoryName.size() <= 100)) &&
+        (!('serviceType' in data) || (data.serviceType is string && data.serviceType.size() <= 100)) &&
+        (!('services' in data) || (data.services is list && data.services.size() <= 20)) &&
+        (!('appointmentDate' in data) || data.appointmentDate is timestamp || (data.appointmentDate is string && data.appointmentDate.size() <= 50)) &&
+        (!('timeSlot' in data) || (data.timeSlot is string && data.timeSlot.size() <= 50)) &&
+        (!('address' in data) || (data.address is string && data.address.size() <= 300)) &&
+        (!('serviceArea' in data) || (data.serviceArea is string && data.serviceArea.size() <= 100)) &&
+        (!('district' in data) || (data.district is string && data.district.size() <= 100)) &&
+        (!('notes' in data) || (data.notes is string && data.notes.size() <= 1000)) &&
+        (!('description' in data) || (data.description is string && data.description.size() <= 1000)) &&
+        (!('photos' in data) || (data.photos is list && data.photos.size() <= 10)) &&
+        (!('totalPrice' in data) || (data.totalPrice is number && data.totalPrice >= 0)) &&
+        (!('price' in data) || (data.price is number && data.price >= 0)) &&
+        (!('technicianId' in data) || (data.technicianId is string && data.technicianId.size() <= 128)) &&
+        (!('technicianName' in data) || (data.technicianName is string && data.technicianName.size() <= 100)) &&
+        (!('cancellationReason' in data) || (data.cancellationReason is string && data.cancellationReason.size() <= 300)) &&
+        (!('declinedReason' in data) || (data.declinedReason is string && data.declinedReason.size() <= 300)) &&
+        (!('createdAt' in data) || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp || (data.updatedAt is string && data.updatedAt.size() <= 50));
+    }
+
+    // ===============================================================
+    // Root Level Default Deny
+    // ===============================================================
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ===============================================================
+    // Collection 1: /users/{userId}
+    // ===============================================================
+
+    match /users/{userId} {
+      // Read: Any authenticated user can read basic user profile info
+      allow read: if isAuthenticated();
+
+      // Create: User themselves or platform admin.
+      // Privilege escalation protection: non-admins cannot assign themselves the 'admin' role.
+      allow create: if isAuthenticated() &&
+                       isValidUser(request.resource.data) &&
+                       request.resource.data.id == userId &&
+                       (
+                         (isOwner(userId) && request.resource.data.role != 'admin') ||
+                         isAdmin()
+                       );
+
+      // Update: User themselves or platform admin.
+      // Protect immutable identity fields and role hierarchy from self-escalation.
+      allow update: if isAuthenticated() &&
+                       isValidUser(request.resource.data) &&
+                       (isOwner(userId) || isAdmin()) &&
+                       areImmutableFieldsUnchanged(['id', 'createdAt']) &&
+                       (
+                         isAdmin() ||
+                         (
+                           request.resource.data.role == resource.data.role &&
+                           (resource.data.status != 'suspended' || request.resource.data.status == 'suspended')
+                         )
+                       );
+
+      // Delete: Account owner or platform admin
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+
+    // ===============================================================
+    // Collection 2: /providers/{providerId}
+    // ===============================================================
+
+    match /providers/{providerId} {
+      // Read: Anyone can read providers where status == 'active'.
+      // The provider themselves can read their document regardless of status.
+      // Platform admins can read all provider documents.
+      allow read: if resource.data.status == 'active' || isOwner(providerId) || isAdmin();
+
+      // Create: Provider themselves or platform admin.
+      // Providers self-registering cannot set active status without admin verification.
+      allow create: if (isOwner(providerId) || isAdmin()) &&
+                       isValidProvider(request.resource.data) &&
+                       request.resource.data.id == providerId &&
+                       (isAdmin() || request.resource.data.status in ['pending_verification', 'inactive']);
+
+      // Update: Provider themselves or platform admin.
+      // Providers cannot self-verify from pending/suspended to active, and cannot forge ratings.
+      allow update: if (isOwner(providerId) || isAdmin()) &&
+                       isValidProvider(request.resource.data) &&
+                       areImmutableFieldsUnchanged(['id', 'createdAt']) &&
+                       (
+                         isAdmin() ||
+                         (
+                           (
+                             request.resource.data.status == resource.data.status ||
+                             (resource.data.status == 'active' && request.resource.data.status == 'inactive') ||
+                             (resource.data.status == 'inactive' && request.resource.data.status == 'active')
+                           ) &&
+                           areImmutableFieldsUnchanged(['rating', 'reviewCount'])
+                         )
+                       );
+
+      // Delete: Provider themselves or platform admin
+      allow delete: if isOwner(providerId) || isAdmin();
+    }
+
+    // ===============================================================
+    // Collection 3: /categories/{categoryId}
+    // ===============================================================
+
+    match /categories/{categoryId} {
+      // Read: Public read for all users (including unauthenticated visitors)
+      allow read: if true;
+
+      // Create: Platform admin only
+      allow create: if isAdmin() &&
+                       isValidCategory(request.resource.data) &&
+                       request.resource.data.id == categoryId;
+
+      // Update: Platform admin only
+      allow update: if isAdmin() &&
+                       isValidCategory(request.resource.data) &&
+                       areImmutableFieldsUnchanged(['id', 'createdAt']);
+
+      // Delete: Platform admin only
+      allow delete: if isAdmin();
+    }
+
+    // ===============================================================
+    // Collection 4: /bookings/{bookingId}
+    // ===============================================================
+
+    match /bookings/{bookingId} {
+      // Read: Customer, target provider, assigned technician, or platform admin
+      allow read: if isAuthenticated() &&
+                     (
+                       resource.data.customerId == request.auth.uid ||
+                       resource.data.providerId == request.auth.uid ||
+                       ('technicianId' in resource.data && resource.data.technicianId == request.auth.uid) ||
+                       isAdmin()
+                     );
+
+      // Create: Authenticated customer setting request.resource.data.customerId == request.auth.uid,
+      // with initial status 'pending', or platform admin.
+      allow create: if isAuthenticated() &&
+                       isValidBooking(request.resource.data) &&
+                       (!('id' in request.resource.data) || request.resource.data.id == bookingId) &&
+                       (
+                         (
+                           request.resource.data.customerId == request.auth.uid &&
+                           request.resource.data.status == 'pending'
+                         ) ||
+                         isAdmin()
+                       );
+
+      // Update: Customer, provider, assigned technician, or platform admin.
+      // Enforces booking state machine integrity, customer cancellation rules, and immutability.
+      allow update: if isAuthenticated() &&
+                       isValidBooking(request.resource.data) &&
+                       (
+                         isAdmin() ||
+                         (
+                           areImmutableFieldsUnchanged(['customerId', 'providerId', 'createdAt']) &&
+                           (
+                             // Customer: allowed to cancel pending/confirmed/assigned bookings, or edit while pending
+                             (
+                               resource.data.customerId == request.auth.uid &&
+                               (
+                                 (
+                                   request.resource.data.status == 'cancelled' &&
+                                   resource.data.status in ['pending', 'confirmed', 'assigned']
+                                 ) ||
+                                 (
+                                   resource.data.status == 'pending' &&
+                                   request.resource.data.status == 'pending'
+                                 )
+                               )
+                             ) ||
+                             // Provider or assigned technician: progress status transitions
+                             // US-14 (SCRUM-45) AC: Cancelled bookings cannot be accepted, assigned, or started afterward.
+                             (
+                               (
+                                 resource.data.providerId == request.auth.uid ||
+                                 ('technicianId' in resource.data && resource.data.technicianId == request.auth.uid)
+                               ) &&
+                               !(resource.data.status in ['cancelled', 'completed', 'declined']) &&
+                               request.resource.data.status in [
+                                 'pending', 'confirmed', 'assigned', 'in_progress', 'completed', 'declined'
+                               ]
+                             )
+                           )
+                         )
+                       );
+
+      // Delete: Platform admin only
+      allow delete: if isAdmin();
+    }
+  }
+}

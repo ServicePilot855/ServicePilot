@@ -23,8 +23,9 @@ class ProviderDetailScreen extends ConsumerWidget {
   const ProviderDetailScreen({
     super.key,
     required this.providerId,
-    this.initialProvider,
-  });
+    ProviderModel? initialProvider,
+    ProviderModel? provider,
+  }) : initialProvider = initialProvider ?? provider;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
