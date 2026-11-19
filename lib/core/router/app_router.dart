@@ -13,6 +13,8 @@ import 'package:service_pilot/features/auth/screens/register_company_screen.dart
 import 'package:service_pilot/features/auth/screens/technician_activation_screen.dart';
 import 'package:service_pilot/features/auth/screens/forgot_password_screen.dart';
 import 'package:service_pilot/features/auth/screens/reset_password_screen.dart';
+import 'package:service_pilot/features/providers/models/provider_model.dart';
+import 'package:service_pilot/features/providers/screens/provider_detail_screen.dart';
 import 'package:service_pilot/features/providers/screens/provider_list_screen.dart';
 import 'package:service_pilot/features/services/models/category_model.dart';
 import 'package:service_pilot/features/services/screens/categories_screen.dart';
@@ -42,7 +44,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final authState = authNotifier.value;
       final isAuthenticated = authState is AuthStateAuthenticated;
       final isGoingToHome = state.matchedLocation.startsWith('/home') ||
-          state.matchedLocation.startsWith('/categories');
+          state.matchedLocation.startsWith('/categories') ||
+          state.matchedLocation.startsWith('/providers');
       final isGoingToLogin = state.matchedLocation == '/login';
       final isGoingToSplash = state.matchedLocation == '/splash';
 
@@ -124,6 +127,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return ProviderListScreen(
             categoryId: categoryId,
             category: category,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/providers/:providerId',
+        builder: (_, state) {
+          final providerId = state.pathParameters['providerId'] ?? '';
+          final provider = state.extra as ProviderModel?;
+          return ProviderDetailScreen(
+            providerId: providerId,
+            provider: provider,
           );
         },
       ),

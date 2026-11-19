@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_data_connect/firebase_data_connect.dart';
@@ -22,6 +23,16 @@ Future<void> initializeFirebase() async {
         await FirebaseAuth.instance.useAuthEmulator('127.0.0.1', 9099);
       } catch (e) {
         debugPrint('Auth emulator init skipped: $e');
+      }
+    }
+
+    // Optional Firestore emulator support via: --dart-define=USE_FIRESTORE_EMULATOR=true
+    const useFirestoreEmulator = bool.fromEnvironment('USE_FIRESTORE_EMULATOR', defaultValue: false);
+    if (useFirestoreEmulator) {
+      try {
+        FirebaseFirestore.instance.useFirestoreEmulator('127.0.0.1', 8080);
+      } catch (e) {
+        debugPrint('Firestore emulator init skipped: $e');
       }
     }
 

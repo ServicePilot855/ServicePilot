@@ -48,3 +48,12 @@ app.*.map.json
 .widget_preview/
 
 me/
+
+# Firebase — contains API keys, regenerated per developer via `flutterfire configure`
+lib/firebase_options.dart
+
+# Generated Data Connect Dart SDK — regenerated from schema via `firebase dataconnect:sdk:generate`
+lib/dataconnect/
+
+# Firebase emulator cache and exported data
+.firebase/
