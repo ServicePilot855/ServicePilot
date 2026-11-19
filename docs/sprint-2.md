@@ -8,9 +8,9 @@
 
 | Ticket | User Story | Points | Assignee | Status |
 |--------|-----------|:------:|----------|:------:|
-| SCRUM-41 | US-09: Browse available repair services | 13 | THANG Saoly (`TS`) | To Do |
+| SCRUM-41 | US-09: Browse available repair services | 13 | THANG Saoly (`TS`) | Done |
 | SCRUM-55 | US-10: Browse and select service providers | 8 | Taing Sothyvan (`TS`) | To Do |
-| SCRUM-54 | US-11: View service provider details | 5 | TIEK Chhunhour (`TC`) | To Do |
+| SCRUM-54 | US-11: View service provider details | 5 | TIEK Chhunhour (`TC`) | Done |
 | SCRUM-43 | US-12: Submit a repair booking request | 13 | KHENG Sokthearith (`KS`) | To Do |
 | SCRUM-44 | US-13: Track repair booking status | 8 | YEAT David (`YD`) | To Do |
 | SCRUM-45 | US-14: Cancel a repair booking | 3 | HEM Eamsocheat (`HE`) | Done |
@@ -94,18 +94,18 @@
 > As a customer, I want to view the profile and service information of a repair provider so that I can decide whether the provider is suitable for my needs.
 
 #### Acceptance Criteria
-- [ ] Customers can view the selected provider's name, description, bio, and service specialties.
-- [ ] Customers can view the provider's service coverage area (e.g., Toul Kork, Sen Sok, Chamkarmon).
-- [ ] The profile identifies whether the provider is an independent technician or a repair company.
-- [ ] Customers can start a booking request directly from the provider's profile.
-- [ ] Unavailable providers cannot receive new booking requests (Book button disabled).
+- [x] Customers can view the selected provider's name, description, bio, and service specialties.
+- [x] Customers can view the provider's service coverage area (e.g., Toul Kork, Sen Sok, Chamkarmon).
+- [x] The profile identifies whether the provider is an independent technician or a repair company.
+- [x] Customers can start a booking request directly from the provider's profile.
+- [x] Unavailable providers cannot receive new booking requests (Book button disabled).
 
 #### Definition of Done
-- [ ] Service provider details interface is implemented.
-- [ ] Provider information is correctly retrieved and displayed.
-- [ ] Booking navigation works correctly (`Book Service` CTA).
-- [ ] Provider availability restrictions are tested.
-- [ ] Code is peer-reviewed and the feature is demonstrated.
+- [x] Service provider details interface is implemented.
+- [x] Provider information is correctly retrieved and displayed.
+- [x] Booking navigation works correctly (`Book Service` CTA).
+- [x] Provider availability restrictions are tested.
+- [x] Code is peer-reviewed and the feature is demonstrated.
 
 #### Technical Notes
 - Route: `/providers/:providerId`.

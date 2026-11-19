@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
-import 'package:service_pilot/core/constants/app_roles.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
 import 'package:service_pilot/features/providers/services/provider_service.dart';
 
@@ -25,118 +24,71 @@ class FirestoreProviderService implements IProviderService {
   static const String collectionName = 'providers';
 
   /// Pre-seeded verified providers covering Phnom Penh service areas and all categories.
-  static final List<ProviderModel> seedProviders = [
-    ProviderModel(
-      id: 'prov-virak-ac',
-      name: 'Virak Chan',
-      email: 'technician@test.com',
-      phone: '+85587654321',
-      type: AppRole.independentProvider,
-      status: 'active',
-      serviceArea: 'Toul Kork, Phnom Penh',
-      categoryIds: const ['cat-ac', 'cat-electrical'],
-      rating: 4.9,
-      reviewCount: 42,
-      completedJobs: 118,
-      hourlyRate: 15.0,
-      bio:
-          'Certified HVAC technician with 7+ years of experience in Daikin, Panasonic, and LG inverter systems. Expert in chemical cleaning and leak diagnosis.',
-      isAvailable: true,
-      createdAt: DateTime(2025, 1, 10),
-    ),
-    ProviderModel(
-      id: 'prov-fixco-company',
-      name: 'Sophea Lim',
-      businessName: 'Phnom Penh Fix Co.',
-      email: 'company@test.com',
-      phone: '+85511223344',
-      type: AppRole.company,
-      status: 'active',
-      serviceArea: 'Chamkarmon, Sen Sok, Phnom Penh',
-      categoryIds: const ['cat-plumbing', 'cat-appliance', 'cat-ac'],
-      rating: 4.8,
-      reviewCount: 86,
-      completedJobs: 320,
-      hourlyRate: 20.0,
-      bio:
-          'Licensed maintenance company with 12 dispatched technicians. 24/7 emergency response for plumbing failures, water heaters, and major appliances.',
-      isAvailable: true,
-      createdAt: DateTime(2024, 11, 1),
-    ),
-    ProviderModel(
-      id: 'prov-borey-electric',
-      name: 'Borey Nhem',
-      email: 'tech@company.com',
-      phone: '+85599887766',
-      type: AppRole.independentProvider,
-      status: 'active',
-      serviceArea: 'Daun Penh, Phnom Penh',
-      categoryIds: const ['cat-electrical', 'cat-appliance'],
-      rating: 4.7,
-      reviewCount: 19,
-      completedJobs: 54,
-      hourlyRate: 12.0,
-      bio:
-          'Master residential electrician. Specializing in circuit breaker panel upgrades, short-circuit troubleshooting, and smart home lighting setup.',
-      isAvailable: true,
-      createdAt: DateTime(2025, 3, 5),
-    ),
-    ProviderModel(
-      id: 'prov-cleanpro-cambodia',
-      name: 'CleanPro Cambodia',
-      businessName: 'CleanPro Cambodia Co.',
-      email: 'cleanpro@servicepilot.local',
-      phone: '+85523999888',
-      type: AppRole.company,
-      status: 'active',
-      serviceArea: 'All Phnom Penh',
-      categoryIds: const ['cat-cleaning', 'cat-ac'],
-      rating: 4.9,
-      reviewCount: 104,
-      completedJobs: 410,
-      hourlyRate: 18.0,
-      bio:
-          'Top-rated home deep cleaning and sanitization team. Eco-friendly hospital-grade disinfectants, upholstery shampooing, and move-in/out prep.',
-      isAvailable: true,
-      createdAt: DateTime(2024, 8, 15),
-    ),
-    ProviderModel(
-      id: 'prov-dara-plumbing',
-      name: 'Sophea Lim Services',
-      email: 'sophea.plumb@servicepilot.local',
-      phone: '+85512778899',
-      type: AppRole.independentProvider,
-      status: 'active',
-      serviceArea: 'Boeung Keng Kang (BKK), Phnom Penh',
-      categoryIds: const ['cat-plumbing'],
-      rating: 4.8,
-      reviewCount: 31,
-      completedJobs: 89,
-      hourlyRate: 14.0,
-      bio:
-          'Prompt, reliable plumbing repairs. Expert in high-pressure water pump installations, bathroom fixture replacements, and drain pipe unblocking.',
-      isAvailable: true,
-      createdAt: DateTime(2025, 2, 20),
-    ),
-    // Unapproved provider: included in seed data to verify filtering rules (US-10 AC)
-    ProviderModel(
-      id: 'prov-unapproved-sample',
-      name: 'Sokha Pich (Pending)',
-      email: 'sokha.pending@test.com',
-      phone: '+85598112233',
-      type: AppRole.independentProvider,
-      status: 'pending_verification',
-      serviceArea: 'Chbar Ampov, Phnom Penh',
-      categoryIds: const ['cat-ac', 'cat-plumbing'],
-      rating: 5.0,
-      reviewCount: 0,
-      completedJobs: 0,
-      hourlyRate: 10.0,
-      bio: 'New applicant pending background check.',
-      isAvailable: false,
-      createdAt: DateTime.now(),
-    ),
-  ];
+  static final List<ProviderModel> seedProviders = ProviderService.defaultProviders;
+
+  @override
+  Future<List<ProviderModel>> getProviders({
+    String? categoryId,
+    bool activeOnly = true,
+  }) async {
+    if (categoryId != null) {
+      final list = await getProvidersByCategory(categoryId);
+      if (activeOnly) {
+        return list.where((p) => p.isApprovedAndActive).toList();
+      }
+      return list;
+    }
+
+    if (Firebase.apps.isNotEmpty) {
+      try {
+        Query<Map<String, dynamic>> query =
+            _firestore.collection(collectionName);
+        if (activeOnly) {
+          query = query.where('status', isEqualTo: 'active');
+        }
+        final snapshot = await query.get();
+        if (snapshot.docs.isNotEmpty) {
+          return snapshot.docs
+              .map((doc) => ProviderModel.fromFirestore(doc))
+              .toList();
+        }
+      } catch (e) {
+        debugPrint('[FirestoreProviderService] getProviders error: $e');
+      }
+    }
+
+    return seedProviders.where((p) {
+      if (activeOnly && !p.isApprovedAndActive) return false;
+      return true;
+    }).toList();
+  }
+
+  @override
+  Future<List<ProviderModel>> searchProviders(
+    String query, {
+    String? categoryId,
+  }) async {
+    final clean = query.trim().toLowerCase();
+    final base = await getProviders(categoryId: categoryId);
+    if (clean.isEmpty) return base;
+
+    return base.where((p) {
+      final matchName = p.name.toLowerCase().contains(clean);
+      final matchDesc = p.description.toLowerCase().contains(clean);
+      final matchBio = p.bio.toLowerCase().contains(clean);
+      final matchSpecialty =
+          p.specialties.any((s) => s.toLowerCase().contains(clean));
+      final matchArea =
+          p.coverageAreas.any((a) => a.toLowerCase().contains(clean)) ||
+          p.serviceArea.toLowerCase().contains(clean);
+
+      return matchName ||
+          matchDesc ||
+          matchBio ||
+          matchSpecialty ||
+          matchArea;
+    }).toList();
+  }
 
   @override
   Future<List<ProviderModel>> getProvidersByCategory(String categoryId) async {

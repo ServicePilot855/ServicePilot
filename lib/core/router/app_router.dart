@@ -133,6 +133,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
+      // ── Provider Details & Profiles (US-11) ───────────────────────────
       GoRoute(
         path: '/providers/:providerId',
         builder: (_, state) {
@@ -140,7 +141,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final provider = state.extra as ProviderModel?;
           return ProviderDetailScreen(
             providerId: providerId,
-            provider: provider,
+            initialProvider: provider,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/providers/:providerId/book',
+        builder: (_, state) {
+          final providerId = state.pathParameters['providerId'] ?? '';
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Book Service'),
+              leading: const BackButton(),
+            ),
+            body: Center(
+              child: Text('Booking request form for provider $providerId (US-12)'),
+            ),
           );
         },
       ),

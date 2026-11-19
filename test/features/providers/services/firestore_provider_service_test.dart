@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:service_pilot/core/constants/app_roles.dart';
 import 'package:service_pilot/features/providers/services/firestore_provider_service.dart';
 
 void main() {
@@ -28,8 +27,8 @@ void main() {
     test('getProvidersByCategory returns both independent and company providers', () async {
       final acProviders = await service.getProvidersByCategory('cat-ac');
 
-      final hasIndependent = acProviders.any((p) => p.type == AppRole.independentProvider);
-      final hasCompany = acProviders.any((p) => p.type == AppRole.company);
+      final hasIndependent = acProviders.any((p) => p.isIndependent);
+      final hasCompany = acProviders.any((p) => p.isCompany);
 
       expect(hasIndependent, isTrue);
       expect(hasCompany, isTrue);

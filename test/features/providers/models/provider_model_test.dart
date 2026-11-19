@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:service_pilot/core/constants/app_roles.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
 
 void main() {
@@ -13,7 +12,7 @@ void main() {
         businessName: 'Phnom Penh Fix Co.',
         email: 'sophea@fixco.com',
         phone: '+855112233',
-        type: AppRole.company,
+        type: ProviderType.company,
         serviceArea: 'Phnom Penh',
         categoryIds: const ['cat-plumbing'],
         createdAt: now,
@@ -29,7 +28,7 @@ void main() {
         name: 'Virak Chan',
         email: 'virak@test.com',
         phone: '+85587654321',
-        type: AppRole.independentProvider,
+        type: ProviderType.independent,
         serviceArea: 'Toul Kork',
         categoryIds: const ['cat-ac'],
         createdAt: now,
@@ -47,7 +46,7 @@ void main() {
         name: 'Active Tech',
         email: 'active@test.com',
         phone: '+855111111',
-        type: AppRole.independentProvider,
+        type: ProviderType.independent,
         status: 'active',
         isAvailable: true,
         serviceArea: 'PP',
@@ -74,7 +73,7 @@ void main() {
         businessName: 'Borey Electrical',
         email: 'borey@test.com',
         phone: '+855998877',
-        type: AppRole.independentProvider,
+        type: ProviderType.independent,
         status: 'active',
         serviceArea: 'Daun Penh, Phnom Penh',
         categoryIds: const ['cat-electrical', 'cat-appliance'],
@@ -92,7 +91,7 @@ void main() {
       final map = provider.toMap();
       expect(map['name'], equals('Borey Nhem'));
       expect(map['businessName'], equals('Borey Electrical'));
-      expect(map['type'], equals('independentProvider'));
+      expect(map['type'], equals('independent'));
       expect(map['categoryIds'], equals(['cat-electrical', 'cat-appliance']));
 
       final deserialized = ProviderModel.fromMap(map, 'p123');
