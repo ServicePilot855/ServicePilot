@@ -1111,6 +1111,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Strength: Strong'**
   String get resetPasswordStrengthStrong;
+
+  /// No description provided for @providerDirectoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Service providers'**
+  String get providerDirectoryTitle;
+
+  /// No description provided for @providerDirectoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No providers are available for this category yet.'**
+  String get providerDirectoryEmpty;
+
+  /// No description provided for @providerDirectoryError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t load providers.'**
+  String get providerDirectoryError;
+
+  /// No description provided for @providerDirectoryRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get providerDirectoryRetry;
+
+  /// No description provided for @providerProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider profile'**
+  String get providerProfileTitle;
+
+  /// No description provided for @providerProfileUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This provider is currently unavailable.'**
+  String get providerProfileUnavailable;
+
+  /// No description provided for @providerProfileError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t load this provider’s profile.'**
+  String get providerProfileError;
+
+  /// No description provided for @providerTypeCompany.
+  ///
+  /// In en, this message translates to:
+  /// **'Company'**
+  String get providerTypeCompany;
+
+  /// No description provided for @providerTypeIndependent.
+  ///
+  /// In en, this message translates to:
+  /// **'Independent'**
+  String get providerTypeIndependent;
 }
 
 class _AppLocalizationsDelegate

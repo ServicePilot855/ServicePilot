@@ -42,14 +42,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final authState = authNotifier.value;
       final isAuthenticated = authState is AuthStateAuthenticated;
       final isGoingToHome = state.matchedLocation.startsWith('/home') ||
-          state.matchedLocation.startsWith('/categories');
+          state.matchedLocation.startsWith('/categories') ||
+          state.matchedLocation.startsWith('/providers/');
       final isGoingToLogin = state.matchedLocation == '/login';
       final isGoingToSplash = state.matchedLocation == '/splash';
 
       // Let the splash screen handle its own routing.
       if (isGoingToSplash) return null;
 
-      // Unauthenticated users cannot access home or category screens.
+      // Browse and home screens require authentication.
       if (!isAuthenticated && isGoingToHome) return '/login';
 
       // Authenticated users are redirected away from /login to their home.
@@ -126,6 +127,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             category: category,
           );
         },
+      ),
+      GoRoute(
+        path: '/providers/:providerId',
+        builder: (_, state) => ProviderProfileScreen(
+          providerId: state.pathParameters['providerId']!,
+        ),
       ),
 
       // ── Protected home routes ─────────────────────────────────────────

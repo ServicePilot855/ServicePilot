@@ -561,4 +561,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resetPasswordStrengthStrong => 'Strength: Strong';
+
+  @override
+  String get providerDirectoryTitle => 'Service providers';
+
+  @override
+  String get providerDirectoryEmpty =>
+      'No providers are available for this category yet.';
+
+  @override
+  String get providerDirectoryError => 'Couldn’t load providers.';
+
+  @override
+  String get providerDirectoryRetry => 'Try again';
+
+  @override
+  String get providerProfileTitle => 'Provider profile';
+
+  @override
+  String get providerProfileUnavailable =>
+      'This provider is currently unavailable.';
+
+  @override
+  String get providerProfileError => 'Couldn’t load this provider’s profile.';
+
+  @override
+  String get providerTypeCompany => 'Company';
+
+  @override
+  String get providerTypeIndependent => 'Independent';
 }

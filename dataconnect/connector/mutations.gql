@@ -28,7 +28,7 @@ mutation UpdateMyProfile(
   $avatarUrl: String
 ) @auth(level: USER) {
   user_update(
-    uid: { eq_expr: "auth.uid" }
+    key: { uid_expr: "auth.uid" }
     data: { displayName: $displayName, phone: $phone, avatarUrl: $avatarUrl }
   )
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:service_pilot/core/theme/app_theme.dart';
+import 'package:service_pilot/features/providers/provider_directory.dart';
 import 'package:service_pilot/features/providers/screens/provider_list_screen.dart';
 import 'package:service_pilot/features/services/models/category_model.dart';
 import 'package:service_pilot/features/services/providers/category_provider.dart';
@@ -40,6 +41,9 @@ void main() {
 
     return ProviderScope(
       overrides: [
+        providerDirectoryProvider.overrideWithValue(
+          ProviderDirectory((_, __) async => {'providers': []}),
+        ),
         if (customService != null)
           categoryServiceProvider.overrideWithValue(customService),
       ],
@@ -53,7 +57,7 @@ void main() {
   }
 
   group('SCRUM-41 / US-09: CategoriesScreen Widget Tests', () {
-    testWidgets('renders category list with titles, descriptions, and provider counts',
+    testWidgets('renders category list with titles and descriptions',
         (tester) async {
       await tester.pumpWidget(buildCategoriesTestApp());
       await tester.pumpAndSettle();
@@ -65,7 +69,6 @@ void main() {
       // Verify default categories from US-09
       expect(find.text('Air Conditioner Repair & Care'), findsOneWidget);
       expect(find.text('Plumbing & Drainage'), findsOneWidget);
-      expect(find.text('12 available'), findsOneWidget);
 
       final electricalFinder = find.text('Electrical & Wiring');
       await tester.scrollUntilVisible(
@@ -111,7 +114,7 @@ void main() {
     });
 
     testWidgets(
-        'selecting category with providers navigates to provider listing',
+        'selecting a category opens its named provider list',
         (tester) async {
       await tester.pumpWidget(buildCategoriesTestApp());
       await tester.pumpAndSettle();
@@ -123,12 +126,12 @@ void main() {
       await tester.pumpAndSettle();
 
       // Should navigate to ProviderListScreen
-      expect(find.text('Verified Providers for Air Conditioner Repair & Care'),
-          findsOneWidget);
+      expect(find.byType(ProviderListScreen), findsOneWidget);
+      expect(find.text('Air Conditioner Repair & Care'), findsOneWidget);
     });
 
     testWidgets(
-        'selecting category without providers displays empty-state dialog (US-09 AC)',
+        'selecting a category with a zero fixture count still opens the directory',
         (tester) async {
       await tester.pumpWidget(buildCategoriesTestApp());
       await tester.pumpAndSettle();
@@ -146,21 +149,8 @@ void main() {
       await tester.tap(locksmithCard);
       await tester.pumpAndSettle();
 
-      // Dialog should appear
-      expect(find.byKey(const Key('empty_category_dialog')), findsOneWidget);
-      expect(find.text('No Providers Available'), findsOneWidget);
-      expect(
-        find.textContaining('There are currently no verified service providers listed'),
-        findsOneWidget,
-      );
-
-      // Dismiss dialog
-      final okBtn = find.byKey(const Key('empty_category_dialog_ok'));
-      expect(okBtn, findsOneWidget);
-      await tester.tap(okBtn);
-      await tester.pumpAndSettle();
-
-      expect(find.byKey(const Key('empty_category_dialog')), findsNothing);
+      expect(find.byType(ProviderListScreen), findsOneWidget);
+      expect(find.text('No providers are available for this category yet.'), findsOneWidget);
     });
   });
 }

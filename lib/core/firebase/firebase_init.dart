@@ -5,6 +5,15 @@ import 'package:flutter/foundation.dart';
 
 import '../../firebase_options.dart';
 
+FirebaseDataConnect get servicePilotDataConnect =>
+    FirebaseDataConnect.instanceFor(
+      connectorConfig: ConnectorConfig(
+        'us-central1',
+        'servicepilot-connector',
+        'servicepilot-service',
+      ),
+    );
+
 /// Initializes Firebase and configures local emulators when running in debug.
 ///
 /// Call this once at app startup, before [runApp].
@@ -16,7 +25,8 @@ Future<void> initializeFirebase() async {
   // In debug builds, optionally connect to local emulators
   if (kDebugMode) {
     // Optional Auth emulator support via: --dart-define=USE_AUTH_EMULATOR=true
-    const useAuthEmulator = bool.fromEnvironment('USE_AUTH_EMULATOR', defaultValue: false);
+    const useAuthEmulator =
+        bool.fromEnvironment('USE_AUTH_EMULATOR', defaultValue: false);
     if (useAuthEmulator) {
       try {
         await FirebaseAuth.instance.useAuthEmulator('127.0.0.1', 9099);
@@ -25,18 +35,10 @@ Future<void> initializeFirebase() async {
       }
     }
 
-    // Connect to Data Connect emulator if available
-    try {
-      FirebaseDataConnect.instanceFor(
-        app: Firebase.app(),
-        connectorConfig: ConnectorConfig(
-          'us-central1',
-          'servicepilot-connector',
-          'servicepilot-855',
-        ),
-      ).useDataConnectEmulator('127.0.0.1', 9399);
-    } catch (e) {
-      debugPrint('DataConnect emulator init skipped: $e');
+    const useDataConnectEmulator =
+        bool.fromEnvironment('USE_DATACONNECT_EMULATOR');
+    if (useDataConnectEmulator) {
+      servicePilotDataConnect.useDataConnectEmulator('127.0.0.1', 9399);
     }
   }
 }

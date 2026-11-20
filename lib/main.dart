@@ -9,7 +9,7 @@ void main() async {
   // Required before any async work in main().
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Boot Firebase and configure the Data Connect emulator in debug mode.
+  // Boot Firebase and configure any requested local emulators.
   await initializeFirebase();
 
   runApp(

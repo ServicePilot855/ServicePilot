@@ -543,6 +543,15 @@ extend type ServiceCategory {
   """
   _count: Int! @fdc_generated(from: "ServiceCategory.", purpose: QUERY_COUNT)
   """
+  ✨ Count the number of rows in the `ServiceCategory` table where the `browseKey` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  browseKey_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "ServiceCategory.browseKey", purpose: QUERY_COUNT)
+  """
   ✨ Count the number of rows in the `ServiceCategory` table where the `description` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
   """
   description_count(
@@ -740,6 +749,33 @@ extend type User {
     distinct: Boolean = false
   ): Int! @fdc_generated(from: "User.phone", purpose: QUERY_COUNT)
   """
+  ✨ Count the number of rows in the `User` table where the `providerName` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  providerName_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "User.providerName", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `User` table where the `providerStatus` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  providerStatus_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "User.providerStatus", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `User` table where the `providerType` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  providerType_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "User.providerType", purpose: QUERY_COUNT)
+  """
   ✨ Count the number of rows in the `User` table where the `role` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
   """
   role_count(
@@ -748,6 +784,15 @@ extend type User {
     """
     distinct: Boolean = false
   ): Int! @fdc_generated(from: "User.role", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `User` table where the `serviceArea` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  serviceArea_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "User.serviceArea", purpose: QUERY_COUNT)
   """
   ✨ Count the number of rows in the `User` table where the `uid` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
   """

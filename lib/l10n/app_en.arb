@@ -205,5 +205,15 @@
   "resetPasswordStrengthHint": "Add a capital letter and a number to make it stronger.",
   "resetPasswordStrengthWeak": "Strength: Weak",
   "resetPasswordStrengthGood": "Strength: Good",
-  "resetPasswordStrengthStrong": "Strength: Strong"
+  "resetPasswordStrengthStrong": "Strength: Strong",
+
+  "providerDirectoryTitle": "Service providers",
+  "providerDirectoryEmpty": "No providers are available for this category yet.",
+  "providerDirectoryError": "Couldn’t load providers.",
+  "providerDirectoryRetry": "Try again",
+  "providerProfileTitle": "Provider profile",
+  "providerProfileUnavailable": "This provider is currently unavailable.",
+  "providerProfileError": "Couldn’t load this provider’s profile.",
+  "providerTypeCompany": "Company",
+  "providerTypeIndependent": "Independent"
 }

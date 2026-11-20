@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:service_pilot/core/theme/app_theme.dart';
 import 'package:service_pilot/features/services/models/category_model.dart';
 
-/// Interactive card widget displaying a service category with description,
-/// provider count badge, and visual icon box.
+/// Interactive card widget displaying a service category, description, and icon.
 ///
 /// Built according to ServicePilot's "Blue Pipe" design system (DESIGN.md).
 /// Corresponds to US-09 (SCRUM-41).
@@ -19,11 +18,8 @@ class CategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasProviders = category.hasAvailableProviders;
-
     return Semantics(
       button: true,
-      label: '${category.name}, ${hasProviders ? "${category.providerCount} providers available" : "No providers available"}',
       child: Material(
         color: AppTheme.surface,
         shape: RoundedRectangleBorder(
@@ -40,70 +36,15 @@ class CategoryCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Icon container
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: hasProviders
-                            ? AppTheme.primarySoft
-                            : AppTheme.surfaceElevated,
-                        borderRadius:
-                            BorderRadius.circular(AppTheme.radiusControl),
-                      ),
-                      child: Icon(
-                        category.iconData,
-                        color: hasProviders
-                            ? AppTheme.primary
-                            : AppTheme.textMuted,
-                        size: 26,
-                      ),
-                    ),
-                    const Spacer(),
-                    // Provider count badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: hasProviders
-                            ? AppTheme.successSoft
-                            : AppTheme.surfaceElevated,
-                        borderRadius: BorderRadius.circular(AppTheme.radiusChip),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            hasProviders
-                                ? Icons.verified_user_rounded
-                                : Icons.info_outline_rounded,
-                            size: 13,
-                            color: hasProviders
-                                ? AppTheme.successDeep
-                                : AppTheme.textMuted,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            hasProviders
-                                ? '${category.providerCount} available'
-                                : 'No providers yet',
-                            style: AppTheme.text(
-                              size: 12,
-                              weight: FontWeight.w600,
-                              color: hasProviders
-                                  ? AppTheme.successDeep
-                                  : AppTheme.textMuted,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primarySoft,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusControl),
+                  ),
+                  child: Icon(category.iconData,
+                      color: AppTheme.primary, size: 26),
                 ),
                 const SizedBox(height: 14),
                 // Category Title
@@ -136,7 +77,8 @@ class CategoryCard extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: AppTheme.surfaceElevated,
-                          borderRadius: BorderRadius.circular(AppTheme.radiusChip),
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusChip),
                         ),
                         child: Text(
                           service,

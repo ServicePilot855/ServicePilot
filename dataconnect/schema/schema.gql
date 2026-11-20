@@ -11,6 +11,11 @@ type User @table(key: "uid") {
   phone: String
   avatarUrl: String
   role: UserRole! @default(value: CUSTOMER)
+  # Directory metadata is set by trusted operations after provider verification.
+  providerName: String
+  providerType: ProviderType
+  providerStatus: ProviderStatus
+  serviceArea: String
   createdAt: Timestamp! @default(expr: "request.time")
 }
 
@@ -20,10 +25,23 @@ enum UserRole {
   ADMIN
 }
 
+enum ProviderType {
+  INDEPENDENT
+  COMPANY
+}
+
+enum ProviderStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  INACTIVE
+}
+
 # Service category (e.g., Plumbing, Electrical, Cleaning)
 type ServiceCategory @table {
   id: UUID! @default(expr: "uuidV4()")
   name: String! @unique
+  # Connects existing Flutter category routes (cat-*) to database categories.
+  browseKey: String @unique
   description: String
   iconUrl: String
 }
