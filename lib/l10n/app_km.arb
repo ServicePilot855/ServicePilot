@@ -44,7 +44,5 @@
   "providerReviewCount": "ការវាយតម្លៃ {count}",
   "providerRatingSummary": "{score} · {reviews}",
   "providerRatingAnnouncement": "{score} លើ ៥ ពិន្ទុ។ {reviews}",
-  "providerContinueBooking": "បន្តទៅការកក់",
-  "providerBookingPreviewTitle": "សាកមើលការកក់",
-  "providerBookingPreviewNotice": "អ្នកមិនអាចផ្ញើសំណើកក់នៅក្នុងកំណែសាកល្បងនេះបានទេ។"
+  "providerContinueBooking": "បន្តទៅការកក់"
 }

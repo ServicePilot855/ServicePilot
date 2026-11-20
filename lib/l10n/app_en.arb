@@ -256,8 +256,6 @@
     "placeholders": {"score": {"type": "String"}, "reviews": {"type": "String"}}
   },
   "providerContinueBooking": "Continue to booking",
-  "providerBookingPreviewTitle": "Booking preview",
-  "providerBookingPreviewNotice": "You can’t submit a booking request in this preview.",
 
   "bookingFormTitle": "Book a repair",
   "bookingFormHeading": "Request a repair",
