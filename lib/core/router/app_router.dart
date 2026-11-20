@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/core/auth/auth_state.dart';
 import 'package:service_pilot/core/constants/app_roles.dart';
-import 'package:service_pilot/core/theme/app_theme.dart';
 import 'package:service_pilot/features/auth/screens/splash_screen.dart';
 import 'package:service_pilot/features/auth/screens/role_select_screen.dart';
 import 'package:service_pilot/features/auth/screens/login_screen.dart';
@@ -15,20 +15,20 @@ import 'package:service_pilot/features/auth/screens/technician_activation_screen
 import 'package:service_pilot/features/auth/screens/forgot_password_screen.dart';
 import 'package:service_pilot/features/auth/screens/reset_password_screen.dart';
 import 'package:service_pilot/features/bookings/models/booking_model.dart';
+import 'package:service_pilot/features/bookings/screens/booking_confirmation_screen.dart';
+import 'package:service_pilot/features/bookings/screens/create_booking_screen.dart';
+import 'package:service_pilot/features/bookings/screens/location_picker_screen.dart';
 import 'package:service_pilot/features/bookings/screens/booking_tracking_screen.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
 import 'package:service_pilot/features/providers/screens/provider_detail_screen.dart';
 import 'package:service_pilot/features/providers/screens/provider_list_screen.dart';
 import 'package:service_pilot/features/services/models/category_model.dart';
 import 'package:service_pilot/features/services/screens/categories_screen.dart';
-import 'package:service_pilot/l10n/l10n.dart';
 import 'package:service_pilot/shared/home/customer_home.dart';
 import 'package:service_pilot/shared/home/technician_home.dart';
 import 'package:service_pilot/shared/home/company_home.dart';
 import 'package:service_pilot/shared/home/company_technician_home.dart';
 import 'package:service_pilot/shared/home/admin_home.dart';
-import 'package:service_pilot/shared/widgets/sp_button.dart';
-import 'package:service_pilot/shared/widgets/sp_layout.dart';
 
 /// Provides the [GoRouter] instance to the widget tree.
 ///
@@ -149,43 +149,32 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
+      // ── Booking request (US-12) ───────────────────────────────────────
       GoRoute(
         path: '/providers/:providerId/book',
-        builder: (context, state) {
-          final l10n = context.l10n;
+        builder: (_, state) {
           final providerId = state.pathParameters['providerId'] ?? '';
-          return Scaffold(
-            backgroundColor: AppTheme.browseBackground,
-            appBar: AppBar(
-              title: Text(
-                l10n.providerBookingPreviewTitle,
-                style: AppTheme.display(size: 18, color: AppTheme.browseInk),
-              ),
-              leading: SpBackButton(
-                onPressed: () {
-                  if (context.canPop()) {
-                    context.pop();
-                  } else {
-                    context.go('/providers/${Uri.encodeComponent(providerId)}');
-                  }
-                },
-              ),
-            ),
-            body: SafeArea(
-              top: false,
-              child: SpContentWidth(
-                child: ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    SpNotice(
-                      icon: Icons.info_outline_rounded,
-                      message: l10n.providerBookingPreviewNotice,
-                      tone: SpTone.neutral,
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          final provider = state.extra as ProviderModel?;
+          return CreateBookingScreen(
+            providerId: providerId,
+            initialProvider: provider,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/providers/:providerId/book/location',
+        builder: (_, state) => LocationPickerScreen(
+          initial: state.extra as LatLng?,
+        ),
+      ),
+      GoRoute(
+        path: '/bookings/:bookingId/sent',
+        builder: (_, state) {
+          final bookingId = state.pathParameters['bookingId'] ?? '';
+          final booking = state.extra as BookingModel?;
+          return BookingConfirmationScreen(
+            bookingId: bookingId,
+            booking: booking,
           );
         },
       ),

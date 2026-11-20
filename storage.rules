@@ -1,0 +1,61 @@
+rules_version = '2';
+
+// ===============================================================
+// ServicePilot — Firebase Storage rules
+// ===============================================================
+//
+// bookings/{customerId}/{bookingId}/{file}
+//   Problem photos attached to a repair request (US-12 / SCRUM-43).
+//   PLAN.md: up to 5 photos per booking, each at most 5 MB, images only.
+//
+//   - Write: only the customer whose UID is in the path. The booking
+//     document does not exist yet while photos upload, so the path is
+//     the only thing to check against.
+//   - Read: that customer, the provider the booking was sent to, the
+//     technician assigned to it, or an admin. Checked against the
+//     Firestore booking (cross-service rules; the first deploy asks to
+//     grant Storage access to Firestore).
+//   - Files are never changed or deleted from the app.
+//
+// Everything else is closed.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function booking(bookingId) {
+      return firestore.get(/databases/(default)/documents/bookings/$(bookingId)).data;
+    }
+
+    // Admin custom claims only (set with the Admin SDK). Unlike
+    // firestore.rules, an email address containing "admin" is not enough.
+    function isAdmin() {
+      return isSignedIn() &&
+        (request.auth.token.admin == true || request.auth.token.role == 'admin');
+    }
+
+    match /bookings/{customerId}/{bookingId}/{fileName} {
+      allow create: if isSignedIn() &&
+                       request.auth.uid == customerId &&
+                       request.resource.size <= 5 * 1024 * 1024 &&
+                       request.resource.contentType.matches('image/.*');
+
+      allow read: if isSignedIn() &&
+                     (
+                       request.auth.uid == customerId ||
+                       booking(bookingId).providerId == request.auth.uid ||
+                       booking(bookingId).get('technicianId', '') == request.auth.uid ||
+                       isAdmin()
+                     );
+
+      allow update, delete: if false;
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

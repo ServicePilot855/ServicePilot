@@ -1,5 +1,6 @@
 import 'package:service_pilot/core/constants/booking_status.dart';
 import 'package:service_pilot/features/bookings/models/booking_model.dart';
+import 'package:service_pilot/features/bookings/models/booking_request.dart';
 
 /// Thrown when a requested booking ID does not exist.
 class BookingNotFoundException implements Exception {
@@ -85,10 +86,40 @@ class InvalidBookingTransitionException implements Exception {
       'InvalidBookingTransitionException(bookingId: $bookingId, from: ${currentStatus.value}, to: ${targetStatus.value}): $message';
 }
 
-/// Contract for repair booking retrieval, cancellation, and status transitions.
+/// Thrown when a booking request breaks the US-12 field rules.
+class InvalidBookingRequestException implements Exception {
+  final List<BookingFieldError> errors;
+
+  const InvalidBookingRequestException(this.errors);
+
+  @override
+  String toString() =>
+      'InvalidBookingRequestException(${errors.map((e) => e.name).join(', ')})';
+}
+
+/// Thrown when a booking could not be saved (offline, refused by the server).
+class BookingSubmissionException implements Exception {
+  final String message;
+
+  const BookingSubmissionException(this.message);
+
+  @override
+  String toString() => 'BookingSubmissionException: $message';
+}
+
+/// Contract for repair booking creation, retrieval, cancellation, and status
+/// transitions.
 ///
-/// Corresponds to US-13 (SCRUM-44), US-14 (SCRUM-45), and US-15 (SCRUM-46).
+/// Corresponds to US-12 (SCRUM-43), US-13 (SCRUM-44), US-14 (SCRUM-45), and
+/// US-15 (SCRUM-46).
 abstract class IBookingService {
+  /// Saves [request] as a new `Pending` booking for its customer and provider.
+  ///
+  /// Throws:
+  /// - [InvalidBookingRequestException] if a field breaks the US-12 rules.
+  /// - [BookingSubmissionException] if the booking could not be saved.
+  Future<BookingModel> createBooking(BookingRequest request);
+
   /// Returns all bookings belonging to [customerId].
   Future<List<BookingModel>> getCustomerBookings(String customerId);
 
@@ -273,6 +304,39 @@ class BookingService implements IBookingService {
         createdAt: now.subtract(const Duration(hours: 2)),
       ),
     ];
+  }
+
+  @override
+  Future<BookingModel> createBooking(BookingRequest request) async {
+    final errors = BookingRequestValidator.validate(request);
+    if (errors.isNotEmpty) {
+      throw InvalidBookingRequestException(errors);
+    }
+
+    final now = DateTime.now();
+    final booking = BookingModel(
+      id: 'bk-${now.microsecondsSinceEpoch}',
+      customerId: request.customerId,
+      providerId: request.providerId,
+      providerName: request.providerName,
+      serviceCategory: request.serviceCategory,
+      serviceTitle: request.serviceTitle.trim(),
+      description: request.description.trim(),
+      address: request.address.trim(),
+      preferredDateTime: request.preferredDateTime,
+      status: BookingStatus.pending,
+      totalPrice: request.estimatedPrice,
+      createdAt: now,
+      latitude: request.latitude,
+      longitude: request.longitude,
+      // Nothing is uploaded in memory; keep a recognisable placeholder link.
+      photoUrls: [
+        for (final photo in request.photos)
+          'memory://bk-${now.microsecondsSinceEpoch}/${photo.name}',
+      ],
+    );
+    _bookings.add(booking);
+    return booking;
   }
 
   @override

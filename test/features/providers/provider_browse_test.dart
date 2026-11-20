@@ -11,6 +11,7 @@ import 'package:service_pilot/core/router/app_router.dart';
 import 'package:service_pilot/core/theme/app_theme.dart';
 import 'package:service_pilot/features/auth/models/user_model.dart';
 import 'package:service_pilot/features/bookings/screens/booking_tracking_screen.dart';
+import 'package:service_pilot/features/bookings/screens/create_booking_screen.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
 import 'package:service_pilot/features/providers/providers/provider_provider.dart';
 import 'package:service_pilot/features/providers/screens/provider_detail_screen.dart';
@@ -137,16 +138,17 @@ void main() {
       'company-1',
     );
     expect(find.text('Provider profile'), findsOneWidget);
-    final disclosure =
-        find.text('You can’t submit a booking request in this preview.');
-    expect(disclosure.hitTestable(), findsOneWidget);
     expect(find.text('Trust & Safety Guarantee'), findsNothing);
     expect(find.text('Verified Provider'), findsNothing);
     await tester.tap(find.text('Continue to booking'));
     await tester.pumpAndSettle();
-    expect(disclosure, findsOneWidget);
+    // US-12 (SCRUM-43): the booking request form for this provider.
+    final bookingForm = find.byType(CreateBookingScreen);
+    expect(bookingForm, findsOneWidget);
+    expect(tester.widget<CreateBookingScreen>(bookingForm).providerId,
+        'company-1');
     expect(
-      GoRouterState.of(tester.element(disclosure)).uri.path,
+      GoRouterState.of(tester.element(bookingForm)).uri.path,
       '/providers/company-1/book',
     );
     await tester.tap(find.byTooltip('Back'));
@@ -413,11 +415,7 @@ void main() {
           await tester.tap(find.text(name));
           await tester.pumpAndSettle();
 
-          final notice = find.text(khmer
-              ? 'អ្នកមិនអាចផ្ញើសំណើកក់នៅក្នុងកំណែសាកល្បងនេះបានទេ។'
-              : 'You can’t submit a booking request in this preview.');
           final cta = find.text(khmer ? 'បន្តទៅការកក់' : 'Continue to booking');
-          expect(notice.hitTestable(), findsOneWidget);
           expect(cta.hitTestable(), findsOneWidget);
           final areasHeading = find.text(khmer ? 'តំបន់ផ្តល់សេវា' : 'Service areas');
           final summaryCard = find.ancestor(
@@ -441,8 +439,6 @@ void main() {
             ),
             findsOneWidget,
           );
-          expect(tester.getBottomLeft(notice).dy,
-              lessThan(tester.getTopLeft(cta).dy));
           expect(tester.renderObject<RenderParagraph>(cta).didExceedMaxLines,
               isFalse);
           final bookingButton = find.ancestor(
@@ -459,8 +455,9 @@ void main() {
           expect(cta.hitTestable(), findsOneWidget);
           await tester.tap(cta);
           await tester.pumpAndSettle();
-          expect(notice.hitTestable(), findsOneWidget);
-          expect(GoRouterState.of(tester.element(notice)).uri.path,
+          final bookingForm = find.byType(CreateBookingScreen);
+          expect(bookingForm, findsOneWidget);
+          expect(GoRouterState.of(tester.element(bookingForm)).uri.path,
               '/providers/preview-company/book');
           expect(tester.takeException(), isNull);
         });

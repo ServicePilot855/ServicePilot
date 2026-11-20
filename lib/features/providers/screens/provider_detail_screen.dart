@@ -229,8 +229,6 @@ class _ProviderProfile extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(l10n.providerBookingPreviewNotice, style: bodyStyle),
-                    const SizedBox(height: 8),
                     SpPrimaryButton(
                       label: l10n.providerContinueBooking,
                       wrapLabel: true,
@@ -238,6 +236,7 @@ class _ProviderProfile extends StatelessWidget {
                       onPressed: canBook
                           ? () => context.push(
                                 '/providers/${Uri.encodeComponent(provider.id)}/book',
+                                extra: provider,
                               )
                           : null,
                     ),

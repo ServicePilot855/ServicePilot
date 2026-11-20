@@ -1,7 +1,9 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/features/bookings/models/booking_model.dart';
 import 'package:service_pilot/features/bookings/services/booking_service.dart';
+import 'package:service_pilot/features/bookings/services/firestore_booking_service.dart';
 
 /// Resolves the active customer ID from authentication state, falling back
 /// to [BookingService.defaultCustomerId] in standalone widget tests.
@@ -11,7 +13,14 @@ final activeCustomerIdProvider = Provider<String>((ref) {
 });
 
 /// Provides the active [IBookingService] instance.
+///
+/// The running app saves bookings in Firestore (US-12 Definition of Done).
+/// When Firebase is not initialised, as in widget tests, it falls back to the
+/// in-memory [BookingService] and its sample bookings.
 final bookingServiceProvider = Provider<IBookingService>((ref) {
+  if (Firebase.apps.isNotEmpty) {
+    return FirestoreBookingService();
+  }
   final customerId = ref.watch(activeCustomerIdProvider);
   return BookingService(customerId: customerId);
 });
