@@ -1352,18 +1352,6 @@ abstract class AppLocalizations {
   /// **'Continue to booking'**
   String get providerContinueBooking;
 
-  /// No description provided for @providerBookingPreviewTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Booking preview'**
-  String get providerBookingPreviewTitle;
-
-  /// No description provided for @providerBookingPreviewNotice.
-  ///
-  /// In en, this message translates to:
-  /// **'You can’t submit a booking request in this preview.'**
-  String get providerBookingPreviewNotice;
-
   /// No description provided for @bookingFormTitle.
   ///
   /// In en, this message translates to:

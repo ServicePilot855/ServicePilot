@@ -12,6 +12,9 @@ import 'package:service_pilot/core/theme/app_theme.dart';
 import 'package:service_pilot/features/auth/models/user_model.dart';
 import 'package:service_pilot/features/bookings/screens/booking_tracking_screen.dart';
 import 'package:service_pilot/features/bookings/screens/create_booking_screen.dart';
+import 'package:service_pilot/features/bookings/services/booking_service.dart';
+import 'package:service_pilot/features/bookings/providers/booking_provider.dart';
+import 'package:service_pilot/core/constants/booking_status.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
 import 'package:service_pilot/features/providers/providers/provider_provider.dart';
 import 'package:service_pilot/features/providers/screens/provider_detail_screen.dart';
@@ -60,6 +63,7 @@ void main() {
     WidgetTester tester,
     String path, {
     IProviderService? service,
+    IBookingService? bookings,
     bool signedIn = true,
     Locale? previewLocale,
     AppRole role = AppRole.homeowner,
@@ -71,6 +75,7 @@ void main() {
       overrides: [
         if (signedIn) authProvider.overrideWith(() => _SignedInUser(role)),
         if (service != null) providerServiceProvider.overrideWithValue(service),
+        if (bookings != null) bookingServiceProvider.overrideWithValue(bookings),
       ],
       child: previewLocale == null
           ? const ServicePilotApp()
@@ -158,6 +163,66 @@ void main() {
     await tester.pageBack();
     await tester.pumpAndSettle();
     expect(find.text('Test Technician'), findsOneWidget);
+  });
+
+  testWidgets(
+      'customer sends a booking request from the provider profile (US-12)',
+      (tester) async {
+    final bookings = BookingService(initialBookings: []);
+    await open(
+      tester,
+      '/categories',
+      service: ProviderService(initialProviders: const [
+        ProviderModel(
+          id: 'company-1',
+          name: 'Test Repair Company',
+          type: ProviderType.company,
+          serviceArea: 'Toul Kork',
+          categoryIds: ['cat-plumbing'],
+        ),
+      ]),
+      bookings: bookings,
+    );
+
+    Future<void> tapVisible(Finder finder) async {
+      await tester.ensureVisible(finder);
+      await tester.pumpAndSettle();
+      await tester.tap(finder);
+      await tester.pumpAndSettle();
+    }
+
+    await tapVisible(find.text('Plumbing & Drainage'));
+    await tapVisible(find.text('Test Repair Company'));
+    await tapVisible(find.text('Continue to booking'));
+    expect(find.byType(CreateBookingScreen), findsOneWidget);
+
+    // The provider lists no specialties, so the general visit is preselected.
+    await tester.enterText(
+      find.byKey(const Key('booking_description_field')),
+      'Kitchen sink pipe leaks when the pump runs.',
+    );
+    await tester.enterText(
+      find.byKey(const Key('booking_address_field')),
+      'St. 592, Boeung Kak 2, Toul Kork',
+    );
+    await tapVisible(find.byKey(const Key('booking_date_picker')));
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+    await tapVisible(find.byKey(const Key('booking_time_picker')));
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+    await tapVisible(find.byKey(const Key('booking_submit_button')));
+
+    expect(find.text('Request sent'), findsOneWidget);
+    final saved = await bookings.getCustomerBookings('customer');
+    expect(saved, hasLength(1));
+    expect(saved.single.providerId, 'company-1');
+    expect(saved.single.providerName, 'Test Repair Company');
+    expect(saved.single.serviceTitle, 'General repair visit');
+    expect(saved.single.status, BookingStatus.pending);
+
+    await tapVisible(find.byKey(const Key('booking_view_status_button')));
+    expect(find.byType(BookingTrackingScreen), findsOneWidget);
   });
 
   testWidgets('a failed directory request can be retried', (tester) async {

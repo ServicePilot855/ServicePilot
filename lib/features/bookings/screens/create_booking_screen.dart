@@ -143,10 +143,12 @@ class _BookingFormState extends ConsumerState<_BookingForm> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    if (_provider.specialties.length == 1) {
-      _service = _provider.specialties.single;
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // With only one service on offer, choose it for the customer.
+    final options = _serviceOptions(context.l10n);
+    if (_service == null && options.length == 1) {
+      _service = options.single;
     }
   }
 

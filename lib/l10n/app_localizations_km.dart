@@ -695,13 +695,6 @@ class AppLocalizationsKm extends AppLocalizations {
   String get providerContinueBooking => 'បន្តទៅការកក់';
 
   @override
-  String get providerBookingPreviewTitle => 'សាកមើលការកក់';
-
-  @override
-  String get providerBookingPreviewNotice =>
-      'អ្នកមិនអាចផ្ញើសំណើកក់នៅក្នុងកំណែសាកល្បងនេះបានទេ។';
-
-  @override
   String get bookingFormTitle => 'Book a repair';
 
   @override

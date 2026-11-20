@@ -704,13 +704,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get providerContinueBooking => 'Continue to booking';
 
   @override
-  String get providerBookingPreviewTitle => 'Booking preview';
-
-  @override
-  String get providerBookingPreviewNotice =>
-      'You can’t submit a booking request in this preview.';
-
-  @override
   String get bookingFormTitle => 'Book a repair';
 
   @override
