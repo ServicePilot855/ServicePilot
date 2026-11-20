@@ -39,7 +39,7 @@ class CustomerHome extends ConsumerWidget {
     final bookingsAsync = ref.watch(customerBookingsProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: AppTheme.browseBackground,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppTheme.gutter),
@@ -47,152 +47,99 @@ class CustomerHome extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top App Bar / Identity row
                 Row(
                   children: [
                     const SpLogoMark(size: 34),
                     const SizedBox(width: 10),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'ServicePilot',
-                          style: AppTheme.display(size: 18),
-                        ),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.location_on_rounded,
-                              size: 13,
-                              color: AppTheme.primary,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.appName,
+                            style: AppTheme.display(
+                              size: 18,
+                              color: AppTheme.browseInk,
                             ),
-                            const SizedBox(width: 3),
-                            Text(
-                              'Phnom Penh',
-                              style: AppTheme.text(
-                                size: 12,
-                                weight: FontWeight.w600,
-                                color: AppTheme.textSecondary,
-                              ),
+                          ),
+                          Text(
+                            l10n.discoveryLocation,
+                            style: AppTheme.text(
+                              color: AppTheme.browseSecondary,
+                              height: 1.5,
                             ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const Spacer(),
-                    // Logout button
-                    IconButton(
-                      icon: const Icon(
-                        Icons.logout_rounded,
-                        color: AppTheme.textSecondary,
-                        size: 20,
+                          ),
+                        ],
                       ),
-                      tooltip: 'Log out',
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.logout_rounded),
+                      color: AppTheme.browseSecondary,
+                      constraints: const BoxConstraints.tightFor(
+                        width: 48,
+                        height: 48,
+                      ),
+                      tooltip: l10n.homeLogOut,
                       onPressed: () async {
                         await ref.read(authProvider.notifier).logout();
-                        if (context.mounted) {
-                          context.go('/login');
-                        }
+                        if (context.mounted) context.go('/login');
                       },
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
-
-                // Greeting Hero
+                const SizedBox(height: 12),
                 Text(
-                  'Hello, $firstName 👋',
-                  style: AppTheme.display(size: 26),
+                  l10n.homeGreeting(firstName),
+                  style: AppTheme.display(
+                    size: 26,
+                    color: AppTheme.browseInk,
+                    height: 1.5,
+                  ),
                 ),
-                const SizedBox(height: 6),
                 Text(
-                  'What repair or maintenance service do you need today?',
+                  l10n.discoveryHomePrompt,
                   style: AppTheme.text(
                     size: 15,
-                    color: AppTheme.textSecondary,
-                    height: 1.45,
+                    color: AppTheme.browseSecondary,
+                    height: 1.5,
                   ),
                 ),
-                const SizedBox(height: 18),
-
-                // Search quick action
-                InkWell(
+                const SizedBox(height: 16),
+                Text(
+                  l10n.discoveryHomeCategories,
+                  style: AppTheme.display(size: 18, color: AppTheme.browseInk),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
                   key: const Key('customer_home_search_bar'),
-                  onTap: () => context.push('/categories'),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusControl),
-                  child: Container(
-                    height: 50,
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surface,
+                  onPressed: () => context.push('/categories'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppTheme.primary,
+                    minimumSize: const Size(double.infinity, 48),
+                    alignment: Alignment.centerLeft,
+                    backgroundColor: AppTheme.surface,
+                    shape: RoundedRectangleBorder(
                       borderRadius:
                           BorderRadius.circular(AppTheme.radiusControl),
-                      border: Border.all(color: AppTheme.border),
                     ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.search_rounded,
-                          color: AppTheme.primary,
-                          size: 22,
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          'Search AC, plumbing, electrical...',
-                          style: AppTheme.text(
-                            size: 14.5,
-                            color: AppTheme.textMuted,
-                          ),
-                        ),
-                        const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppTheme.surfaceElevated,
-                            borderRadius:
-                                BorderRadius.circular(AppTheme.radiusChip),
-                          ),
-                          child: Text(
-                            'Browse',
-                            style: AppTheme.text(
-                              size: 11,
-                              weight: FontWeight.w600,
-                              color: AppTheme.primary,
-                            ),
-                          ),
-                        ),
-                      ],
+                  ).copyWith(
+                    side: WidgetStateBorderSide.resolveWith(
+                      (states) => states.contains(WidgetState.focused)
+                          ? const BorderSide(color: AppTheme.primary, width: 2)
+                          : const BorderSide(color: AppTheme.browseControlBorder),
                     ),
                   ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.search_rounded),
+                      const SizedBox(width: 10),
+                      Expanded(child: Text(l10n.discoveryBrowseServices)),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.chevron_right_rounded),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 24),
-
-                // Categories Header
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Repair Categories',
-                      style: AppTheme.display(size: 18),
-                    ),
-                    TextButton(
-                      key: const Key('view_all_categories_button'),
-                      onPressed: () => context.push('/categories'),
-                      child: Text(
-                        'See all',
-                        style: AppTheme.text(
-                          size: 13.5,
-                          weight: FontWeight.w600,
-                          color: AppTheme.primary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
 
                 // Categories List / Stream
                 categoriesAsync.when(
@@ -204,24 +151,23 @@ class CustomerHome extends ConsumerWidget {
                           child: CategoryCard(
                             key: Key('home_category_${cat.id}'),
                             category: cat,
-                            onTap: () =>
-                                _onCategorySelected(context, ref, cat),
+                            onTap: () => _onCategorySelected(context, ref, cat),
                           ),
                         );
                       }).toList(),
                     );
                   },
-                  loading: () => const Center(
+                  loading: () => Center(
                     child: Padding(
-                      padding: EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(24),
                       child: CircularProgressIndicator(
-                        color: AppTheme.primary,
+                        semanticsLabel: l10n.discoveryLoadingCategories,
                       ),
                     ),
                   ),
-                  error: (err, _) => SpNotice(
+                  error: (_, __) => SpNotice(
                     icon: Icons.error_outline_rounded,
-                    message: 'Could not load categories: $err',
+                    message: l10n.discoveryCategoriesError,
                     tone: SpTone.danger,
                   ),
                 ),
@@ -229,16 +175,16 @@ class CustomerHome extends ConsumerWidget {
 
                 // My Repair Bookings Section (US-13 / US-14)
                 Text(
-                  'My Repair Bookings',
-                  style: AppTheme.display(size: 18),
+                  l10n.discoveryHomeBookings,
+                  style: AppTheme.display(size: 18, color: AppTheme.browseInk),
                 ),
                 const SizedBox(height: 10),
                 bookingsAsync.when(
                   data: (bookings) {
                     if (bookings.isEmpty) {
-                      return const SpNotice(
+                      return SpNotice(
                         icon: Icons.event_note_rounded,
-                        message: 'You have no repair bookings yet.',
+                        message: l10n.discoveryNoBookings,
                         tone: SpTone.neutral,
                       );
                     }
@@ -258,17 +204,17 @@ class CustomerHome extends ConsumerWidget {
                       }).toList(),
                     );
                   },
-                  loading: () => const Center(
+                  loading: () => Center(
                     child: Padding(
-                      padding: EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(16),
                       child: CircularProgressIndicator(
-                        color: AppTheme.primary,
+                        semanticsLabel: l10n.discoveryLoadingBookings,
                       ),
                     ),
                   ),
-                  error: (err, _) => SpNotice(
+                  error: (_, __) => SpNotice(
                     icon: Icons.error_outline_rounded,
-                    message: 'Could not load bookings: $err',
+                    message: l10n.discoveryBookingsError,
                     tone: SpTone.danger,
                   ),
                 ),
@@ -297,7 +243,7 @@ class _CustomerBookingCard extends StatelessWidget {
       color: AppTheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTheme.radiusCard),
-        side: const BorderSide(color: AppTheme.border),
+        side: const BorderSide(color: AppTheme.browseBorder),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -316,7 +262,7 @@ class _CustomerBookingCard extends StatelessWidget {
                       style: AppTheme.text(
                         size: 15.5,
                         weight: FontWeight.w600,
-                        color: AppTheme.textPrimary,
+                        color: AppTheme.browseInk,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -331,7 +277,7 @@ class _CustomerBookingCard extends StatelessWidget {
                 booking.providerName,
                 style: AppTheme.text(
                   size: 13.5,
-                  color: AppTheme.textSecondary,
+                  color: AppTheme.browseSecondary,
                 ),
               ),
               const SizedBox(height: 6),
@@ -340,7 +286,7 @@ class _CustomerBookingCard extends StatelessWidget {
                   const Icon(
                     Icons.location_on_outlined,
                     size: 14,
-                    color: AppTheme.textSecondary,
+                    color: AppTheme.browseSecondary,
                   ),
                   const SizedBox(width: 4),
                   Expanded(
@@ -348,7 +294,7 @@ class _CustomerBookingCard extends StatelessWidget {
                       booking.address,
                       style: AppTheme.text(
                         size: 12.5,
-                        color: AppTheme.textSecondary,
+                        color: AppTheme.browseSecondary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

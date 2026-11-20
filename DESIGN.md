@@ -19,6 +19,12 @@ colors:
   ink-body: "#2A3547"
   ink-secondary: "#55627A"
   ink-muted: "#8E99AD"
+  browse-background: "#F4F7FB"
+  browse-fill: "#E8EFF8"
+  browse-ink: "#172840"
+  browse-secondary: "#51637C"
+  browse-border: "#D9E2EE"
+  browse-control-border: "#71839D"
   danger: "#C7352B"
   danger-soft: "#FCEAE8"
   danger-deep: "#9B271F"
@@ -104,11 +110,11 @@ components:
 
 # Design System: ServicePilot
 
-Source of truth in code: `lib/core/theme/app_theme.dart` and `lib/shared/widgets/sp_*.dart`.
+Use this guide when adding or changing a screen. The implemented tokens are in [AppTheme](lib/core/theme/app_theme.dart), and reusable controls are in [shared widgets](lib/shared/widgets/).
 Token names map to `AppTheme` constants: `pipe-blue` = `primary`, `tape-yellow` = `accent`, `page` = `background`, `fill` = `surfaceElevated`, `hairline` = `border`, `ink-*` = `text*`.
 Research, flows and the sprint plan are in [`docs/UX-PLAN.md`](docs/UX-PLAN.md).
 
-This file describes what is built: the Sprint 1 account screens. Components for later sprints are specified when they are built.
+The guide covers the Blue Pipe foundation and the [customer discovery preview](#customer-discovery-preview). Match the reference screen for the flow you are changing.
 
 ## Overview
 
@@ -121,7 +127,7 @@ Flow and layout start from the Grab app, because that is the ordering pattern th
 The app is a working tool, used in daylight on mid-range Android phones by someone whose tap is leaking now. It is light, flat and plain. Colour appears only where it does a job.
 
 **Key Characteristics:**
-- White form pages, a cool pale page tone for browse screens; never a dark canvas.
+- White form pages, cool neutrals in the shared theme, and blue-gray backgrounds in customer discovery.
 - One filled blue button per screen, pinned to the bottom in flows.
 - Tape Yellow means "waiting" and nothing else.
 - Flat forms: labels above fields, no boxes around groups, a visible field edge.
@@ -129,7 +135,7 @@ The app is a working tool, used in daylight on mid-range Android phones by someo
 
 ## Colors
 
-One saturated blue on white and cool greys, with a single yellow signal.
+Pipe Blue carries actions across the app. Customer discovery uses its own cool blue-gray palette alongside the shared cool neutrals.
 
 ### Primary
 - **Pipe Blue** (`pipe-blue`): primary buttons, links, focus borders, selected radios and checkboxes, reached joints, the splash background. White on it measures 5.5:1.
@@ -144,7 +150,7 @@ One saturated blue on white and cool greys, with a single yellow signal.
 
 ### Neutral
 - **Surface** (`surface`): form pages, cards, sheets, inputs.
-- **Page** (`page`): background of home and browse screens.
+- **Page** (`page`): default page background. Customer discovery supplies its own background token.
 - **Fill** (`fill`): read-only fields, neutral tags, disabled buttons.
 - **Hairline** (`hairline`): 1px dividers and the top edge of the pinned action bar. Decorative; too faint to mark a control.
 - **Field Border** (`field-border`): the edge of inputs, outlined buttons and unselected radios (3.1:1 on white).
@@ -180,7 +186,7 @@ One saturated blue on white and cool greys, with a single yellow signal.
 - **Caption** (400 to 600, 13px): helper text, step count, footnotes.
 
 ### Named Rules
-**The Role Rule.** Sizes come from `AppTheme.display()` / `AppTheme.text()` at the steps above or from the theme's text roles. No other sizes, and no direct font calls, in feature code.
+**The Role Rule.** Use `AppTheme.display()`, `AppTheme.text()`, or the theme's text roles. Match the relevant screen pattern. The sizes above describe the account screens, and discovery uses the hierarchy below.
 
 **The Khmer Room Rule.** No layout depends on an English string length: titles wrap, buttons ellipsise, nothing sits in a fixed-height box. Khmer needs more height than Latin, so leave line height at 1.5 or more wherever text can wrap.
 
@@ -256,6 +262,42 @@ Plain and dependable: large targets, labels that say what happens, obvious state
 
 ### Motion
 State changes only, 150 to 250ms: the joint filling, a field focusing, the splash fading in (350ms, once). No entrance choreography, no looping motion.
+
+## Customer discovery preview
+
+Use the cool blue-gray palette on Customer Home, Categories, the provider list, and the provider profile. Apply the `browse*` tokens at the screen or component level. Keep Pipe Blue for actions, focus, and the brand mark. Use Tape Yellow for pending states and the existing brand and step marks. Soft corners and a clear browsing hierarchy draw on the [Home Service Booking App reference](https://dribbble.com/shots/26804635-Home-Service-Booking-App).
+
+| Token in `AppTheme` | Use |
+| --- | --- |
+| `browseBackground` | Cool blue-gray page background |
+| `surface` | White cards, search field, and pinned action bar |
+| `browseFill` | Pale blue category icon tiles and provider type badges |
+| `browseInk` | Navy headings, badge text, and recorded rating stars |
+| `browseSecondary` | Supporting text such as examples, service areas, and review counts |
+| `browseBorder` | Decorative card edges, dividers, and the action bar separator |
+| `browseControlBorder` | Visible boundaries for search fields and outlined browse actions |
+
+Use a single column with `SpContentWidth`, 16dp gutters on category and provider screens, and flat white cards with `AppTheme.radiusCard`. Use the existing compact screen and card titles and give the provider name the largest type on the profile. Reuse the shared buttons and notices. Use `browseControlBorder` for search and outlined browse actions. Search and the Home browse action have a 2dp Pipe Blue focus outline. Category and provider cards use a light Pipe Blue tint when focused.
+
+On white, `browseInk` measures 14.85:1, `browseSecondary` 6.13:1, and `browseControlBorder` 3.86:1. Supporting text measures 5.71:1 and the control outline 3.60:1 against the blue-gray page. The decorative card edge separates surfaces.
+
+| Screen | Reference pattern |
+| --- | --- |
+| [Customer Home](lib/shared/home/customer_home.dart) | Put Service categories directly below the greeting. Group Browse services and the category shortcuts under that heading. |
+| [Categories](lib/features/services/screens/categories_screen.dart) | Place search above a single list. Reuse [`CategoryCard`](lib/features/services/widgets/category_card.dart) for a full-width tap target with a wrapping title and service examples. |
+| [Provider list](lib/features/providers/screens/provider_list_screen.dart) | Make each provider card one tap target. Lead with the name and type, then show the rating summary, coverage, and an unavailable state when applicable. |
+| [Provider profile](lib/features/providers/screens/provider_detail_screen.dart) | Group provider identity, rating, availability, and service areas in the top card. Follow with specialties and About when supplied. Pin one blue action on a white bar above the bottom safe area. |
+
+Reuse [`ProviderTypeBadge`](lib/features/providers/widgets/provider_type_badge.dart) and [`ProviderRatingSummary`](lib/features/providers/widgets/provider_rating_summary.dart) across provider surfaces. Show a star, localized score, and review count together for a recorded score from 1 to 5 with a positive review count. Show **No reviews yet** for an explicitly recorded zero count and **Rating unavailable** for missing or invalid rating evidence. The fallback labels appear as text alone. Use claims about providers, prices, and services only when the product and its records support them.
+
+Pair availability with text and an icon. Disable the profile action when `canAcceptBookings` is false. During the preview, place the booking limitation immediately above **Continue to booking** and repeat it on the handoff page. The action opens the selected provider's `/providers/:providerId/book` route.
+
+## Reviewing UI changes
+
+1. Start from the closest implemented screen. Reuse its `AppTheme` tokens and shared widgets. If a new pattern is needed, document it here with the same change and check any other screens that use the affected theme or component.
+2. Put customer-facing UI copy in the [English](lib/l10n/app_en.arb) and [Khmer](lib/l10n/app_km.arb) localization files. Use placeholders and plural forms in localized messages. Check wrapping, mixed-script content, the keyboard, and pinned actions on narrow screens.
+3. Verify affected loading, empty, error, and disabled states. Use at least 48dp touch targets, visible focus, 4.5:1 text contrast, and 3:1 for meaningful control boundaries. Check that assistive technology can identify the action or state.
+4. For discovery changes, use the [preview tests](test/features/providers/provider_browse_test.dart) as the reference for English and Khmer at 320dp and 360dp with 100% and 130% text scaling. Include screenshots of changed screens and verification results in the PR. Record device checks separately from widget-test results.
 
 ## Do's and Don'ts
 

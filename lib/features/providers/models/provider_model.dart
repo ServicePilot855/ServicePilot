@@ -50,8 +50,8 @@ class ProviderModel {
   final List<String> coverageAreas;
   final String serviceArea;
   final List<String> categoryIds;
-  final double rating;
-  final int reviewCount;
+  final double? _recordedRating;
+  final int? recordedReviewCount;
   final int completedJobs;
   final int yearsExperience;
   final double hourlyRate;
@@ -76,8 +76,8 @@ class ProviderModel {
     this.coverageAreas = const [],
     this.serviceArea = 'Phnom Penh',
     this.categoryIds = const [],
-    this.rating = 5.0,
-    this.reviewCount = 0,
+    double? rating,
+    int? reviewCount,
     int completedJobs = 0,
     int? completedJobsCount,
     this.yearsExperience = 1,
@@ -93,7 +93,9 @@ class ProviderModel {
     this.avatarUrl,
     this.createdAt,
     this.updatedAt,
-  })  : completedJobs = completedJobsCount ?? completedJobs,
+  })  : _recordedRating = rating,
+        recordedReviewCount = reviewCount,
+        completedJobs = completedJobsCount ?? completedJobs,
         hourlyRate = startingPrice ?? hourlyRate,
         phone = phoneNumber ?? phone;
 
@@ -113,7 +115,8 @@ class ProviderModel {
   double? get startingPrice => hourlyRate;
 
   /// AppRole mapping
-  AppRole get appRole => isCompany ? AppRole.company : AppRole.independentProvider;
+  AppRole get appRole =>
+      isCompany ? AppRole.company : AppRole.independentProvider;
 
   /// Whether the provider is an independent technician.
   bool get isIndependent => type == ProviderType.independent;
@@ -134,7 +137,18 @@ class ProviderModel {
   String get typeDisplayName => type.displayName;
   String get typeBadgeLabel => isCompany ? 'Company' : 'Independent';
 
-  /// Formatted rating (e.g. "4.9")
+  // Legacy defaults are separate from the values shown as customer evidence.
+  double get rating => _recordedRating ?? 5.0;
+  int get reviewCount => recordedReviewCount ?? 0;
+
+  double? get customerRating {
+    final score = _recordedRating;
+    return reviewCount > 0 && score != null && score >= 1 && score <= 5
+        ? score
+        : null;
+  }
+
+  /// Formatted rating for callers using the legacy default.
   String get formattedRating => rating.toStringAsFixed(1);
 
   /// Formatted coverage areas (comma-separated)
@@ -175,6 +189,15 @@ class ProviderModel {
       specs = rawSpecialties.map((e) => e.toString()).toList();
     }
 
+    final rawRating = data['rating'];
+    final rawCount = data['reviewCount'];
+    final recordedCount = rawCount is num &&
+            rawCount.isFinite &&
+            rawCount >= 0 &&
+            rawCount == rawCount.toInt()
+        ? rawCount.toInt()
+        : null;
+
     return ProviderModel(
       id: id,
       name: data['name'] as String? ?? 'Service Provider',
@@ -184,13 +207,14 @@ class ProviderModel {
       bio: data['bio'] as String? ?? '',
       specialties: specs,
       coverageAreas: coverage,
-      serviceArea: data['serviceArea'] as String? ?? (coverage.isNotEmpty ? coverage.first : 'Phnom Penh'),
+      serviceArea: data['serviceArea'] as String? ??
+          (coverage.isNotEmpty ? coverage.first : 'Phnom Penh'),
       categoryIds: (data['categoryIds'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           const [],
-      rating: (data['rating'] as num?)?.toDouble() ?? 5.0,
-      reviewCount: (data['reviewCount'] as num?)?.toInt() ?? 0,
+      rating: rawRating is num ? rawRating.toDouble() : null,
+      reviewCount: recordedCount,
       completedJobs: (data['completedJobs'] as num?)?.toInt() ??
           (data['completedJobsCount'] as num?)?.toInt() ??
           0,
@@ -230,8 +254,8 @@ class ProviderModel {
       'coverageAreas': coverageAreas,
       'serviceArea': serviceArea,
       'categoryIds': categoryIds,
-      'rating': rating,
-      'reviewCount': reviewCount,
+      if (_recordedRating != null) 'rating': _recordedRating,
+      if (recordedReviewCount != null) 'reviewCount': recordedReviewCount,
       'completedJobs': completedJobs,
       'completedJobsCount': completedJobs,
       'yearsExperience': yearsExperience,
@@ -292,8 +316,8 @@ class ProviderModel {
       coverageAreas: coverageAreas ?? this.coverageAreas,
       serviceArea: serviceArea ?? this.serviceArea,
       categoryIds: categoryIds ?? this.categoryIds,
-      rating: rating ?? this.rating,
-      reviewCount: reviewCount ?? this.reviewCount,
+      rating: rating ?? _recordedRating,
+      reviewCount: reviewCount ?? recordedReviewCount,
       completedJobs: completedJobs ?? completedJobsCount ?? this.completedJobs,
       yearsExperience: yearsExperience ?? this.yearsExperience,
       hourlyRate: hourlyRate ?? startingPrice ?? this.hourlyRate,

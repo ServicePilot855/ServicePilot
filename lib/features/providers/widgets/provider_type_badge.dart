@@ -1,57 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:service_pilot/core/theme/app_theme.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
+import 'package:service_pilot/l10n/l10n.dart';
 
-/// Renders a provider category badge according to ServicePilot specifications:
-/// - Company: Blue (`primarySoft` / `onPrimarySoft`)
-/// - Independent: Green (`successSoft` / `successDeep`)
-///
-/// Corresponds to US-10 (SCRUM-55) & US-11 (SCRUM-54).
 class ProviderTypeBadge extends StatelessWidget {
-  final ProviderType type;
-  final bool isCompact;
+  const ProviderTypeBadge({super.key, required this.type});
 
-  const ProviderTypeBadge({
-    super.key,
-    required this.type,
-    this.isCompact = false,
-  });
+  final ProviderType type;
 
   @override
   Widget build(BuildContext context) {
-    final isCompany = type == ProviderType.company;
-    final bg = isCompany ? AppTheme.primarySoft : AppTheme.successSoft;
-    final fg = isCompany ? AppTheme.onPrimarySoft : AppTheme.successDeep;
-    final icon = isCompany ? Icons.apartment_rounded : Icons.person_rounded;
-    final label = isCompany ? 'Repair Company' : 'Independent';
-
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isCompact ? 8 : 10,
-        vertical: isCompact ? 3 : 5,
-      ),
+    final company = type == ProviderType.company;
+    final l10n = context.l10n;
+    return DecoratedBox(
       decoration: BoxDecoration(
-        color: bg,
+        color: AppTheme.browseFill,
         borderRadius: BorderRadius.circular(AppTheme.radiusChip),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: isCompact ? 13 : 15,
-            color: fg,
-          ),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: AppTheme.text(
-              size: isCompact ? 11.5 : 12.5,
-              weight: FontWeight.w700,
-              color: fg,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Icon(
+                company ? Icons.apartment_rounded : Icons.person_rounded,
+                size: 16,
+                color: AppTheme.browseInk,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                company
+                    ? l10n.providerTypeCompany
+                    : l10n.providerTypeIndependent,
+                style: AppTheme.text(
+                  size: 13,
+                  weight: FontWeight.w600,
+                  color: AppTheme.browseInk,
+                  height: 1.5,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

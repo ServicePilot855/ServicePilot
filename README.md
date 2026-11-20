@@ -2,6 +2,8 @@
 
 A new Flutter project.
 
+Before changing a screen, read the [ServicePilot design guide](DESIGN.md) for the shared Flutter components, the customer discovery palette, and the UI review checklist.
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.

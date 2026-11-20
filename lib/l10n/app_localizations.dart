@@ -1112,6 +1112,96 @@ abstract class AppLocalizations {
   /// **'Strength: Strong'**
   String get resetPasswordStrengthStrong;
 
+  /// No description provided for @discoveryLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Phnom Penh'**
+  String get discoveryLocation;
+
+  /// No description provided for @discoveryHomePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'What repair or maintenance service do you need?'**
+  String get discoveryHomePrompt;
+
+  /// No description provided for @discoveryBrowseServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse services'**
+  String get discoveryBrowseServices;
+
+  /// No description provided for @discoveryHomeCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Service categories'**
+  String get discoveryHomeCategories;
+
+  /// No description provided for @discoveryCategoriesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Repair & Maintenance'**
+  String get discoveryCategoriesTitle;
+
+  /// No description provided for @discoverySearchLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Search categories'**
+  String get discoverySearchLabel;
+
+  /// No description provided for @discoveryClearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get discoveryClearSearch;
+
+  /// No description provided for @discoveryNoMatchingCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'No categories match your search.'**
+  String get discoveryNoMatchingCategories;
+
+  /// No description provided for @discoveryNoCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'No service categories are available yet.'**
+  String get discoveryNoCategories;
+
+  /// No description provided for @discoveryLoadingCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading categories'**
+  String get discoveryLoadingCategories;
+
+  /// No description provided for @discoveryCategoriesError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t load service categories.'**
+  String get discoveryCategoriesError;
+
+  /// No description provided for @discoveryHomeBookings.
+  ///
+  /// In en, this message translates to:
+  /// **'My repair bookings'**
+  String get discoveryHomeBookings;
+
+  /// No description provided for @discoveryNoBookings.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no repair bookings yet.'**
+  String get discoveryNoBookings;
+
+  /// No description provided for @discoveryBookingsError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t load your bookings.'**
+  String get discoveryBookingsError;
+
+  /// No description provided for @discoveryLoadingBookings.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading your bookings'**
+  String get discoveryLoadingBookings;
+
   /// No description provided for @providerDirectoryTitle.
   ///
   /// In en, this message translates to:
@@ -1135,6 +1225,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try again'**
   String get providerDirectoryRetry;
+
+  /// No description provided for @providerDirectoryLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading providers'**
+  String get providerDirectoryLoading;
+
+  /// No description provided for @providerOtherCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse other categories'**
+  String get providerOtherCategories;
+
+  /// No description provided for @providerTypeIndependent.
+  ///
+  /// In en, this message translates to:
+  /// **'Independent technician'**
+  String get providerTypeIndependent;
+
+  /// No description provided for @providerTypeCompany.
+  ///
+  /// In en, this message translates to:
+  /// **'Repair company'**
+  String get providerTypeCompany;
+
+  /// No description provided for @providerProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider profile'**
+  String get providerProfileTitle;
+
+  /// No description provided for @providerProfileLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading provider profile'**
+  String get providerProfileLoading;
+
+  /// No description provided for @providerProfileError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t load this provider’s profile.'**
+  String get providerProfileError;
+
+  /// No description provided for @providerProfileNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider not found'**
+  String get providerProfileNotFound;
+
+  /// No description provided for @providerProfileNotFoundBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This profile is no longer available.'**
+  String get providerProfileNotFoundBody;
+
+  /// No description provided for @providerBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to providers'**
+  String get providerBack;
+
+  /// No description provided for @providerAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get providerAvailable;
+
+  /// No description provided for @providerUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Currently unavailable'**
+  String get providerUnavailable;
+
+  /// No description provided for @providerSpecialties.
+  ///
+  /// In en, this message translates to:
+  /// **'Specialties'**
+  String get providerSpecialties;
+
+  /// No description provided for @providerAreas.
+  ///
+  /// In en, this message translates to:
+  /// **'Service areas'**
+  String get providerAreas;
+
+  /// No description provided for @providerAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get providerAbout;
+
+  /// No description provided for @providerNoReviews.
+  ///
+  /// In en, this message translates to:
+  /// **'No reviews yet'**
+  String get providerNoReviews;
+
+  /// No description provided for @providerRatingUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Rating unavailable'**
+  String get providerRatingUnavailable;
+
+  /// No description provided for @providerReviewCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} review} other{{count} reviews}}'**
+  String providerReviewCount(int count);
+
+  /// No description provided for @providerRatingSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{score} · {reviews}'**
+  String providerRatingSummary(String score, String reviews);
+
+  /// No description provided for @providerRatingAnnouncement.
+  ///
+  /// In en, this message translates to:
+  /// **'{score} out of 5. {reviews}'**
+  String providerRatingAnnouncement(String score, String reviews);
+
+  /// No description provided for @providerContinueBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to booking'**
+  String get providerContinueBooking;
+
+  /// No description provided for @providerBookingPreviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking preview'**
+  String get providerBookingPreviewTitle;
+
+  /// No description provided for @providerBookingPreviewNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'You can’t submit a booking request in this preview.'**
+  String get providerBookingPreviewNotice;
 
   /// No description provided for @bookingFormTitle.
   ///

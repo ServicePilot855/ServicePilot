@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,6 +12,13 @@ import 'package:service_pilot/features/providers/services/provider_service.dart'
 import 'package:service_pilot/features/providers/widgets/provider_type_badge.dart';
 import 'package:service_pilot/l10n/app_localizations.dart';
 import 'package:service_pilot/shared/widgets/sp_button.dart';
+
+class _DeferredProfileService extends ProviderService {
+  final response = Completer<ProviderModel?>();
+
+  @override
+  Future<ProviderModel?> getProviderById(String providerId) => response.future;
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -109,7 +118,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Section title
-      final coverageSection = find.text('Service Coverage Area');
+      final coverageSection = find.text('Service areas');
       await tester.scrollUntilVisible(
         coverageSection,
         100,
@@ -137,7 +146,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(ProviderTypeBadge), findsOneWidget);
-      expect(find.text('Independent'), findsOneWidget);
+      expect(find.text('Independent technician'), findsOneWidget);
 
       // 2. Repair Company
       await tester.pumpWidget(
@@ -145,15 +154,14 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Repair Company'), findsOneWidget);
+      expect(find.text('Repair company'), findsOneWidget);
       expect(
         find.text('Khmer Cool Aircon & Home Care Co., Ltd.'),
         findsWidgets,
       );
     });
 
-    testWidgets(
-        'AC #4: Customers can start a booking request directly from profile (Book Service CTA navigates)',
+    testWidgets('An available provider can open its booking preview',
         (tester) async {
       setupViewport(tester);
       String? navigatedRoute;
@@ -168,13 +176,12 @@ void main() {
 
       // Available indicator
       expect(
-        find.textContaining('Available for Booking'),
+        find.text('Available'),
         findsOneWidget,
       );
 
-      // Find the Book Service button
       final bookButtonFinder =
-          find.widgetWithText(SpPrimaryButton, 'Book Service');
+          find.widgetWithText(SpPrimaryButton, 'Continue to booking');
       expect(bookButtonFinder, findsOneWidget);
 
       // Verify button is enabled
@@ -201,7 +208,7 @@ void main() {
 
       // Verify unavailable status banner is displayed
       expect(
-        find.text('Currently Unavailable for Bookings'),
+        find.text('Currently unavailable'),
         findsOneWidget,
       );
       expect(
@@ -211,18 +218,12 @@ void main() {
 
       // Verify button is disabled
       final bookButtonFinder =
-          find.widgetWithText(SpPrimaryButton, 'Currently Unavailable');
+          find.widgetWithText(SpPrimaryButton, 'Continue to booking');
       expect(bookButtonFinder, findsOneWidget);
 
       final buttonWidget = tester.widget<SpPrimaryButton>(bookButtonFinder);
       expect(buttonWidget.enabled, isFalse);
       expect(buttonWidget.onPressed, isNull);
-
-      // Verify helper warning text
-      expect(
-        find.text('Provider is currently unavailable for new bookings'),
-        findsOneWidget,
-      );
     });
 
     testWidgets('shows Not Found state when provider does not exist',
@@ -233,8 +234,46 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Provider Not Found'), findsOneWidget);
-      expect(find.text('Back to Providers'), findsOneWidget);
+      expect(find.text('Provider not found'), findsOneWidget);
+      expect(find.text('Back to providers'), findsOneWidget);
+    });
+
+    for (final withInitial in [false, true]) {
+      testWidgets('loading a provider with initial profile $withInitial',
+          (tester) async {
+        final service = _DeferredProfileService();
+        await tester.pumpWidget(buildProviderDetailTestApp(
+          providerId: 'test-provider',
+          initialProvider: withInitial
+              ? const ProviderModel(id: 'test-provider', name: 'Directory copy')
+              : null,
+          customService: service,
+        ));
+        expect(find.byType(CircularProgressIndicator),
+            withInitial ? findsNothing : findsOneWidget);
+        expect(find.text('Directory copy'),
+            withInitial ? findsOneWidget : findsNothing);
+        service.response.complete(
+          const ProviderModel(id: 'test-provider', name: 'Updated profile'),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('Updated profile'), findsOneWidget);
+      });
+    }
+
+    testWidgets('profile error without initial data offers a retry',
+        (tester) async {
+      final service = _DeferredProfileService();
+      await tester.pumpWidget(buildProviderDetailTestApp(
+        providerId: 'test-provider',
+        customService: service,
+      ));
+      service.response.completeError(StateError('internal failure'));
+      await tester.pumpAndSettle();
+      expect(
+          find.text('Couldn’t load this provider’s profile.'), findsOneWidget);
+      expect(find.textContaining('internal failure'), findsNothing);
+      expect(find.text('Try again'), findsOneWidget);
     });
   });
 }
