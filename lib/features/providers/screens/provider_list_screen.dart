@@ -6,6 +6,7 @@ import 'package:service_pilot/features/providers/models/provider_model.dart';
 import 'package:service_pilot/features/providers/providers/provider_provider.dart';
 import 'package:service_pilot/features/providers/widgets/provider_type_badge.dart';
 import 'package:service_pilot/features/services/models/category_model.dart';
+import 'package:service_pilot/l10n/l10n.dart';
 import 'package:service_pilot/shared/widgets/sp_button.dart';
 import 'package:service_pilot/shared/widgets/sp_layout.dart';
 
@@ -23,10 +24,19 @@ class ProviderListScreen extends ConsumerWidget {
     this.category,
   });
 
+  void _goBack(BuildContext context) {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/categories');
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final title = category?.name ?? 'Service Providers';
-    final providersAsync = ref.watch(categoryProvidersProvider(categoryId));
+    final l10n = context.l10n;
+    final title = category?.name ?? l10n.providerDirectoryTitle;
+    final providers = categoryProvidersProvider(categoryId);
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -34,7 +44,7 @@ class ProviderListScreen extends ConsumerWidget {
         backgroundColor: AppTheme.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
-        leading: SpBackButton(onPressed: () => context.pop()),
+        leading: SpBackButton(onPressed: () => _goBack(context)),
         title: Text(
           title,
           style: AppTheme.display(size: 18),
@@ -44,36 +54,46 @@ class ProviderListScreen extends ConsumerWidget {
           child: Container(color: AppTheme.border, height: 1),
         ),
       ),
-      body: providersAsync.when(
-        data: (providers) {
-          if (providers.isEmpty) {
-            return _buildEmptyState(context, title);
-          }
-          return _buildProviderList(context, providers, title);
-        },
-        loading: () => const Center(
-          child: CircularProgressIndicator(
-            strokeWidth: 2.5,
-            color: AppTheme.primary,
-          ),
-        ),
-        error: (err, _) => Center(
-          child: SpContentWidth(
-            child: Padding(
-              padding: const EdgeInsets.all(AppTheme.gutter),
-              child: SpNotice(
-                icon: Icons.error_outline_rounded,
-                message: 'Failed to load providers: $err',
-                tone: SpTone.danger,
+      body: ref.watch(providers).when(
+            data: (providers) {
+              if (providers.isEmpty) {
+                return _buildEmptyState(context);
+              }
+              return _buildProviderList(context, providers, title);
+            },
+            loading: () => const Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                color: AppTheme.primary,
+              ),
+            ),
+            error: (_, __) => Center(
+              child: SpContentWidth(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppTheme.gutter),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SpNotice(
+                        icon: Icons.error_outline_rounded,
+                        message: l10n.providerDirectoryError,
+                        tone: SpTone.danger,
+                      ),
+                      const SizedBox(height: 16),
+                      SpSecondaryButton(
+                        label: l10n.providerDirectoryRetry,
+                        onPressed: () => ref.invalidate(providers),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-      ),
     );
   }
 
-  Widget _buildEmptyState(BuildContext context, String title) {
+  Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: SpContentWidth(
         child: Padding(
@@ -96,22 +116,14 @@ class ProviderListScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'No Providers Available',
+                context.l10n.providerDirectoryEmpty,
                 style: AppTheme.display(size: 20),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'There are currently no verified providers listed for $title in your area.',
-                style: AppTheme.text(
-                  size: 14.5,
-                  color: AppTheme.textSecondary,
-                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
               SpSecondaryButton(
                 label: 'Browse Other Categories',
-                onPressed: () => context.pop(),
+                onPressed: () => _goBack(context),
               ),
             ],
           ),
@@ -155,7 +167,7 @@ class ProviderListScreen extends ConsumerWidget {
                   return _ProviderCard(
                     provider: provider,
                     onTap: () => context.push(
-                      '/providers/${provider.id}',
+                      '/providers/${Uri.encodeComponent(provider.id)}',
                       extra: provider,
                     ),
                   );
@@ -265,7 +277,7 @@ class _ProviderCard extends StatelessWidget {
                   const SizedBox(width: 3),
                   Flexible(
                     child: Text(
-                      provider.coverageAreas.take(2).join(', '),
+                      provider.formattedCoverageAreas,
                       style: AppTheme.text(
                         size: 12,
                         color: AppTheme.textSecondary,

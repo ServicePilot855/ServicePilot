@@ -1111,6 +1111,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Strength: Strong'**
   String get resetPasswordStrengthStrong;
+
+  /// No description provided for @providerDirectoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Service providers'**
+  String get providerDirectoryTitle;
+
+  /// No description provided for @providerDirectoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No providers are available for this category yet.'**
+  String get providerDirectoryEmpty;
+
+  /// No description provided for @providerDirectoryError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t load providers.'**
+  String get providerDirectoryError;
+
+  /// No description provided for @providerDirectoryRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get providerDirectoryRetry;
 }
 
 class _AppLocalizationsDelegate

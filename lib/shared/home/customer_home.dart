@@ -10,7 +10,6 @@ import 'package:service_pilot/features/services/providers/category_provider.dart
 import 'package:service_pilot/features/services/widgets/category_card.dart';
 import 'package:service_pilot/l10n/l10n.dart';
 import 'package:service_pilot/shared/widgets/sp_brand.dart';
-import 'package:service_pilot/shared/widgets/sp_button.dart';
 import 'package:service_pilot/shared/widgets/sp_layout.dart';
 import 'package:service_pilot/shared/widgets/status_badge.dart';
 
@@ -21,83 +20,13 @@ import 'package:service_pilot/shared/widgets/status_badge.dart';
 class CustomerHome extends ConsumerWidget {
   const CustomerHome({super.key});
 
-  void _onCategorySelected(BuildContext context, WidgetRef ref, CategoryModel category) {
-    if (category.hasAvailableProviders) {
-      ref.read(selectedCategoryProvider.notifier).state = category;
-      context.push('/categories/${category.id}/providers', extra: category);
-    } else {
-      _showEmptyCategoryDialog(context, category);
-    }
-  }
-
-  void _showEmptyCategoryDialog(BuildContext context, CategoryModel category) {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        key: const Key('empty_category_dialog'),
-        backgroundColor: AppTheme.surface,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radiusCard),
-          side: const BorderSide(color: AppTheme.border),
-        ),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppTheme.accentSoft,
-                borderRadius: BorderRadius.circular(AppTheme.radiusControl),
-              ),
-              child: const Icon(
-                Icons.handyman_outlined,
-                color: AppTheme.accentDeep,
-                size: 22,
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Expanded(
-              child: Text(
-                'No Providers Available',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimary,
-                ),
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'There are currently no verified service providers listed for "${category.name}" in Phnom Penh.',
-              style: AppTheme.text(
-                size: 14.5,
-                color: AppTheme.textBody,
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 12),
-            const SpNotice(
-              icon: Icons.info_outline_rounded,
-              message:
-                  'Our team is actively onboarding licensed technicians for this service area.',
-              tone: SpTone.waiting,
-            ),
-          ],
-        ),
-        actions: [
-          SpPrimaryButton(
-            key: const Key('empty_category_dialog_ok'),
-            label: 'Explore Other Services',
-            onPressed: () => Navigator.of(ctx).pop(),
-          ),
-        ],
-      ),
-    );
+  void _onCategorySelected(
+    BuildContext context,
+    WidgetRef ref,
+    CategoryModel category,
+  ) {
+    ref.read(selectedCategoryProvider.notifier).state = category;
+    context.push('/categories/${category.id}/providers', extra: category);
   }
 
   @override
