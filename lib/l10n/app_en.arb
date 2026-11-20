@@ -210,5 +210,111 @@
   "providerDirectoryTitle": "Service providers",
   "providerDirectoryEmpty": "No providers are available for this category yet.",
   "providerDirectoryError": "Couldn’t load providers.",
-  "providerDirectoryRetry": "Try again"
+  "providerDirectoryRetry": "Try again",
+
+  "bookingFormTitle": "Book a repair",
+  "bookingFormHeading": "Request a repair",
+  "bookingFormSubtitle": "{provider} will review your request and confirm or decline it.",
+  "@bookingFormSubtitle": {
+    "placeholders": {"provider": {"type": "String"}}
+  },
+  "bookingServiceSection": "Which service do you need?",
+  "bookingServiceGeneral": "General repair visit",
+  "bookingProblemSection": "What's wrong?",
+  "bookingProblemLabel": "Describe the problem",
+  "bookingProblemHint": "For example: the bedroom AC blows warm air and drips water",
+  "bookingAddressLabel": "Repair address",
+  "bookingAddressHint": "House no., street, sangkat, khan",
+  "bookingAddressHelper": "Include the street and khan so the technician can find you.",
+  "bookingWhereSection": "Where is the repair?",
+  "bookingLocationAdd": "Pin it on the map",
+  "bookingLocationAddHelper": "Optional. Helps the technician find a borey or alley.",
+  "bookingLocationPinned": "Pinned on the map",
+  "bookingLocationChange": "Change pin",
+  "bookingLocationRemove": "Remove pin",
+  "bookingPhotosLabel": "Photos",
+  "bookingPhotosHelper": "Optional. Up to {max} photos, {mb} MB each. They help the provider bring the right parts.",
+  "@bookingPhotosHelper": {
+    "placeholders": {"max": {"type": "int"}, "mb": {"type": "int"}}
+  },
+  "bookingPhotosAdd": "Add photo",
+  "bookingPhotosTake": "Take a photo",
+  "bookingPhotosChoose": "Choose from gallery",
+  "bookingPhotoRemove": "Remove photo {number}",
+  "@bookingPhotoRemove": {
+    "placeholders": {"number": {"type": "int"}}
+  },
+  "bookingPhotoCount": "{count, plural, =1{1 photo attached} other{{count} photos attached}}",
+  "@bookingPhotoCount": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "bookingErrorTooManyPhotos": "You can add up to {max} photos.",
+  "@bookingErrorTooManyPhotos": {
+    "placeholders": {"max": {"type": "int"}}
+  },
+  "bookingErrorPhotoTooLarge": "Each photo must be {mb} MB or smaller. Choose a smaller photo.",
+  "@bookingErrorPhotoTooLarge": {
+    "placeholders": {"mb": {"type": "int"}}
+  },
+  "bookingErrorPhotoPick": "We couldn't open your photos. Check the app's camera and photo permissions.",
+  "bookingSummaryPhotos": "Photos",
+  "locationPickerTitle": "Pin the repair address",
+  "locationPickerHint": "Move the map until the pin sits on the place that needs the repair.",
+  "locationPickerConfirm": "Use this location",
+  "locationPickerZoomIn": "Zoom in",
+  "locationPickerZoomOut": "Zoom out",
+  "bookingWhenSection": "When should they come?",
+  "bookingDateLabel": "Date",
+  "bookingTimeLabel": "Time",
+  "bookingDatePlaceholder": "Choose a date",
+  "bookingTimePlaceholder": "Choose a time",
+  "bookingEstimateLabel": "Starting price",
+  "bookingEstimateValue": "From {price}",
+  "@bookingEstimateValue": {
+    "placeholders": {"price": {"type": "String"}}
+  },
+  "bookingPaymentNote": "This is a request, not a payment. You pay the provider directly after the job, once the final price is agreed.",
+  "bookingSubmit": "Send booking request",
+  "bookingErrorServiceRequired": "Choose the service you need.",
+  "bookingErrorDescriptionRequired": "Describe the problem so the provider knows what to expect.",
+  "bookingErrorDescriptionTooShort": "Add a little more detail (at least {min} characters).",
+  "@bookingErrorDescriptionTooShort": {
+    "placeholders": {"min": {"type": "int"}}
+  },
+  "bookingErrorDescriptionTooLong": "Keep the description under {max} characters.",
+  "@bookingErrorDescriptionTooLong": {
+    "placeholders": {"max": {"type": "int"}}
+  },
+  "bookingErrorAddressRequired": "Enter the address where the repair is needed.",
+  "bookingErrorAddressTooShort": "Add your street and khan so the technician can find you.",
+  "bookingErrorAddressTooLong": "Keep the address under {max} characters.",
+  "@bookingErrorAddressTooLong": {
+    "placeholders": {"max": {"type": "int"}}
+  },
+  "bookingErrorDateTimeRequired": "Choose a date and a time.",
+  "bookingErrorDateTimeTooSoon": "Choose a time at least {hours} hour from now.",
+  "@bookingErrorDateTimeTooSoon": {
+    "placeholders": {"hours": {"type": "int"}}
+  },
+  "bookingErrorDateTimeTooFar": "Choose a date within the next {days} days.",
+  "@bookingErrorDateTimeTooFar": {
+    "placeholders": {"days": {"type": "int"}}
+  },
+  "bookingErrorSaveFailed": "We couldn't send your request. Check your connection and try again.",
+  "bookingProviderUnavailable": "{provider} isn't taking new bookings right now.",
+  "@bookingProviderUnavailable": {
+    "placeholders": {"provider": {"type": "String"}}
+  },
+  "bookingProviderNotFound": "We couldn't find this provider.",
+  "bookingSentTitle": "Request sent",
+  "bookingSentMessage": "{provider} will review it and confirm or decline. You'll see their answer on the booking status page.",
+  "@bookingSentMessage": {
+    "placeholders": {"provider": {"type": "String"}}
+  },
+  "bookingSentMessageGeneric": "The provider will review it and confirm or decline. You'll see their answer on the booking status page.",
+  "bookingSummaryService": "Service",
+  "bookingSummaryWhen": "Date and time",
+  "bookingSummaryAddress": "Address",
+  "bookingSentViewStatus": "View booking status",
+  "bookingSentBackHome": "Back to home"
 }

@@ -78,6 +78,9 @@ rules_version = '2';
 //   - totalPrice / price: number (optional, >= 0) - Quoted or final price
 //   - technicianId: string (optional, max 128 chars) - Assigned technician UID
 //   - technicianName: string (optional, max 100 chars) - Assigned technician name
+//   - cancelledAt: timestamp | string (optional) - When the customer cancelled
+//   - cancelledBy: string (optional, max 128 chars) - UID of who cancelled
+//   - location: latlng (optional) - Map pin for the repair address (GeoPoint)
 //   - cancellationReason: string (optional, max 300 chars) - Reason for cancellation
 //   - declinedReason: string (optional, max 300 chars) - Reason for decline
 //   - createdAt: timestamp | string (optional, immutable)
@@ -237,7 +240,7 @@ service cloud.firestore {
           'appointmentDate', 'timeSlot', 'address', 'serviceArea', 'district',
           'notes', 'description', 'photos', 'totalPrice', 'price',
           'technicianId', 'technicianName', 'cancellationReason', 'declinedReason',
-          'createdAt', 'updatedAt'
+          'cancelledAt', 'cancelledBy', 'location', 'createdAt', 'updatedAt'
         ]) &&
         hasRequiredFields(data, ['customerId', 'providerId', 'status']) &&
         data.customerId is string && data.customerId.size() >= 1 && data.customerId.size() <= 128 &&
@@ -268,6 +271,9 @@ service cloud.firestore {
         (!('technicianName' in data) || (data.technicianName is string && data.technicianName.size() <= 100)) &&
         (!('cancellationReason' in data) || (data.cancellationReason is string && data.cancellationReason.size() <= 300)) &&
         (!('declinedReason' in data) || (data.declinedReason is string && data.declinedReason.size() <= 300)) &&
+        (!('cancelledAt' in data) || data.cancelledAt is timestamp || (data.cancelledAt is string && data.cancelledAt.size() <= 50)) &&
+        (!('cancelledBy' in data) || (data.cancelledBy is string && data.cancelledBy.size() <= 128)) &&
+        (!('location' in data) || data.location is latlng) &&
         (!('createdAt' in data) || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
         (!('updatedAt' in data) || data.updatedAt is timestamp || (data.updatedAt is string && data.updatedAt.size() <= 50));
     }

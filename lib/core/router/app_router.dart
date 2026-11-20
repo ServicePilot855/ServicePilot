@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/core/auth/auth_state.dart';
@@ -14,6 +15,9 @@ import 'package:service_pilot/features/auth/screens/technician_activation_screen
 import 'package:service_pilot/features/auth/screens/forgot_password_screen.dart';
 import 'package:service_pilot/features/auth/screens/reset_password_screen.dart';
 import 'package:service_pilot/features/bookings/models/booking_model.dart';
+import 'package:service_pilot/features/bookings/screens/booking_confirmation_screen.dart';
+import 'package:service_pilot/features/bookings/screens/create_booking_screen.dart';
+import 'package:service_pilot/features/bookings/screens/location_picker_screen.dart';
 import 'package:service_pilot/features/bookings/screens/booking_tracking_screen.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
 import 'package:service_pilot/features/providers/screens/provider_detail_screen.dart';
@@ -145,18 +149,32 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
+      // ── Booking request (US-12) ───────────────────────────────────────
       GoRoute(
         path: '/providers/:providerId/book',
         builder: (_, state) {
           final providerId = state.pathParameters['providerId'] ?? '';
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Book Service'),
-              leading: const BackButton(),
-            ),
-            body: Center(
-              child: Text('Booking request form for provider $providerId (US-12)'),
-            ),
+          final provider = state.extra as ProviderModel?;
+          return CreateBookingScreen(
+            providerId: providerId,
+            initialProvider: provider,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/providers/:providerId/book/location',
+        builder: (_, state) => LocationPickerScreen(
+          initial: state.extra as LatLng?,
+        ),
+      ),
+      GoRoute(
+        path: '/bookings/:bookingId/sent',
+        builder: (_, state) {
+          final bookingId = state.pathParameters['bookingId'] ?? '';
+          final booking = state.extra as BookingModel?;
+          return BookingConfirmationScreen(
+            bookingId: bookingId,
+            booking: booking,
           );
         },
       ),

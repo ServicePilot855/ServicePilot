@@ -1135,6 +1135,384 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try again'**
   String get providerDirectoryRetry;
+
+  /// No description provided for @bookingFormTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Book a repair'**
+  String get bookingFormTitle;
+
+  /// No description provided for @bookingFormHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Request a repair'**
+  String get bookingFormHeading;
+
+  /// No description provided for @bookingFormSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{provider} will review your request and confirm or decline it.'**
+  String bookingFormSubtitle(String provider);
+
+  /// No description provided for @bookingServiceSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Which service do you need?'**
+  String get bookingServiceSection;
+
+  /// No description provided for @bookingServiceGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'General repair visit'**
+  String get bookingServiceGeneral;
+
+  /// No description provided for @bookingProblemSection.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s wrong?'**
+  String get bookingProblemSection;
+
+  /// No description provided for @bookingProblemLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe the problem'**
+  String get bookingProblemLabel;
+
+  /// No description provided for @bookingProblemHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For example: the bedroom AC blows warm air and drips water'**
+  String get bookingProblemHint;
+
+  /// No description provided for @bookingAddressLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Repair address'**
+  String get bookingAddressLabel;
+
+  /// No description provided for @bookingAddressHint.
+  ///
+  /// In en, this message translates to:
+  /// **'House no., street, sangkat, khan'**
+  String get bookingAddressHint;
+
+  /// No description provided for @bookingAddressHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Include the street and khan so the technician can find you.'**
+  String get bookingAddressHelper;
+
+  /// No description provided for @bookingWhereSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Where is the repair?'**
+  String get bookingWhereSection;
+
+  /// No description provided for @bookingLocationAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin it on the map'**
+  String get bookingLocationAdd;
+
+  /// No description provided for @bookingLocationAddHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional. Helps the technician find a borey or alley.'**
+  String get bookingLocationAddHelper;
+
+  /// No description provided for @bookingLocationPinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned on the map'**
+  String get bookingLocationPinned;
+
+  /// No description provided for @bookingLocationChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change pin'**
+  String get bookingLocationChange;
+
+  /// No description provided for @bookingLocationRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove pin'**
+  String get bookingLocationRemove;
+
+  /// No description provided for @bookingPhotosLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos'**
+  String get bookingPhotosLabel;
+
+  /// No description provided for @bookingPhotosHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional. Up to {max} photos, {mb} MB each. They help the provider bring the right parts.'**
+  String bookingPhotosHelper(int max, int mb);
+
+  /// No description provided for @bookingPhotosAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add photo'**
+  String get bookingPhotosAdd;
+
+  /// No description provided for @bookingPhotosTake.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a photo'**
+  String get bookingPhotosTake;
+
+  /// No description provided for @bookingPhotosChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from gallery'**
+  String get bookingPhotosChoose;
+
+  /// No description provided for @bookingPhotoRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo {number}'**
+  String bookingPhotoRemove(int number);
+
+  /// No description provided for @bookingPhotoCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 photo attached} other{{count} photos attached}}'**
+  String bookingPhotoCount(int count);
+
+  /// No description provided for @bookingErrorTooManyPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'You can add up to {max} photos.'**
+  String bookingErrorTooManyPhotos(int max);
+
+  /// No description provided for @bookingErrorPhotoTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Each photo must be {mb} MB or smaller. Choose a smaller photo.'**
+  String bookingErrorPhotoTooLarge(int mb);
+
+  /// No description provided for @bookingErrorPhotoPick.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t open your photos. Check the app\'s camera and photo permissions.'**
+  String get bookingErrorPhotoPick;
+
+  /// No description provided for @bookingSummaryPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos'**
+  String get bookingSummaryPhotos;
+
+  /// No description provided for @locationPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin the repair address'**
+  String get locationPickerTitle;
+
+  /// No description provided for @locationPickerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Move the map until the pin sits on the place that needs the repair.'**
+  String get locationPickerHint;
+
+  /// No description provided for @locationPickerConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this location'**
+  String get locationPickerConfirm;
+
+  /// No description provided for @locationPickerZoomIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom in'**
+  String get locationPickerZoomIn;
+
+  /// No description provided for @locationPickerZoomOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom out'**
+  String get locationPickerZoomOut;
+
+  /// No description provided for @bookingWhenSection.
+  ///
+  /// In en, this message translates to:
+  /// **'When should they come?'**
+  String get bookingWhenSection;
+
+  /// No description provided for @bookingDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get bookingDateLabel;
+
+  /// No description provided for @bookingTimeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get bookingTimeLabel;
+
+  /// No description provided for @bookingDatePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a date'**
+  String get bookingDatePlaceholder;
+
+  /// No description provided for @bookingTimePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a time'**
+  String get bookingTimePlaceholder;
+
+  /// No description provided for @bookingEstimateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting price'**
+  String get bookingEstimateLabel;
+
+  /// No description provided for @bookingEstimateValue.
+  ///
+  /// In en, this message translates to:
+  /// **'From {price}'**
+  String bookingEstimateValue(String price);
+
+  /// No description provided for @bookingPaymentNote.
+  ///
+  /// In en, this message translates to:
+  /// **'This is a request, not a payment. You pay the provider directly after the job, once the final price is agreed.'**
+  String get bookingPaymentNote;
+
+  /// No description provided for @bookingSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Send booking request'**
+  String get bookingSubmit;
+
+  /// No description provided for @bookingErrorServiceRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the service you need.'**
+  String get bookingErrorServiceRequired;
+
+  /// No description provided for @bookingErrorDescriptionRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe the problem so the provider knows what to expect.'**
+  String get bookingErrorDescriptionRequired;
+
+  /// No description provided for @bookingErrorDescriptionTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a little more detail (at least {min} characters).'**
+  String bookingErrorDescriptionTooShort(int min);
+
+  /// No description provided for @bookingErrorDescriptionTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep the description under {max} characters.'**
+  String bookingErrorDescriptionTooLong(int max);
+
+  /// No description provided for @bookingErrorAddressRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the address where the repair is needed.'**
+  String get bookingErrorAddressRequired;
+
+  /// No description provided for @bookingErrorAddressTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your street and khan so the technician can find you.'**
+  String get bookingErrorAddressTooShort;
+
+  /// No description provided for @bookingErrorAddressTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep the address under {max} characters.'**
+  String bookingErrorAddressTooLong(int max);
+
+  /// No description provided for @bookingErrorDateTimeRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a date and a time.'**
+  String get bookingErrorDateTimeRequired;
+
+  /// No description provided for @bookingErrorDateTimeTooSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a time at least {hours} hour from now.'**
+  String bookingErrorDateTimeTooSoon(int hours);
+
+  /// No description provided for @bookingErrorDateTimeTooFar.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a date within the next {days} days.'**
+  String bookingErrorDateTimeTooFar(int days);
+
+  /// No description provided for @bookingErrorSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t send your request. Check your connection and try again.'**
+  String get bookingErrorSaveFailed;
+
+  /// No description provided for @bookingProviderUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'{provider} isn\'t taking new bookings right now.'**
+  String bookingProviderUnavailable(String provider);
+
+  /// No description provided for @bookingProviderNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t find this provider.'**
+  String get bookingProviderNotFound;
+
+  /// No description provided for @bookingSentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Request sent'**
+  String get bookingSentTitle;
+
+  /// No description provided for @bookingSentMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{provider} will review it and confirm or decline. You\'ll see their answer on the booking status page.'**
+  String bookingSentMessage(String provider);
+
+  /// No description provided for @bookingSentMessageGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'The provider will review it and confirm or decline. You\'ll see their answer on the booking status page.'**
+  String get bookingSentMessageGeneric;
+
+  /// No description provided for @bookingSummaryService.
+  ///
+  /// In en, this message translates to:
+  /// **'Service'**
+  String get bookingSummaryService;
+
+  /// No description provided for @bookingSummaryWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'Date and time'**
+  String get bookingSummaryWhen;
+
+  /// No description provided for @bookingSummaryAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Address'**
+  String get bookingSummaryAddress;
+
+  /// No description provided for @bookingSentViewStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'View booking status'**
+  String get bookingSentViewStatus;
+
+  /// No description provided for @bookingSentBackHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to home'**
+  String get bookingSentBackHome;
 }
 
 class _AppLocalizationsDelegate

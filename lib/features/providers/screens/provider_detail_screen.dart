@@ -721,7 +721,10 @@ class _ProviderDetailContent extends StatelessWidget {
                       : Icons.block_rounded,
                   enabled: canBook,
                   onPressed: canBook
-                      ? () => context.push('/providers/${provider.id}/book')
+                      ? () => context.push(
+                            '/providers/${provider.id}/book',
+                            extra: provider,
+                          )
                       : null,
                 ),
               ],

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:service_pilot/core/constants/booking_status.dart';
 
 /// Represents a customer's repair service booking in ServicePilot.
@@ -23,6 +24,13 @@ class BookingModel {
   final String? cancelledBy;
   final String? cancellationReason;
 
+  /// Map pin the customer dropped for the repair address, if any.
+  final double? latitude;
+  final double? longitude;
+
+  /// Download links of the problem photos the customer attached.
+  final List<String> photoUrls;
+
   const BookingModel({
     required this.id,
     required this.customerId,
@@ -42,7 +50,13 @@ class BookingModel {
     this.cancelledAt,
     this.cancelledBy,
     this.cancellationReason,
+    this.latitude,
+    this.longitude,
+    this.photoUrls = const [],
   });
+
+  /// Whether the customer pinned the address on the map.
+  bool get hasLocation => latitude != null && longitude != null;
 
   /// Whether this booking's current status permits customer cancellation.
   ///
@@ -86,6 +100,12 @@ class BookingModel {
           : null,
       cancelledBy: json['cancelledBy'] as String?,
       cancellationReason: json['cancellationReason'] as String?,
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
+      photoUrls: (json['photoUrls'] as List<dynamic>?)
+              ?.whereType<String>()
+              .toList() ??
+          const [],
     );
   }
 
@@ -111,7 +131,86 @@ class BookingModel {
       if (cancelledAt != null) 'cancelledAt': cancelledAt!.toIso8601String(),
       if (cancelledBy != null) 'cancelledBy': cancelledBy,
       if (cancellationReason != null) 'cancellationReason': cancellationReason,
+      if (latitude != null) 'latitude': latitude,
+      if (longitude != null) 'longitude': longitude,
+      if (photoUrls.isNotEmpty) 'photoUrls': photoUrls,
     };
+  }
+
+  /// Document for the Firestore `bookings` collection.
+  ///
+  /// Uses the field names `firestore.rules` accepts (`categoryName`,
+  /// `serviceType`, `appointmentDate`, `technicianId`, `technicianName`),
+  /// which differ from [toJson]. Technicians can only read a booking through
+  /// `technicianId`, so the names matter. The map pin is a `GeoPoint` in
+  /// `location`; photo links go in `photos`.
+  Map<String, dynamic> toFirestore() {
+    return {
+      'id': id,
+      'customerId': customerId,
+      'providerId': providerId,
+      'providerName': providerName,
+      'categoryName': serviceCategory,
+      'serviceType': serviceTitle,
+      'description': description,
+      'address': address,
+      'appointmentDate': Timestamp.fromDate(preferredDateTime),
+      'status': status.value,
+      'totalPrice': totalPrice,
+      if (assignedTechnicianId != null) 'technicianId': assignedTechnicianId,
+      if (assignedTechnicianName != null)
+        'technicianName': assignedTechnicianName,
+      'createdAt': Timestamp.fromDate(createdAt),
+      if (updatedAt != null) 'updatedAt': Timestamp.fromDate(updatedAt!),
+      if (cancelledAt != null) 'cancelledAt': Timestamp.fromDate(cancelledAt!),
+      if (cancelledBy != null) 'cancelledBy': cancelledBy,
+      if (cancellationReason != null) 'cancellationReason': cancellationReason,
+      if (hasLocation) 'location': GeoPoint(latitude!, longitude!),
+      if (photoUrls.isNotEmpty) 'photos': photoUrls,
+    };
+  }
+
+  /// Reads a booking written by [toFirestore]. Dates may be Firestore
+  /// timestamps or ISO strings (both are allowed by the rules).
+  factory BookingModel.fromFirestore(
+      String documentId, Map<String, dynamic> data) {
+    return BookingModel(
+      id: documentId,
+      customerId: data['customerId'] as String? ?? '',
+      providerId: data['providerId'] as String? ?? '',
+      providerName: data['providerName'] as String? ?? 'Service Provider',
+      serviceCategory: data['categoryName'] as String? ?? 'General Repair',
+      serviceTitle: data['serviceType'] as String? ??
+          data['categoryName'] as String? ??
+          'Repair Service',
+      description:
+          data['description'] as String? ?? data['notes'] as String? ?? '',
+      address: data['address'] as String? ?? '',
+      preferredDateTime: _readDate(data['appointmentDate']) ?? DateTime.now(),
+      status: BookingStatusExtension.fromValue(data['status'] as String?),
+      totalPrice: (data['totalPrice'] as num?)?.toDouble() ??
+          (data['price'] as num?)?.toDouble() ??
+          0.0,
+      assignedTechnicianId: data['technicianId'] as String?,
+      assignedTechnicianName: data['technicianName'] as String?,
+      createdAt: _readDate(data['createdAt']) ?? DateTime.now(),
+      updatedAt: _readDate(data['updatedAt']),
+      cancelledAt: _readDate(data['cancelledAt']),
+      cancelledBy: data['cancelledBy'] as String?,
+      cancellationReason: data['cancellationReason'] as String?,
+      latitude: (data['location'] as GeoPoint?)?.latitude,
+      longitude: (data['location'] as GeoPoint?)?.longitude,
+      photoUrls: (data['photos'] as List<dynamic>?)
+              ?.whereType<String>()
+              .toList() ??
+          const [],
+    );
+  }
+
+  static DateTime? _readDate(Object? value) {
+    if (value is Timestamp) return value.toDate();
+    if (value is String) return DateTime.tryParse(value);
+    return null;
   }
 
   BookingModel copyWith({
@@ -133,6 +232,9 @@ class BookingModel {
     DateTime? cancelledAt,
     String? cancelledBy,
     String? cancellationReason,
+    double? latitude,
+    double? longitude,
+    List<String>? photoUrls,
   }) {
     return BookingModel(
       id: id ?? this.id,
@@ -154,6 +256,9 @@ class BookingModel {
       cancelledAt: cancelledAt ?? this.cancelledAt,
       cancelledBy: cancelledBy ?? this.cancelledBy,
       cancellationReason: cancellationReason ?? this.cancellationReason,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      photoUrls: photoUrls ?? this.photoUrls,
     );
   }
 

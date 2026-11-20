@@ -574,4 +574,238 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get providerDirectoryRetry => 'Try again';
+
+  @override
+  String get bookingFormTitle => 'Book a repair';
+
+  @override
+  String get bookingFormHeading => 'Request a repair';
+
+  @override
+  String bookingFormSubtitle(String provider) {
+    return '$provider will review your request and confirm or decline it.';
+  }
+
+  @override
+  String get bookingServiceSection => 'Which service do you need?';
+
+  @override
+  String get bookingServiceGeneral => 'General repair visit';
+
+  @override
+  String get bookingProblemSection => 'What\'s wrong?';
+
+  @override
+  String get bookingProblemLabel => 'Describe the problem';
+
+  @override
+  String get bookingProblemHint =>
+      'For example: the bedroom AC blows warm air and drips water';
+
+  @override
+  String get bookingAddressLabel => 'Repair address';
+
+  @override
+  String get bookingAddressHint => 'House no., street, sangkat, khan';
+
+  @override
+  String get bookingAddressHelper =>
+      'Include the street and khan so the technician can find you.';
+
+  @override
+  String get bookingWhereSection => 'Where is the repair?';
+
+  @override
+  String get bookingLocationAdd => 'Pin it on the map';
+
+  @override
+  String get bookingLocationAddHelper =>
+      'Optional. Helps the technician find a borey or alley.';
+
+  @override
+  String get bookingLocationPinned => 'Pinned on the map';
+
+  @override
+  String get bookingLocationChange => 'Change pin';
+
+  @override
+  String get bookingLocationRemove => 'Remove pin';
+
+  @override
+  String get bookingPhotosLabel => 'Photos';
+
+  @override
+  String bookingPhotosHelper(int max, int mb) {
+    return 'Optional. Up to $max photos, $mb MB each. They help the provider bring the right parts.';
+  }
+
+  @override
+  String get bookingPhotosAdd => 'Add photo';
+
+  @override
+  String get bookingPhotosTake => 'Take a photo';
+
+  @override
+  String get bookingPhotosChoose => 'Choose from gallery';
+
+  @override
+  String bookingPhotoRemove(int number) {
+    return 'Remove photo $number';
+  }
+
+  @override
+  String bookingPhotoCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count photos attached',
+      one: '1 photo attached',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bookingErrorTooManyPhotos(int max) {
+    return 'You can add up to $max photos.';
+  }
+
+  @override
+  String bookingErrorPhotoTooLarge(int mb) {
+    return 'Each photo must be $mb MB or smaller. Choose a smaller photo.';
+  }
+
+  @override
+  String get bookingErrorPhotoPick =>
+      'We couldn\'t open your photos. Check the app\'s camera and photo permissions.';
+
+  @override
+  String get bookingSummaryPhotos => 'Photos';
+
+  @override
+  String get locationPickerTitle => 'Pin the repair address';
+
+  @override
+  String get locationPickerHint =>
+      'Move the map until the pin sits on the place that needs the repair.';
+
+  @override
+  String get locationPickerConfirm => 'Use this location';
+
+  @override
+  String get locationPickerZoomIn => 'Zoom in';
+
+  @override
+  String get locationPickerZoomOut => 'Zoom out';
+
+  @override
+  String get bookingWhenSection => 'When should they come?';
+
+  @override
+  String get bookingDateLabel => 'Date';
+
+  @override
+  String get bookingTimeLabel => 'Time';
+
+  @override
+  String get bookingDatePlaceholder => 'Choose a date';
+
+  @override
+  String get bookingTimePlaceholder => 'Choose a time';
+
+  @override
+  String get bookingEstimateLabel => 'Starting price';
+
+  @override
+  String bookingEstimateValue(String price) {
+    return 'From $price';
+  }
+
+  @override
+  String get bookingPaymentNote =>
+      'This is a request, not a payment. You pay the provider directly after the job, once the final price is agreed.';
+
+  @override
+  String get bookingSubmit => 'Send booking request';
+
+  @override
+  String get bookingErrorServiceRequired => 'Choose the service you need.';
+
+  @override
+  String get bookingErrorDescriptionRequired =>
+      'Describe the problem so the provider knows what to expect.';
+
+  @override
+  String bookingErrorDescriptionTooShort(int min) {
+    return 'Add a little more detail (at least $min characters).';
+  }
+
+  @override
+  String bookingErrorDescriptionTooLong(int max) {
+    return 'Keep the description under $max characters.';
+  }
+
+  @override
+  String get bookingErrorAddressRequired =>
+      'Enter the address where the repair is needed.';
+
+  @override
+  String get bookingErrorAddressTooShort =>
+      'Add your street and khan so the technician can find you.';
+
+  @override
+  String bookingErrorAddressTooLong(int max) {
+    return 'Keep the address under $max characters.';
+  }
+
+  @override
+  String get bookingErrorDateTimeRequired => 'Choose a date and a time.';
+
+  @override
+  String bookingErrorDateTimeTooSoon(int hours) {
+    return 'Choose a time at least $hours hour from now.';
+  }
+
+  @override
+  String bookingErrorDateTimeTooFar(int days) {
+    return 'Choose a date within the next $days days.';
+  }
+
+  @override
+  String get bookingErrorSaveFailed =>
+      'We couldn\'t send your request. Check your connection and try again.';
+
+  @override
+  String bookingProviderUnavailable(String provider) {
+    return '$provider isn\'t taking new bookings right now.';
+  }
+
+  @override
+  String get bookingProviderNotFound => 'We couldn\'t find this provider.';
+
+  @override
+  String get bookingSentTitle => 'Request sent';
+
+  @override
+  String bookingSentMessage(String provider) {
+    return '$provider will review it and confirm or decline. You\'ll see their answer on the booking status page.';
+  }
+
+  @override
+  String get bookingSentMessageGeneric =>
+      'The provider will review it and confirm or decline. You\'ll see their answer on the booking status page.';
+
+  @override
+  String get bookingSummaryService => 'Service';
+
+  @override
+  String get bookingSummaryWhen => 'Date and time';
+
+  @override
+  String get bookingSummaryAddress => 'Address';
+
+  @override
+  String get bookingSentViewStatus => 'View booking status';
+
+  @override
+  String get bookingSentBackHome => 'Back to home';
 }
