@@ -2,190 +2,308 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:service_pilot/core/theme/app_theme.dart';
-import 'package:service_pilot/features/providers/provider_directory.dart';
+import 'package:service_pilot/features/providers/models/provider_model.dart';
+import 'package:service_pilot/features/providers/providers/provider_provider.dart';
+import 'package:service_pilot/features/providers/widgets/provider_type_badge.dart';
 import 'package:service_pilot/features/services/models/category_model.dart';
 import 'package:service_pilot/l10n/l10n.dart';
+import 'package:service_pilot/shared/widgets/sp_button.dart';
 import 'package:service_pilot/shared/widgets/sp_layout.dart';
 
+/// Screen listing verified providers for a selected service category.
+///
+/// Navigation target for US-09 (SCRUM-41); provider listing delivered in US-10 (SCRUM-55).
+/// Tapping a provider navigates to US-11 (SCRUM-54) ProviderDetailScreen.
 class ProviderListScreen extends ConsumerWidget {
-  const ProviderListScreen(
-      {super.key, required this.categoryId, this.category});
-
   final String categoryId;
   final CategoryModel? category;
 
+  const ProviderListScreen({
+    super.key,
+    required this.categoryId,
+    this.category,
+  });
+
+  void _goBack(BuildContext context) {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/categories');
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final title = category?.name ?? l10n.providerDirectoryTitle;
     final providers = categoryProvidersProvider(categoryId);
-    return ProviderDirectoryPage(
-      title: category?.name ?? l10n.providerDirectoryTitle,
-      child: ref.watch(providers).when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, __) => ProviderDirectoryMessage(
-              text: l10n.providerDirectoryError,
-              onRetry: () => ref.invalidate(providers),
-            ),
-            data: (entries) => entries.isEmpty
-                ? ProviderDirectoryMessage(text: l10n.providerDirectoryEmpty)
-                : ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: entries.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
-                    itemBuilder: (context, index) {
-                      final provider = entries[index];
-                      return ProviderSummaryCard(
-                        provider: provider,
-                        onTap: () => context.push(
-                          '/providers/${Uri.encodeComponent(provider.id)}',
-                        ),
-                      );
-                    },
-                  ),
-          ),
-    );
-  }
-}
 
-/// Profile route handoff for SCRUM-54.
-class ProviderProfileScreen extends ConsumerWidget {
-  const ProviderProfileScreen({super.key, required this.providerId});
-
-  final String providerId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    final profile = providerProfileProvider(providerId);
-    return ProviderDirectoryPage(
-      title: l10n.providerProfileTitle,
-      child: ref.watch(profile).when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, __) => ProviderDirectoryMessage(
-              text: l10n.providerProfileError,
-              onRetry: () => ref.invalidate(profile),
-            ),
-            data: (provider) => provider == null
-                ? ProviderDirectoryMessage(
-                    text: l10n.providerProfileUnavailable)
-                : ListView(
-                    padding: const EdgeInsets.all(16),
-                    children: [ProviderSummaryCard(provider: provider)],
-                  ),
-          ),
-    );
-  }
-}
-
-class ProviderDirectoryPage extends StatelessWidget {
-  const ProviderDirectoryPage(
-      {super.key, required this.title, required this.child});
-
-  final String title;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
         backgroundColor: AppTheme.surface,
-        leading: BackButton(
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go('/categories');
-            }
-          },
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        leading: SpBackButton(onPressed: () => _goBack(context)),
+        title: Text(
+          title,
+          style: AppTheme.display(size: 18),
         ),
-        title: Text(title, style: AppTheme.display(size: 18)),
-      ),
-      body: SafeArea(child: SpContentWidth(child: child)),
-    );
-  }
-}
-
-class ProviderSummaryCard extends StatelessWidget {
-  const ProviderSummaryCard({super.key, required this.provider, this.onTap});
-
-  final ProviderSummary provider;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final company = provider.type == ProviderType.company;
-    final tone = company ? SpTone.brand : SpTone.success;
-    return Card(
-      margin: EdgeInsets.zero,
-      color: AppTheme.surface,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radiusCard),
-        side: const BorderSide(color: AppTheme.border),
-      ),
-      child: ListTile(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radiusCard),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(color: AppTheme.border, height: 1),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        title: Text(provider.name, style: AppTheme.display(size: 16)),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 6),
-            Text(provider.serviceArea,
-                style: AppTheme.text(color: AppTheme.textSecondary)),
-            const SizedBox(height: 6),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: tone.background,
-                borderRadius: BorderRadius.circular(AppTheme.radiusChip),
+      ),
+      body: ref.watch(providers).when(
+            data: (providers) {
+              if (providers.isEmpty) {
+                return _buildEmptyState(context);
+              }
+              return _buildProviderList(context, providers, title);
+            },
+            loading: () => const Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                color: AppTheme.primary,
               ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: Text(
-                  company
-                      ? l10n.providerTypeCompany
-                      : l10n.providerTypeIndependent,
-                  style: AppTheme.text(
-                      size: 12,
-                      color: tone.foreground,
-                      weight: FontWeight.w600),
+            ),
+            error: (_, __) => Center(
+              child: SpContentWidth(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppTheme.gutter),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SpNotice(
+                        icon: Icons.error_outline_rounded,
+                        message: l10n.providerDirectoryError,
+                        tone: SpTone.danger,
+                      ),
+                      const SizedBox(height: 16),
+                      SpSecondaryButton(
+                        label: l10n.providerDirectoryRetry,
+                        onPressed: () => ref.invalidate(providers),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ],
+          ),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    return Center(
+      child: SpContentWidth(
+        child: Padding(
+          padding: const EdgeInsets.all(AppTheme.gutter),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceElevated,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusCard),
+                ),
+                child: Icon(
+                  category?.iconData ?? Icons.engineering_rounded,
+                  size: 32,
+                  color: AppTheme.textMuted,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                context.l10n.providerDirectoryEmpty,
+                style: AppTheme.display(size: 20),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              SpSecondaryButton(
+                label: 'Browse Other Categories',
+                onPressed: () => _goBack(context),
+              ),
+            ],
+          ),
         ),
-        trailing:
-            onTap == null ? null : const Icon(Icons.chevron_right_rounded),
-        onTap: onTap,
+      ),
+    );
+  }
+
+  Widget _buildProviderList(
+    BuildContext context,
+    List<ProviderModel> providers,
+    String title,
+  ) {
+    return SingleChildScrollView(
+      child: SpContentWidth(
+        child: Padding(
+          padding: const EdgeInsets.all(AppTheme.gutter),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Verified Providers for $title',
+                style: AppTheme.display(size: 20),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Select a technician or company to view rates, specialties, and schedule a repair.',
+                style: AppTheme.text(
+                  size: 14,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: providers.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final provider = providers[index];
+                  return _ProviderCard(
+                    provider: provider,
+                    onTap: () => context.push(
+                      '/providers/${Uri.encodeComponent(provider.id)}',
+                      extra: provider,
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
-class ProviderDirectoryMessage extends StatelessWidget {
-  const ProviderDirectoryMessage({super.key, required this.text, this.onRetry});
+class _ProviderCard extends StatelessWidget {
+  final ProviderModel provider;
+  final VoidCallback onTap;
 
-  final String text;
-  final VoidCallback? onRetry;
+  const _ProviderCard({
+    required this.provider,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppTheme.gutter),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(text, textAlign: TextAlign.center),
-            if (onRetry != null)
-              TextButton(
-                  onPressed: onRetry,
-                  child: Text(context.l10n.providerDirectoryRetry)),
-          ],
+    return Material(
+      color: AppTheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.radiusCard),
+        side: const BorderSide(color: AppTheme.border, width: 1),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        splashColor: AppTheme.primary.withValues(alpha: 0.08),
+        highlightColor: AppTheme.primary.withValues(alpha: 0.04),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: provider.isCompany
+                          ? AppTheme.primarySoft
+                          : AppTheme.successSoft,
+                      borderRadius:
+                          BorderRadius.circular(AppTheme.radiusControl),
+                    ),
+                    child: Icon(
+                      provider.isCompany
+                          ? Icons.apartment_rounded
+                          : Icons.person_rounded,
+                      color: provider.isCompany
+                          ? AppTheme.primary
+                          : AppTheme.successDeep,
+                      size: 26,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          provider.name,
+                          style: AppTheme.display(size: 16),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          provider.description,
+                          style: AppTheme.text(
+                            size: 13,
+                            color: AppTheme.textSecondary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppTheme.textMuted,
+                    size: 24,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const Divider(color: AppTheme.border, height: 1),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  ProviderTypeBadge(type: provider.type, isCompact: true),
+                  const Spacer(),
+                  const Icon(
+                    Icons.location_on_rounded,
+                    size: 13,
+                    color: AppTheme.textMuted,
+                  ),
+                  const SizedBox(width: 3),
+                  Flexible(
+                    child: Text(
+                      provider.formattedCoverageAreas,
+                      style: AppTheme.text(
+                        size: 12,
+                        color: AppTheme.textSecondary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(
+                    Icons.star_rounded,
+                    size: 15,
+                    color: AppTheme.accentDeep,
+                  ),
+                  const SizedBox(width: 3),
+                  Text(
+                    provider.formattedRating,
+                    style: AppTheme.text(
+                      size: 12.5,
+                      weight: FontWeight.w700,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

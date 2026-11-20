@@ -12,6 +12,9 @@ abstract class ICategoryService {
 
   /// Searches categories by query term (matches name or description).
   Future<List<CategoryModel>> searchCategories(String query);
+
+  /// Seeds initial service categories into database if empty.
+  Future<void> seedInitialCategories();
 }
 
 /// Production and testable implementation of [ICategoryService].
@@ -112,5 +115,10 @@ class CategoryService implements ICategoryService {
       );
       return matchName || matchDesc || matchServices;
     }).toList();
+  }
+
+  @override
+  Future<void> seedInitialCategories() async {
+    // In-memory implementation is a no-op since defaultCategories are already loaded.
   }
 }

@@ -11,18 +11,6 @@ It accepts a CEL expression.
 """
 scalar BookingStatus_Expr
 """
-✨ `ProviderStatus_Expr` is a server value variant of enum type `ProviderStatus`.
-
-It accepts a CEL expression.
-"""
-scalar ProviderStatus_Expr
-"""
-✨ `ProviderType_Expr` is a server value variant of enum type `ProviderType`.
-
-It accepts a CEL expression.
-"""
-scalar ProviderType_Expr
-"""
 ✨ `Review_KeyOutput` returns the primary key fields of table type `Review`.
 
 It has the same format as `Review_Key`, but is only used as mutation return value.
@@ -688,210 +676,6 @@ input BookingStatus_ListFilter {
   Condition of the related objects to filter for.
   """
   exist: BookingStatus_Filter
-}
-"""
-✨ Generated filter input type for table 'ProviderStatus'. This input allows filtering objects using various conditions. Use `_or`, `_and`, and `_not` to compose complex filters.
-"""
-input ProviderStatus_Filter {
-  """
-  Match if field is exactly equal to provided value.
-  """
-  eq: ProviderStatus
-  """
-  ✨ `_expr` server value variant of `eq` (Match if field is exactly equal to provided value.)
-  """
-  eq_expr: ProviderStatus_Expr @fdc_forbiddenInVariables
-  """
-  Match if field is not equal to provided value.
-  """
-  ne: ProviderStatus
-  """
-  ✨ `_expr` server value variant of `ne` (Match if field is not equal to provided value.)
-  """
-  ne_expr: ProviderStatus_Expr @fdc_forbiddenInVariables
-  """
-  When true, match if field `IS NULL`. When false, match if field is `NOT NULL`.
-  """
-  isNull: Boolean
-  """
-  Match if field value is among the provided list of values.
-  """
-  in: [ProviderStatus!]
-  """
-  Match if field value is not among the provided list of values.
-  """
-  nin: [ProviderStatus!]
-  """
-  Match if field value is greater than the provided value, based on index ordering of supported enum values.
-  """
-  gt: ProviderStatus
-  """
-  ✨ `_expr` server value variant of `gt` (Match if field value is greater than the provided value, based on index ordering of supported enum values.)
-  """
-  gt_expr: ProviderStatus_Expr @fdc_forbiddenInVariables
-  """
-  Match if field is greater than or equal to the provided value.
-  """
-  ge: ProviderStatus
-  """
-  ✨ `_expr` server value variant of `ge` (Match if field is greater than or equal to the provided value.)
-  """
-  ge_expr: ProviderStatus_Expr @fdc_forbiddenInVariables
-  """
-  Match if field value is less than the provided value, based on index ordering of supported enum values.
-  """
-  lt: ProviderStatus
-  """
-  ✨ `_expr` server value variant of `lt` (Match if field value is less than the provided value, based on index ordering of supported enum values.)
-  """
-  lt_expr: ProviderStatus_Expr @fdc_forbiddenInVariables
-  """
-  Match if field is less than or equal to the provided value, based on index ordering of supported enum values.
-  """
-  le: ProviderStatus
-  """
-  ✨ `_expr` server value variant of `le` (Match if field is less than or equal to the provided value, based on index ordering of supported enum values.)
-  """
-  le_expr: ProviderStatus_Expr @fdc_forbiddenInVariables
-}
-"""
-✨ Generated list filter input type for table 'ProviderStatus'. This input applies filtering logic based on the count or existence of related objects that matches certain criteria.
-"""
-input ProviderStatus_ListFilter {
-  """
-  Match if list field contains the provided value as a member.
-  """
-  includes: ProviderStatus
-  """
-  ✨ `_expr` server value variant of `includes` (Match if list field contains the provided value as a member.)
-  """
-  includes_expr: ProviderStatus_Expr @fdc_forbiddenInVariables
-  """
-  Match if list field contains all of the provided values as members.
-  """
-  includesAll: [ProviderStatus!]
-  """
-  Match if list field does not contain the provided value as a member.
-  """
-  excludes: ProviderStatus
-  """
-  ✨ `_expr` server value variant of `excludes` (Match if list field does not contain the provided value as a member.)
-  """
-  excludes_expr: ProviderStatus_Expr @fdc_forbiddenInVariables
-  """
-  Match if list field does not contain any of the provided values as members.
-  """
-  excludesAll: [ProviderStatus!]
-  """
-  The desired number of enum values that match the condition (defaults to at least one).
-  """
-  count: Int_Filter = {gt:0}
-  """
-  Condition of the related objects to filter for.
-  """
-  exist: ProviderStatus_Filter
-}
-"""
-✨ Generated filter input type for table 'ProviderType'. This input allows filtering objects using various conditions. Use `_or`, `_and`, and `_not` to compose complex filters.
-"""
-input ProviderType_Filter {
-  """
-  Match if field is exactly equal to provided value.
-  """
-  eq: ProviderType
-  """
-  ✨ `_expr` server value variant of `eq` (Match if field is exactly equal to provided value.)
-  """
-  eq_expr: ProviderType_Expr @fdc_forbiddenInVariables
-  """
-  Match if field is not equal to provided value.
-  """
-  ne: ProviderType
-  """
-  ✨ `_expr` server value variant of `ne` (Match if field is not equal to provided value.)
-  """
-  ne_expr: ProviderType_Expr @fdc_forbiddenInVariables
-  """
-  When true, match if field `IS NULL`. When false, match if field is `NOT NULL`.
-  """
-  isNull: Boolean
-  """
-  Match if field value is among the provided list of values.
-  """
-  in: [ProviderType!]
-  """
-  Match if field value is not among the provided list of values.
-  """
-  nin: [ProviderType!]
-  """
-  Match if field value is greater than the provided value, based on index ordering of supported enum values.
-  """
-  gt: ProviderType
-  """
-  ✨ `_expr` server value variant of `gt` (Match if field value is greater than the provided value, based on index ordering of supported enum values.)
-  """
-  gt_expr: ProviderType_Expr @fdc_forbiddenInVariables
-  """
-  Match if field is greater than or equal to the provided value.
-  """
-  ge: ProviderType
-  """
-  ✨ `_expr` server value variant of `ge` (Match if field is greater than or equal to the provided value.)
-  """
-  ge_expr: ProviderType_Expr @fdc_forbiddenInVariables
-  """
-  Match if field value is less than the provided value, based on index ordering of supported enum values.
-  """
-  lt: ProviderType
-  """
-  ✨ `_expr` server value variant of `lt` (Match if field value is less than the provided value, based on index ordering of supported enum values.)
-  """
-  lt_expr: ProviderType_Expr @fdc_forbiddenInVariables
-  """
-  Match if field is less than or equal to the provided value, based on index ordering of supported enum values.
-  """
-  le: ProviderType
-  """
-  ✨ `_expr` server value variant of `le` (Match if field is less than or equal to the provided value, based on index ordering of supported enum values.)
-  """
-  le_expr: ProviderType_Expr @fdc_forbiddenInVariables
-}
-"""
-✨ Generated list filter input type for table 'ProviderType'. This input applies filtering logic based on the count or existence of related objects that matches certain criteria.
-"""
-input ProviderType_ListFilter {
-  """
-  Match if list field contains the provided value as a member.
-  """
-  includes: ProviderType
-  """
-  ✨ `_expr` server value variant of `includes` (Match if list field contains the provided value as a member.)
-  """
-  includes_expr: ProviderType_Expr @fdc_forbiddenInVariables
-  """
-  Match if list field contains all of the provided values as members.
-  """
-  includesAll: [ProviderType!]
-  """
-  Match if list field does not contain the provided value as a member.
-  """
-  excludes: ProviderType
-  """
-  ✨ `_expr` server value variant of `excludes` (Match if list field does not contain the provided value as a member.)
-  """
-  excludes_expr: ProviderType_Expr @fdc_forbiddenInVariables
-  """
-  Match if list field does not contain any of the provided values as members.
-  """
-  excludesAll: [ProviderType!]
-  """
-  The desired number of enum values that match the condition (defaults to at least one).
-  """
-  count: Int_Filter = {gt:0}
-  """
-  Condition of the related objects to filter for.
-  """
-  exist: ProviderType_Filter
 }
 """
 ✨ Generated data input type for table 'Review'. It includes all necessary fields for creating or upserting rows into table.
@@ -1676,14 +1460,6 @@ input ServiceCategory_Data {
   """
   id_expr: UUID_Expr @fdc_forbiddenInVariables
   """
-  ✨ Generated from Field `ServiceCategory`.`browseKey` of type `String`
-  """
-  browseKey: String
-  """
-  ✨ `_expr` server value variant of `browseKey` (✨ Generated from Field `ServiceCategory`.`browseKey` of type `String`)
-  """
-  browseKey_expr: String_Expr @fdc_forbiddenInVariables
-  """
   ✨ Generated from Field `ServiceCategory`.`description` of type `String`
   """
   description: String
@@ -1732,10 +1508,6 @@ input ServiceCategory_Filter {
   ✨ Generated from Field `ServiceCategory`.`id` of type `UUID!`
   """
   id: UUID_Filter
-  """
-  ✨ Generated from Field `ServiceCategory`.`browseKey` of type `String`
-  """
-  browseKey: String_Filter
   """
   ✨ Generated from Field `ServiceCategory`.`description` of type `String`
   """
@@ -1791,10 +1563,6 @@ input ServiceCategory_Having {
   """
   _count: Int_Filter
   """
-  ✨ Generated from Field `ServiceCategory`.`browseKey_count` of type `Int!`
-  """
-  browseKey_count: Int_Filter
-  """
   ✨ Generated from Field `ServiceCategory`.`description_count` of type `Int!`
   """
   description_count: Int_Filter
@@ -1846,10 +1614,6 @@ input ServiceCategory_Order {
   """
   id: OrderDirection
   """
-  ✨ Generated from Field `ServiceCategory`.`browseKey` of type `String`
-  """
-  browseKey: OrderDirection
-  """
   ✨ Generated from Field `ServiceCategory`.`description` of type `String`
   """
   description: OrderDirection
@@ -1865,10 +1629,6 @@ input ServiceCategory_Order {
   ✨ Generated from Field `ServiceCategory`.`_count` of type `Int!`
   """
   _count: OrderDirection
-  """
-  ✨ Generated from Field `ServiceCategory`.`browseKey_count` of type `Int!`
-  """
-  browseKey_count: OrderDirection
   """
   ✨ Generated from Field `ServiceCategory`.`description_count` of type `Int!`
   """
@@ -1947,30 +1707,6 @@ input User_Data {
   """
   phone_expr: String_Expr @fdc_forbiddenInVariables
   """
-  ✨ Generated from Field `User`.`providerName` of type `String`
-  """
-  providerName: String
-  """
-  ✨ `_expr` server value variant of `providerName` (✨ Generated from Field `User`.`providerName` of type `String`)
-  """
-  providerName_expr: String_Expr @fdc_forbiddenInVariables
-  """
-  ✨ Generated from Field `User`.`providerStatus` of type `ProviderStatus`
-  """
-  providerStatus: ProviderStatus
-  """
-  ✨ `_expr` server value variant of `providerStatus` (✨ Generated from Field `User`.`providerStatus` of type `ProviderStatus`)
-  """
-  providerStatus_expr: ProviderStatus_Expr @fdc_forbiddenInVariables
-  """
-  ✨ Generated from Field `User`.`providerType` of type `ProviderType`
-  """
-  providerType: ProviderType
-  """
-  ✨ `_expr` server value variant of `providerType` (✨ Generated from Field `User`.`providerType` of type `ProviderType`)
-  """
-  providerType_expr: ProviderType_Expr @fdc_forbiddenInVariables
-  """
   ✨ Generated from Field `User`.`role` of type `UserRole!`
   """
   role: UserRole
@@ -1978,14 +1714,6 @@ input User_Data {
   ✨ `_expr` server value variant of `role` (✨ Generated from Field `User`.`role` of type `UserRole!`)
   """
   role_expr: UserRole_Expr @fdc_forbiddenInVariables
-  """
-  ✨ Generated from Field `User`.`serviceArea` of type `String`
-  """
-  serviceArea: String
-  """
-  ✨ `_expr` server value variant of `serviceArea` (✨ Generated from Field `User`.`serviceArea` of type `String`)
-  """
-  serviceArea_expr: String_Expr @fdc_forbiddenInVariables
   """
   ✨ Generated from Field `User`.`bookings_on_customer` of type `[Booking!]!`
   """
@@ -2040,25 +1768,9 @@ input User_Filter {
   """
   phone: String_Filter
   """
-  ✨ Generated from Field `User`.`providerName` of type `String`
-  """
-  providerName: String_Filter
-  """
-  ✨ Generated from Field `User`.`providerStatus` of type `ProviderStatus`
-  """
-  providerStatus: ProviderStatus_Filter
-  """
-  ✨ Generated from Field `User`.`providerType` of type `ProviderType`
-  """
-  providerType: ProviderType_Filter
-  """
   ✨ Generated from Field `User`.`role` of type `UserRole!`
   """
   role: UserRole_Filter
-  """
-  ✨ Generated from Field `User`.`serviceArea` of type `String`
-  """
-  serviceArea: String_Filter
   """
   ✨ Generated from Field `User`.`bookings_on_customer` of type `[Booking!]!`
   """
@@ -2130,25 +1842,9 @@ input User_Having {
   """
   phone_count: Int_Filter
   """
-  ✨ Generated from Field `User`.`providerName_count` of type `Int!`
-  """
-  providerName_count: Int_Filter
-  """
-  ✨ Generated from Field `User`.`providerStatus_count` of type `Int!`
-  """
-  providerStatus_count: Int_Filter
-  """
-  ✨ Generated from Field `User`.`providerType_count` of type `Int!`
-  """
-  providerType_count: Int_Filter
-  """
   ✨ Generated from Field `User`.`role_count` of type `Int!`
   """
   role_count: Int_Filter
-  """
-  ✨ Generated from Field `User`.`serviceArea_count` of type `Int!`
-  """
-  serviceArea_count: Int_Filter
   """
   ✨ Generated from Field `User`.`uid_count` of type `Int!`
   """
@@ -2217,25 +1913,9 @@ input User_Order {
   """
   phone: OrderDirection
   """
-  ✨ Generated from Field `User`.`providerName` of type `String`
-  """
-  providerName: OrderDirection
-  """
-  ✨ Generated from Field `User`.`providerStatus` of type `ProviderStatus`
-  """
-  providerStatus: OrderDirection
-  """
-  ✨ Generated from Field `User`.`providerType` of type `ProviderType`
-  """
-  providerType: OrderDirection
-  """
   ✨ Generated from Field `User`.`role` of type `UserRole!`
   """
   role: OrderDirection
-  """
-  ✨ Generated from Field `User`.`serviceArea` of type `String`
-  """
-  serviceArea: OrderDirection
   """
   ✨ Generated from Field `User`.`_count` of type `Int!`
   """
@@ -2261,25 +1941,9 @@ input User_Order {
   """
   phone_count: OrderDirection
   """
-  ✨ Generated from Field `User`.`providerName_count` of type `Int!`
-  """
-  providerName_count: OrderDirection
-  """
-  ✨ Generated from Field `User`.`providerStatus_count` of type `Int!`
-  """
-  providerStatus_count: OrderDirection
-  """
-  ✨ Generated from Field `User`.`providerType_count` of type `Int!`
-  """
-  providerType_count: OrderDirection
-  """
   ✨ Generated from Field `User`.`role_count` of type `Int!`
   """
   role_count: OrderDirection
-  """
-  ✨ Generated from Field `User`.`serviceArea_count` of type `Int!`
-  """
-  serviceArea_count: OrderDirection
   """
   ✨ Generated from Field `User`.`uid_count` of type `Int!`
   """

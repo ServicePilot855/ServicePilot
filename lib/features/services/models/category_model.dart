@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 /// Represents a home repair and maintenance service category in ServicePilot.
@@ -50,22 +51,30 @@ class CategoryModel {
     }
   }
 
-  factory CategoryModel.fromJson(Map<String, dynamic> json) {
+  factory CategoryModel.fromMap(Map<String, dynamic> data, [String? id]) {
     return CategoryModel(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String,
-      iconName: json['iconName'] as String? ?? 'build',
-      providerCount: (json['providerCount'] as num?)?.toInt() ?? 0,
-      isActive: json['isActive'] as bool? ?? true,
-      popularServices: (json['popularServices'] as List<dynamic>?)
+      id: id ?? (data['id'] as String? ?? ''),
+      name: data['name'] as String? ?? '',
+      description: data['description'] as String? ?? '',
+      iconName: data['iconName'] as String? ?? 'build',
+      providerCount: (data['providerCount'] as num?)?.toInt() ?? 0,
+      isActive: data['isActive'] as bool? ?? true,
+      popularServices: (data['popularServices'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           const [],
     );
   }
 
-  Map<String, dynamic> toJson() {
+  factory CategoryModel.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>? ?? {};
+    return CategoryModel.fromMap(data, doc.id);
+  }
+
+  factory CategoryModel.fromJson(Map<String, dynamic> json) =>
+      CategoryModel.fromMap(json);
+
+  Map<String, dynamic> toMap() {
     return {
       'id': id,
       'name': name,
@@ -76,6 +85,8 @@ class CategoryModel {
       'popularServices': popularServices,
     };
   }
+
+  Map<String, dynamic> toJson() => toMap();
 
   CategoryModel copyWith({
     String? id,

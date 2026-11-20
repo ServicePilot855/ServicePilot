@@ -28,7 +28,7 @@ mutation UpdateMyProfile(
   $avatarUrl: String
 ) @auth(level: USER) {
   user_update(
-    key: { uid_expr: "auth.uid" }
+    uid: { eq_expr: "auth.uid" }
     data: { displayName: $displayName, phone: $phone, avatarUrl: $avatarUrl }
   )
 }
@@ -127,6 +127,7 @@ mutation CreateBooking(
 }
 
 # A provider confirms or updates the status of a booking (job)
+# Cancelled, completed, or declined bookings cannot be accepted, assigned, or started afterward (US-14 / SCRUM-45)
 mutation UpdateBookingStatus(
   $id: UUID!
   $status: BookingStatus!
@@ -135,6 +136,7 @@ mutation UpdateBookingStatus(
     first: { where: {
       id: { eq: $id }
       service: { provider: { uid: { eq_expr: "auth.uid" } } }
+      status: { nin: [CANCELLED, COMPLETED, DECLINED] }
     }}
     data: {
       status: $status
@@ -143,13 +145,13 @@ mutation UpdateBookingStatus(
   )
 }
 
-# A customer cancels their own booking (only if PENDING)
+# A customer cancels their own booking (only if PENDING, ASSIGNED, or CONFIRMED — US-14 / SCRUM-45)
 mutation CancelMyBooking($id: UUID!) @auth(level: USER) {
   booking_update(
     first: { where: {
       id: { eq: $id }
       customer: { uid: { eq_expr: "auth.uid" } }
-      status: { eq: PENDING }
+      status: { in: [PENDING, ASSIGNED, CONFIRMED] }
     }}
     data: {
       status: CANCELLED

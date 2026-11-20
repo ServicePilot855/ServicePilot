@@ -574,20 +574,4 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get providerDirectoryRetry => 'Try again';
-
-  @override
-  String get providerProfileTitle => 'Provider profile';
-
-  @override
-  String get providerProfileUnavailable =>
-      'This provider is currently unavailable.';
-
-  @override
-  String get providerProfileError => 'Couldn’t load this provider’s profile.';
-
-  @override
-  String get providerTypeCompany => 'Company';
-
-  @override
-  String get providerTypeIndependent => 'Independent';
 }

@@ -6,7 +6,7 @@
 
 # Get the currently authenticated user's profile
 query GetMyProfile @auth(level: USER) {
-  user(key: { uid_expr: "auth.uid" }) {
+  user(uid: { eq_expr: "auth.uid" }) {
     uid email displayName phone avatarUrl role createdAt
   }
 }
@@ -21,62 +21,6 @@ query ListCategories @auth(level: PUBLIC) {
 }
 
 # ── Services ─────────────────────────────────────────────────
-
-# One row per approved provider with an active offering in the chosen category.
-query ListCategoryProviders($categoryKey: String!)
-@auth(level: USER, insecureReason: "Signed-in users can browse shared provider profiles.") {
-  providers: users(
-    where: {
-      providerStatus: { eq: ACTIVE }
-      providerType: { isNull: false }
-      providerName: { isNull: false }
-      serviceArea: { isNull: false }
-      services_on_provider: { exist: {
-        isActive: { eq: true }
-        category: { browseKey: { eq: $categoryKey } }
-      } }
-    }
-    orderBy: [{ providerName: ASC }, { uid: ASC }]
-  ) {
-    uid providerName providerType providerStatus serviceArea
-  }
-}
-
-query ListCategoryProvidersById($categoryId: UUID!)
-@auth(level: USER, insecureReason: "Signed-in users can browse shared provider profiles.") {
-  providers: users(
-    where: {
-      providerStatus: { eq: ACTIVE }
-      providerType: { isNull: false }
-      providerName: { isNull: false }
-      serviceArea: { isNull: false }
-      services_on_provider: { exist: {
-        isActive: { eq: true }
-        categoryId: { eq: $categoryId }
-      } }
-    }
-    orderBy: [{ providerName: ASC }, { uid: ASC }]
-  ) {
-    uid providerName providerType providerStatus serviceArea
-  }
-}
-
-query GetActiveProvider($providerId: String!)
-@auth(level: USER, insecureReason: "Signed-in users can browse shared provider profiles.") {
-  providers: users(
-    where: {
-      uid: { eq: $providerId }
-      providerStatus: { eq: ACTIVE }
-      providerType: { isNull: false }
-      providerName: { isNull: false }
-      serviceArea: { isNull: false }
-      services_on_provider: { exist: { isActive: { eq: true } } }
-    }
-    limit: 1
-  ) {
-    uid providerName providerType providerStatus serviceArea
-  }
-}
 
 # Browse all active services, optionally filtered by category
 query ListServices($categoryId: UUID) @auth(level: PUBLIC) {

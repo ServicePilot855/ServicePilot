@@ -3,8 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:service_pilot/core/theme/app_theme.dart';
-import 'package:service_pilot/features/providers/provider_directory.dart';
+import 'package:service_pilot/features/providers/providers/provider_provider.dart';
 import 'package:service_pilot/features/providers/screens/provider_list_screen.dart';
+import 'package:service_pilot/features/providers/services/provider_service.dart';
 import 'package:service_pilot/features/services/models/category_model.dart';
 import 'package:service_pilot/features/services/providers/category_provider.dart';
 import 'package:service_pilot/features/services/screens/categories_screen.dart';
@@ -41,8 +42,8 @@ void main() {
 
     return ProviderScope(
       overrides: [
-        providerDirectoryProvider.overrideWithValue(
-          ProviderDirectory((_, __) async => {'providers': []}),
+        providerServiceProvider.overrideWithValue(
+          ProviderService(initialProviders: const []),
         ),
         if (customService != null)
           categoryServiceProvider.overrideWithValue(customService),
