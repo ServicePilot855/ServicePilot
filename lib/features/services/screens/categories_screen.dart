@@ -5,12 +5,11 @@ import 'package:service_pilot/core/theme/app_theme.dart';
 import 'package:service_pilot/features/services/models/category_model.dart';
 import 'package:service_pilot/features/services/providers/category_provider.dart';
 import 'package:service_pilot/features/services/widgets/category_card.dart';
+import 'package:service_pilot/l10n/l10n.dart';
 import 'package:service_pilot/shared/widgets/sp_button.dart';
 import 'package:service_pilot/shared/widgets/sp_layout.dart';
 
-/// Screen allowing customers to browse and search all available repair categories.
-///
-/// Implements US-09 (SCRUM-41).
+/// Browse and search available repair categories.
 class CategoriesScreen extends ConsumerStatefulWidget {
   const CategoriesScreen({super.key});
 
@@ -19,7 +18,15 @@ class CategoriesScreen extends ConsumerStatefulWidget {
 }
 
 class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
-  final TextEditingController _searchController = TextEditingController();
+  late final TextEditingController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController(
+      text: ref.read(categoryQueryProvider),
+    );
+  }
 
   @override
   void dispose() {
@@ -27,176 +34,144 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
     super.dispose();
   }
 
-  void _onCategorySelected(CategoryModel category) {
+  void _clearSearch() {
+    _searchController.clear();
+    ref.read(categoryQueryProvider.notifier).state = '';
+  }
+
+  void _openCategory(CategoryModel category) {
     ref.read(selectedCategoryProvider.notifier).state = category;
     context.push('/categories/${category.id}/providers', extra: category);
   }
 
   @override
   Widget build(BuildContext context) {
-    final categoriesAsync = ref.watch(categoriesListProvider);
+    final l10n = context.l10n;
+    final categories = ref.watch(categoriesListProvider);
+    final query = ref.watch(categoryQueryProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: AppTheme.browseBackground,
       appBar: AppBar(
         backgroundColor: AppTheme.surface,
-        elevation: 0,
-        title: Text(
-          'Repair & Maintenance',
-          style: AppTheme.display(size: 20),
+        leading: SpBackButton(
+          onPressed: () =>
+              context.canPop() ? context.pop() : context.go('/home/customer'),
         ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(68),
-          child: SpContentWidth(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppTheme.gutter,
-                0,
-                AppTheme.gutter,
-                12,
-              ),
-              child: SizedBox(
-                height: 48,
+        title: Text(
+          l10n.discoveryCategoriesTitle,
+          style: AppTheme.display(size: 18, color: AppTheme.browseInk),
+        ),
+      ),
+      body: SafeArea(
+        top: false,
+        child: SpContentWidth(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                 child: TextField(
                   key: const Key('category_search_field'),
                   controller: _searchController,
-                  style: AppTheme.text(size: 15, color: AppTheme.textPrimary),
+                  style: AppTheme.text(
+                    size: 15,
+                    height: 1.5,
+                    color: AppTheme.browseInk,
+                  ),
                   decoration: InputDecoration(
-                    fillColor: AppTheme.surfaceElevated,
-                    hintText: 'Search categories or services...',
-                    hintStyle: AppTheme.text(size: 14.5, color: AppTheme.textSecondary),
-                    prefixIcon: const Icon(
-                      Icons.search_rounded,
-                      color: AppTheme.textSecondary,
-                      size: 20,
-                    ),
-                    suffixIcon: _searchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(
-                              Icons.clear_rounded,
-                              color: AppTheme.textSecondary,
-                              size: 18,
-                            ),
-                            onPressed: () {
-                              _searchController.clear();
-                              ref.read(categoryQueryProvider.notifier).state = '';
-                              setState(() {});
-                            },
-                          )
-                        : null,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 12,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radiusControl),
-                      borderSide: const BorderSide(color: AppTheme.border),
-                    ),
+                    fillColor: AppTheme.surface,
+                    labelText: l10n.discoverySearchLabel,
+                    labelStyle: AppTheme.text(color: AppTheme.browseSecondary),
+                    prefixIcon: const Icon(Icons.search_rounded),
+                    suffixIcon: query.isEmpty
+                        ? null
+                        : IconButton(
+                            tooltip: l10n.discoveryClearSearch,
+                            icon: const Icon(Icons.clear_rounded),
+                            onPressed: _clearSearch,
+                          ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radiusControl),
-                      borderSide: const BorderSide(color: AppTheme.border),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radiusControl),
-                      borderSide: const BorderSide(color: AppTheme.primary, width: 2),
+                      borderRadius:
+                          BorderRadius.circular(AppTheme.radiusControl),
+                      borderSide: const BorderSide(
+                        color: AppTheme.browseControlBorder,
+                      ),
                     ),
                   ),
-                  onChanged: (val) {
-                    ref.read(categoryQueryProvider.notifier).state = val;
-                    setState(() {});
+                  onChanged: (value) {
+                    ref.read(categoryQueryProvider.notifier).state = value;
                   },
                 ),
               ),
-            ),
-          ),
-        ),
-      ),
-      body: categoriesAsync.when(
-        data: (categories) {
-          if (categories.isEmpty) {
-            return Center(
-              child: SpContentWidth(
-                child: Padding(
-                  padding: const EdgeInsets.all(32),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
+              Expanded(
+                child: categories.when(
+                  data: (items) {
+                    if (items.isEmpty) {
+                      final searching = query.trim().isNotEmpty;
+                      return ListView(
+                        padding: const EdgeInsets.all(16),
+                        children: [
+                          SpNotice(
+                            icon: Icons.search_off_rounded,
+                            message: searching
+                                ? l10n.discoveryNoMatchingCategories
+                                : l10n.discoveryNoCategories,
+                            tone: SpTone.neutral,
+                          ),
+                          if (searching) ...[
+                            const SizedBox(height: 12),
+                            SpSecondaryButton(
+                              label: l10n.discoveryClearSearch,
+                              outlineColor: AppTheme.browseControlBorder,
+                              wrapLabel: true,
+                              onPressed: _clearSearch,
+                            ),
+                          ],
+                        ],
+                      );
+                    }
+                    return ListView.separated(
+                      key: const Key('categories_list_view'),
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      itemCount: items.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final category = items[index];
+                        return CategoryCard(
+                          key: Key('category_card_${category.id}'),
+                          category: category,
+                          onTap: () => _openCategory(category),
+                        );
+                      },
+                    );
+                  },
+                  loading: () => Center(
+                    child: CircularProgressIndicator(
+                      semanticsLabel: l10n.discoveryLoadingCategories,
+                    ),
+                  ),
+                  error: (_, __) => ListView(
+                    padding: const EdgeInsets.all(16),
                     children: [
-                      const SpStatusHero(
-                        icon: Icons.search_off_rounded,
-                        title: 'No Categories Found',
-                        message:
-                            'No repair categories match your current search terms.',
-                        tone: SpTone.neutral,
+                      SpNotice(
+                        icon: Icons.error_outline_rounded,
+                        message: l10n.discoveryCategoriesError,
+                        tone: SpTone.danger,
                       ),
-                      const SizedBox(height: 20),
-                      SpSecondaryButton(
-                        label: 'Clear Search',
-                        onPressed: () {
-                          _searchController.clear();
-                          ref.read(categoryQueryProvider.notifier).state = '';
-                          setState(() {});
-                        },
+                      const SizedBox(height: 12),
+                      SpPrimaryButton(
+                        label: l10n.providerDirectoryRetry,
+                        wrapLabel: true,
+                        onPressed: () => ref.invalidate(categoriesListProvider),
                       ),
                     ],
                   ),
                 ),
               ),
-            );
-          }
-
-          return Center(
-            child: ConstrainedBox(
-              constraints:
-                  const BoxConstraints(maxWidth: AppTheme.maxContentWidth),
-              child: ListView.separated(
-                key: const Key('categories_list_view'),
-                padding: const EdgeInsets.all(AppTheme.gutter),
-                itemCount: categories.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final cat = categories[index];
-                  return CategoryCard(
-                    key: Key('category_card_${cat.id}'),
-                    category: cat,
-                    onTap: () => _onCategorySelected(cat),
-                  );
-                },
-              ),
-            ),
-          );
-        },
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: AppTheme.primary),
-        ),
-        error: (err, stack) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.error_outline_rounded,
-                  color: AppTheme.error,
-                  size: 44,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Failed to load categories',
-                  style: AppTheme.display(size: 18),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  err.toString(),
-                  textAlign: TextAlign.center,
-                  style: AppTheme.text(size: 13.5, color: AppTheme.textSecondary),
-                ),
-                const SizedBox(height: 16),
-                SpPrimaryButton(
-                  label: 'Try Again',
-                  onPressed: () => ref.refresh(categoriesListProvider),
-                ),
-              ],
-            ),
+            ],
           ),
         ),
       ),

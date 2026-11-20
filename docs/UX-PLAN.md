@@ -1,8 +1,7 @@
 # ServicePilot — Design Plan
 
 New design, 13 Nov 2026. Replaces the orange-on-black Figma look.
-Scope of this pass: plan the whole experience, implement only the finished Sprint 1 screens (accounts).
-Visual tokens and component rules live in [`../DESIGN.md`](../DESIGN.md), written from the built screens.
+This plan records the Sprint 1 account design and roadmap. Use [DESIGN.md](../DESIGN.md) for current visual tokens, component rules, and the implemented customer discovery preview.
 
 ---
 
@@ -59,7 +58,7 @@ What we never take from Grab or Orkun: colours, logos, illustrations, product na
 
 - **Brand colour: Pipe Blue.** Used the way Grab uses green: primary buttons, links, selected states, the splash. Not orange, by decision.
 - **Second colour: Tape Yellow.** The yellow of plumber's and electrical tape. It marks one thing only: something is waiting (verification pending, a booking not yet confirmed).
-- **Ground:** white for forms, a cool pale grey for browse screens. Light, because the app is used in daylight, often outdoors, on mid-range Android phones.
+- **Ground:** white for forms. Use the [current palette](../DESIGN.md#colors) for other screens. Light backgrounds support daylight use on mid-range Android phones.
 - **Signature: the joint.** A pipe run with collar joints. In Sprint 1 it is the step indicator in registration and the mark in the logo. Later it becomes the booking status line (Requested, Confirmed, In progress, Done) in place of Grab's map.
 - **Type:** Figtree for all Latin text: friendly, rounded and compact, one family with headings set apart by weight and size. Khmer characters fall back to Kantumruy Pro automatically.
 - **Shape:** medium rounding (12 to 16dp), 1px cool hairlines, no shadows on things that scroll.

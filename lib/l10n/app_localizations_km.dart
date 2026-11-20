@@ -12,7 +12,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get appName => 'ServicePilot';
 
   @override
-  String get commonBack => 'Back';
+  String get commonBack => 'ត្រឡប់ក្រោយ';
 
   @override
   String get commonOr => 'or';
@@ -203,11 +203,11 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String homeGreeting(String name) {
-    return 'Hello, $name';
+    return 'សួស្តី $name';
   }
 
   @override
-  String get homeFallbackName => 'User';
+  String get homeFallbackName => 'អ្នកប្រើប្រាស់';
 
   @override
   String homeNameWithCompany(String name, String company) {
@@ -222,7 +222,7 @@ class AppLocalizationsKm extends AppLocalizations {
       'Booking, tracking and provider tools arrive in the next sprint.';
 
   @override
-  String get homeLogOut => 'Log out';
+  String get homeLogOut => 'ចាកចេញពីគណនី';
 
   @override
   String get homeAdminGreeting =>
@@ -563,15 +563,141 @@ class AppLocalizationsKm extends AppLocalizations {
   String get resetPasswordStrengthStrong => 'Strength: Strong';
 
   @override
-  String get providerDirectoryTitle => 'Service providers';
+  String get discoveryLocation => 'ភ្នំពេញ';
+
+  @override
+  String get discoveryHomePrompt => 'តើអ្នកត្រូវការសេវាជួសជុល ឬថែទាំអ្វី?';
+
+  @override
+  String get discoveryBrowseServices => 'មើលសេវាកម្ម';
+
+  @override
+  String get discoveryHomeCategories => 'ប្រភេទសេវាកម្ម';
+
+  @override
+  String get discoveryCategoriesTitle => 'សេវាជួសជុល និងថែទាំ';
+
+  @override
+  String get discoverySearchLabel => 'ស្វែងរកប្រភេទសេវា';
+
+  @override
+  String get discoveryClearSearch => 'សម្អាតការស្វែងរក';
+
+  @override
+  String get discoveryNoMatchingCategories =>
+      'រកមិនឃើញប្រភេទសេវាដែលត្រូវនឹងការស្វែងរករបស់អ្នកទេ។';
+
+  @override
+  String get discoveryNoCategories => 'មិនទាន់មានប្រភេទសេវាកម្មទេ។';
+
+  @override
+  String get discoveryLoadingCategories => 'កំពុងផ្ទុកប្រភេទសេវាកម្ម';
+
+  @override
+  String get discoveryCategoriesError => 'មិនអាចផ្ទុកប្រភេទសេវាកម្មបានទេ។';
+
+  @override
+  String get discoveryHomeBookings => 'ការកក់សេវាជួសជុលរបស់ខ្ញុំ';
+
+  @override
+  String get discoveryNoBookings => 'អ្នកមិនទាន់បានកក់សេវាជួសជុលទេ។';
+
+  @override
+  String get discoveryBookingsError => 'មិនអាចផ្ទុកការកក់របស់អ្នកបានទេ។';
+
+  @override
+  String get discoveryLoadingBookings => 'កំពុងផ្ទុកការកក់របស់អ្នក';
+
+  @override
+  String get providerDirectoryTitle => 'អ្នកផ្តល់សេវា';
 
   @override
   String get providerDirectoryEmpty =>
-      'No providers are available for this category yet.';
+      'មិនទាន់មានអ្នកផ្តល់សេវាសម្រាប់ប្រភេទនេះទេ។';
 
   @override
-  String get providerDirectoryError => 'Couldn’t load providers.';
+  String get providerDirectoryError => 'មិនអាចផ្ទុកបញ្ជីអ្នកផ្តល់សេវាបានទេ។';
 
   @override
-  String get providerDirectoryRetry => 'Try again';
+  String get providerDirectoryRetry => 'ព្យាយាមម្តងទៀត';
+
+  @override
+  String get providerDirectoryLoading => 'កំពុងផ្ទុកបញ្ជីអ្នកផ្តល់សេវា';
+
+  @override
+  String get providerOtherCategories => 'មើលប្រភេទសេវាផ្សេងទៀត';
+
+  @override
+  String get providerTypeIndependent => 'ជាងជួសជុលឯករាជ្យ';
+
+  @override
+  String get providerTypeCompany => 'ក្រុមហ៊ុនជួសជុល';
+
+  @override
+  String get providerProfileTitle => 'ព័ត៌មានអ្នកផ្តល់សេវា';
+
+  @override
+  String get providerProfileLoading => 'កំពុងផ្ទុកព័ត៌មានអ្នកផ្តល់សេវា';
+
+  @override
+  String get providerProfileError => 'មិនអាចផ្ទុកព័ត៌មានអ្នកផ្តល់សេវានេះបានទេ។';
+
+  @override
+  String get providerProfileNotFound => 'រកមិនឃើញអ្នកផ្តល់សេវា';
+
+  @override
+  String get providerProfileNotFoundBody => 'ព័ត៌មាននេះលែងអាចមើលបានហើយ។';
+
+  @override
+  String get providerBack => 'ត្រឡប់ទៅបញ្ជីអ្នកផ្តល់សេវា';
+
+  @override
+  String get providerAvailable => 'អាចទទួលការកក់';
+
+  @override
+  String get providerUnavailable => 'មិនអាចទទួលការកក់ឥឡូវនេះ';
+
+  @override
+  String get providerSpecialties => 'ជំនាញ';
+
+  @override
+  String get providerAreas => 'តំបន់ផ្តល់សេវា';
+
+  @override
+  String get providerAbout => 'អំពីអ្នកផ្តល់សេវា';
+
+  @override
+  String get providerNoReviews => 'មិនទាន់មានការវាយតម្លៃ';
+
+  @override
+  String get providerRatingUnavailable => 'មិនមានព័ត៌មានវាយតម្លៃ';
+
+  @override
+  String providerReviewCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'ការវាយតម្លៃ $countString';
+  }
+
+  @override
+  String providerRatingSummary(String score, String reviews) {
+    return '$score · $reviews';
+  }
+
+  @override
+  String providerRatingAnnouncement(String score, String reviews) {
+    return '$score លើ ៥ ពិន្ទុ។ $reviews';
+  }
+
+  @override
+  String get providerContinueBooking => 'បន្តទៅការកក់';
+
+  @override
+  String get providerBookingPreviewTitle => 'សាកមើលការកក់';
+
+  @override
+  String get providerBookingPreviewNotice =>
+      'អ្នកមិនអាចផ្ញើសំណើកក់នៅក្នុងកំណែសាកល្បងនេះបានទេ។';
 }

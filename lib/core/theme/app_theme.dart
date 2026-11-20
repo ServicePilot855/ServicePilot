@@ -54,6 +54,14 @@ class AppTheme {
   static const Color textMuted = Color(0xFF8E99AD);
   static const Color inputFill = Color(0xFFFFFFFF);
 
+  // Customer discovery surfaces and text.
+  static const Color browseBackground = Color(0xFFF4F7FB);
+  static const Color browseFill = Color(0xFFE8EFF8);
+  static const Color browseInk = Color(0xFF172840);
+  static const Color browseSecondary = Color(0xFF51637C);
+  static const Color browseBorder = Color(0xFFD9E2EE);
+  static const Color browseControlBorder = Color(0xFF71839D);
+
   // ── Status ────────────────────────────────────────────────────────────────
   static const Color error = Color(0xFFC7352B);
   static const Color errorSoft = Color(0xFFFCEAE8);

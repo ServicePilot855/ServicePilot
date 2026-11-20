@@ -91,5 +91,26 @@ void main() {
       expect(updated.isAvailable, false);
       expect(updated.bio, testProvider.bio);
     });
+
+    test('missing rating stays absent across copies and JSON round trips', () {
+      final provider = ProviderModel.fromMap({'reviewCount': 3}, 'provider');
+      final copied = provider.copyWith(name: 'Cooling company');
+      final restored = ProviderModel.fromJson(copied.toJson());
+
+      expect(copied.toJson(), isNot(contains('rating')));
+      expect(restored.toJson(), containsPair('reviewCount', 3));
+      expect(restored.toJson(), isNot(contains('rating')));
+    });
+
+    test('missing or malformed counts do not become explicit zero', () {
+      for (final count in [null, '3', 0.5, double.infinity, -1]) {
+        final provider = ProviderModel.fromMap({
+          'rating': 'unknown',
+          'reviewCount': count,
+        }, 'provider');
+        expect(provider.toJson(), isNot(contains('reviewCount')));
+        expect(provider.toJson(), isNot(contains('rating')));
+      }
+    });
   });
 }

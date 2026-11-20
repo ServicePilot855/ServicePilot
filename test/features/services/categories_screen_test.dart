@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,6 +13,18 @@ import 'package:service_pilot/features/services/providers/category_provider.dart
 import 'package:service_pilot/features/services/screens/categories_screen.dart';
 import 'package:service_pilot/features/services/services/category_service.dart';
 import 'package:service_pilot/l10n/app_localizations.dart';
+
+class _DeferredCategoryService extends CategoryService {
+  final initialSearch = Completer<List<CategoryModel>>();
+  bool _firstSearch = true;
+
+  @override
+  Future<List<CategoryModel>> searchCategories(String query) {
+    if (!_firstSearch) return super.searchCategories(query);
+    _firstSearch = false;
+    return initialSearch.future;
+  }
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -58,6 +72,20 @@ void main() {
   }
 
   group('SCRUM-41 / US-09: CategoriesScreen Widget Tests', () {
+    testWidgets('category load failure can be retried', (tester) async {
+      final service = _DeferredCategoryService();
+      await tester.pumpWidget(buildCategoriesTestApp(customService: service));
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+      service.initialSearch.completeError(StateError('internal failure'));
+      await tester.pumpAndSettle();
+      expect(find.text('Couldn’t load service categories.'), findsOneWidget);
+      expect(find.textContaining('internal failure'), findsNothing);
+      await tester.tap(find.text('Try again'));
+      await tester.pumpAndSettle();
+      expect(find.text('Plumbing & Drainage'), findsOneWidget);
+    });
+
     testWidgets('renders category list with titles and descriptions',
         (tester) async {
       await tester.pumpWidget(buildCategoriesTestApp());
@@ -104,18 +132,17 @@ void main() {
       await tester.enterText(searchField, 'nonexistent category query');
       await tester.pumpAndSettle();
 
-      expect(find.text('No Categories Found'), findsOneWidget);
-      expect(find.text('Clear Search'), findsOneWidget);
+      expect(find.text('No categories match your search.'), findsOneWidget);
+      expect(find.text('Clear search'), findsOneWidget);
 
       // Tapping clear restores all categories
-      await tester.tap(find.text('Clear Search'));
+      await tester.tap(find.text('Clear search'));
       await tester.pumpAndSettle();
 
       expect(find.text('Air Conditioner Repair & Care'), findsOneWidget);
     });
 
-    testWidgets(
-        'selecting a category opens its named provider list',
+    testWidgets('selecting a category opens its named provider list',
         (tester) async {
       await tester.pumpWidget(buildCategoriesTestApp());
       await tester.pumpAndSettle();
@@ -138,11 +165,15 @@ void main() {
       await tester.pumpAndSettle();
 
       // Scroll down to find the locksmith category (providerCount = 0)
-      final locksmithCard = find.byKey(const Key('category_card_cat-locksmith'));
+      final locksmithCard =
+          find.byKey(const Key('category_card_cat-locksmith'));
       await tester.scrollUntilVisible(
         locksmithCard,
         200,
-        scrollable: find.byType(Scrollable).first,
+        scrollable: find.descendant(
+          of: find.byKey(const Key('categories_list_view')),
+          matching: find.byType(Scrollable),
+        ),
       );
       await tester.pumpAndSettle();
 
@@ -151,7 +182,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(ProviderListScreen), findsOneWidget);
-      expect(find.text('No providers are available for this category yet.'), findsOneWidget);
+      expect(find.text('No providers are available for this category yet.'),
+          findsOneWidget);
     });
   });
 }

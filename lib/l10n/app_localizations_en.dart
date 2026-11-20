@@ -563,6 +563,54 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resetPasswordStrengthStrong => 'Strength: Strong';
 
   @override
+  String get discoveryLocation => 'Phnom Penh';
+
+  @override
+  String get discoveryHomePrompt =>
+      'What repair or maintenance service do you need?';
+
+  @override
+  String get discoveryBrowseServices => 'Browse services';
+
+  @override
+  String get discoveryHomeCategories => 'Service categories';
+
+  @override
+  String get discoveryCategoriesTitle => 'Repair & Maintenance';
+
+  @override
+  String get discoverySearchLabel => 'Search categories';
+
+  @override
+  String get discoveryClearSearch => 'Clear search';
+
+  @override
+  String get discoveryNoMatchingCategories =>
+      'No categories match your search.';
+
+  @override
+  String get discoveryNoCategories =>
+      'No service categories are available yet.';
+
+  @override
+  String get discoveryLoadingCategories => 'Loading categories';
+
+  @override
+  String get discoveryCategoriesError => 'Couldn’t load service categories.';
+
+  @override
+  String get discoveryHomeBookings => 'My repair bookings';
+
+  @override
+  String get discoveryNoBookings => 'You have no repair bookings yet.';
+
+  @override
+  String get discoveryBookingsError => 'Couldn’t load your bookings.';
+
+  @override
+  String get discoveryLoadingBookings => 'Loading your bookings';
+
+  @override
   String get providerDirectoryTitle => 'Service providers';
 
   @override
@@ -574,4 +622,91 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get providerDirectoryRetry => 'Try again';
+
+  @override
+  String get providerDirectoryLoading => 'Loading providers';
+
+  @override
+  String get providerOtherCategories => 'Browse other categories';
+
+  @override
+  String get providerTypeIndependent => 'Independent technician';
+
+  @override
+  String get providerTypeCompany => 'Repair company';
+
+  @override
+  String get providerProfileTitle => 'Provider profile';
+
+  @override
+  String get providerProfileLoading => 'Loading provider profile';
+
+  @override
+  String get providerProfileError => 'Couldn’t load this provider’s profile.';
+
+  @override
+  String get providerProfileNotFound => 'Provider not found';
+
+  @override
+  String get providerProfileNotFoundBody =>
+      'This profile is no longer available.';
+
+  @override
+  String get providerBack => 'Back to providers';
+
+  @override
+  String get providerAvailable => 'Available';
+
+  @override
+  String get providerUnavailable => 'Currently unavailable';
+
+  @override
+  String get providerSpecialties => 'Specialties';
+
+  @override
+  String get providerAreas => 'Service areas';
+
+  @override
+  String get providerAbout => 'About';
+
+  @override
+  String get providerNoReviews => 'No reviews yet';
+
+  @override
+  String get providerRatingUnavailable => 'Rating unavailable';
+
+  @override
+  String providerReviewCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString reviews',
+      one: '$countString review',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String providerRatingSummary(String score, String reviews) {
+    return '$score · $reviews';
+  }
+
+  @override
+  String providerRatingAnnouncement(String score, String reviews) {
+    return '$score out of 5. $reviews';
+  }
+
+  @override
+  String get providerContinueBooking => 'Continue to booking';
+
+  @override
+  String get providerBookingPreviewTitle => 'Booking preview';
+
+  @override
+  String get providerBookingPreviewNotice =>
+      'You can’t submit a booking request in this preview.';
 }

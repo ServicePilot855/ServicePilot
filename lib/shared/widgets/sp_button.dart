@@ -11,6 +11,7 @@ class SpPrimaryButton extends StatelessWidget {
     this.isLoading = false,
     this.enabled = true,
     this.icon,
+    this.wrapLabel = false,
   });
 
   final String label;
@@ -20,6 +21,7 @@ class SpPrimaryButton extends StatelessWidget {
   final bool isLoading;
   final bool enabled;
   final IconData? icon;
+  final bool wrapLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +29,7 @@ class SpPrimaryButton extends StatelessWidget {
 
     return SizedBox(
       width: double.infinity,
-      height: AppTheme.controlHeight,
+      height: wrapLabel ? null : AppTheme.controlHeight,
       child: ElevatedButton(
         // While loading the button stays blue and ignores taps.
         onPressed: enabled ? (active ? onPressed : () {}) : null,
@@ -38,7 +40,10 @@ class SpPrimaryButton extends StatelessWidget {
           disabledForegroundColor: AppTheme.textMuted,
           elevation: 0,
           shadowColor: Colors.transparent,
-          padding: EdgeInsets.zero,
+          minimumSize: wrapLabel ? const Size(0, AppTheme.controlHeight) : null,
+          padding: wrapLabel
+              ? const EdgeInsets.symmetric(vertical: 8)
+              : EdgeInsets.zero,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppTheme.radiusControl),
           ),
@@ -57,6 +62,7 @@ class SpPrimaryButton extends StatelessWidget {
             : _Content(
                 label: label,
                 icon: icon,
+                wrapLabel: wrapLabel,
                 color: enabled ? Colors.white : AppTheme.textMuted,
               ),
       ),
@@ -73,6 +79,8 @@ class SpSecondaryButton extends StatelessWidget {
     this.icon,
     this.leading,
     this.foregroundColor = AppTheme.textPrimary,
+    this.outlineColor,
+    this.wrapLabel = false,
   });
 
   final String label;
@@ -82,6 +90,8 @@ class SpSecondaryButton extends StatelessWidget {
   /// Custom leading widget (for example a brand glyph) instead of [icon].
   final Widget? leading;
   final Color foregroundColor;
+  final Color? outlineColor;
+  final bool wrapLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -92,27 +102,37 @@ class SpSecondaryButton extends StatelessWidget {
       button: true,
       enabled: enabled,
       label: label,
+      onTap: onPressed,
       excludeSemantics: true,
       child: SizedBox(
         width: double.infinity,
-        height: AppTheme.controlHeight,
+        height: wrapLabel ? null : AppTheme.controlHeight,
         child: Material(
           color: AppTheme.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppTheme.radiusControl),
             side: BorderSide(
-              color: enabled ? AppTheme.fieldBorder : AppTheme.border,
+              color: enabled
+                  ? outlineColor ?? AppTheme.fieldBorder
+                  : AppTheme.border,
             ),
           ),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: onPressed,
-            child: Center(
+            focusColor: outlineColor == null ? null : AppTheme.primarySoft,
+            child: Container(
+              alignment: Alignment.center,
+              constraints: const BoxConstraints(minHeight: AppTheme.controlHeight),
+              padding: wrapLabel
+                  ? const EdgeInsets.symmetric(vertical: 8)
+                  : EdgeInsets.zero,
               child: _Content(
                 label: label,
                 icon: icon,
                 leading: leading,
                 color: color,
+                wrapLabel: wrapLabel,
               ),
             ),
           ),
@@ -195,12 +215,14 @@ class _Content extends StatelessWidget {
     required this.color,
     this.icon,
     this.leading,
+    this.wrapLabel = false,
   });
 
   final String label;
   final Color color;
   final IconData? icon;
   final Widget? leading;
+  final bool wrapLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -214,12 +236,14 @@ class _Content extends StatelessWidget {
           Flexible(
             child: Text(
               label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+              maxLines: wrapLabel ? null : 1,
+              overflow: wrapLabel ? TextOverflow.clip : TextOverflow.ellipsis,
+              textAlign: wrapLabel ? TextAlign.center : null,
               style: AppTheme.text(
                 size: 16,
                 weight: FontWeight.w600,
                 color: color,
+                height: wrapLabel ? 1.5 : null,
               ),
             ),
           ),

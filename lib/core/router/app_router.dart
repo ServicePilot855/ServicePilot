@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/core/auth/auth_state.dart';
 import 'package:service_pilot/core/constants/app_roles.dart';
+import 'package:service_pilot/core/theme/app_theme.dart';
 import 'package:service_pilot/features/auth/screens/splash_screen.dart';
 import 'package:service_pilot/features/auth/screens/role_select_screen.dart';
 import 'package:service_pilot/features/auth/screens/login_screen.dart';
@@ -20,11 +21,14 @@ import 'package:service_pilot/features/providers/screens/provider_detail_screen.
 import 'package:service_pilot/features/providers/screens/provider_list_screen.dart';
 import 'package:service_pilot/features/services/models/category_model.dart';
 import 'package:service_pilot/features/services/screens/categories_screen.dart';
+import 'package:service_pilot/l10n/l10n.dart';
 import 'package:service_pilot/shared/home/customer_home.dart';
 import 'package:service_pilot/shared/home/technician_home.dart';
 import 'package:service_pilot/shared/home/company_home.dart';
 import 'package:service_pilot/shared/home/company_technician_home.dart';
 import 'package:service_pilot/shared/home/admin_home.dart';
+import 'package:service_pilot/shared/widgets/sp_button.dart';
+import 'package:service_pilot/shared/widgets/sp_layout.dart';
 
 /// Provides the [GoRouter] instance to the widget tree.
 ///
@@ -147,15 +151,40 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/providers/:providerId/book',
-        builder: (_, state) {
+        builder: (context, state) {
+          final l10n = context.l10n;
           final providerId = state.pathParameters['providerId'] ?? '';
           return Scaffold(
+            backgroundColor: AppTheme.browseBackground,
             appBar: AppBar(
-              title: const Text('Book Service'),
-              leading: const BackButton(),
+              title: Text(
+                l10n.providerBookingPreviewTitle,
+                style: AppTheme.display(size: 18, color: AppTheme.browseInk),
+              ),
+              leading: SpBackButton(
+                onPressed: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/providers/${Uri.encodeComponent(providerId)}');
+                  }
+                },
+              ),
             ),
-            body: Center(
-              child: Text('Booking request form for provider $providerId (US-12)'),
+            body: SafeArea(
+              top: false,
+              child: SpContentWidth(
+                child: ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    SpNotice(
+                      icon: Icons.info_outline_rounded,
+                      message: l10n.providerBookingPreviewNotice,
+                      tone: SpTone.neutral,
+                    ),
+                  ],
+                ),
+              ),
             ),
           );
         },
