@@ -1729,6 +1729,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Back to home'**
   String get bookingSentBackHome;
+
+  /// No description provided for @adminDashboardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Platform Administration'**
+  String get adminDashboardTitle;
+
+  /// No description provided for @adminPendingProvidersSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending provider applications'**
+  String get adminPendingProvidersSection;
+
+  /// No description provided for @adminApprovedProvidersSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved active providers'**
+  String get adminApprovedProvidersSection;
+
+  /// No description provided for @adminPendingProvidersEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending provider applications require review right now.'**
+  String get adminPendingProvidersEmpty;
+
+  /// No description provided for @adminPendingBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending verification'**
+  String get adminPendingBadge;
+
+  /// No description provided for @adminApprovedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved & active'**
+  String get adminApprovedBadge;
+
+  /// No description provided for @adminProviderReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review provider'**
+  String get adminProviderReviewTitle;
+
+  /// No description provided for @adminReviewAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Review application'**
+  String get adminReviewAction;
+
+  /// No description provided for @adminApproveProviderButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve provider'**
+  String get adminApproveProviderButton;
+
+  /// No description provided for @adminProviderApprovedNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'{provider} is now approved, active, and eligible for customer bookings.'**
+  String adminProviderApprovedNotice(String provider);
+
+  /// No description provided for @adminPendingVerificationNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'This provider is awaiting verification and is hidden from customer search and bookings.'**
+  String get adminPendingVerificationNotice;
+
+  /// No description provided for @adminVerificationChecklistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification details'**
+  String get adminVerificationChecklistTitle;
+
+  /// No description provided for @adminContactEmailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Email address'**
+  String get adminContactEmailLabel;
+
+  /// No description provided for @adminContactPhoneLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact phone'**
+  String get adminContactPhoneLabel;
+
+  /// No description provided for @adminAccessDeniedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin access required'**
+  String get adminAccessDeniedTitle;
+
+  /// No description provided for @adminAccessDeniedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Only Platform Admins can review or approve provider accounts.'**
+  String get adminAccessDeniedMessage;
+
+  /// No description provided for @adminViewCustomerProfileButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview customer profile'**
+  String get adminViewCustomerProfileButton;
 }
 
 class _AppLocalizationsDelegate

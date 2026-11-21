@@ -927,4 +927,61 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get bookingSentBackHome => 'Back to home';
+
+  @override
+  String get adminDashboardTitle => 'ការគ្រប់គ្រងប្រព័ន្ធ';
+
+  @override
+  String get adminPendingProvidersSection =>
+      'ពាក្យស្នើសុំអ្នកផ្តល់សេវាដែលកំពុងរង់ចាំ';
+
+  @override
+  String get adminApprovedProvidersSection => 'អ្នកផ្តល់សេវាដែលបានអនុម័ត';
+
+  @override
+  String get adminPendingProvidersEmpty =>
+      'មិនមានពាក្យស្នើសុំអ្នកផ្តល់សេវាដែលត្រូវពិនិត្យទេ។';
+
+  @override
+  String get adminPendingBadge => 'កំពុងរង់ចាំការផ្ទៀងផ្ទាត់';
+
+  @override
+  String get adminApprovedBadge => 'បានអនុម័ត និងសកម្ម';
+
+  @override
+  String get adminProviderReviewTitle => 'ពិនិត្យអ្នកផ្តល់សេវា';
+
+  @override
+  String get adminReviewAction => 'ពិនិត្យពាក្យស្នើសុំ';
+
+  @override
+  String get adminApproveProviderButton => 'អនុម័តអ្នកផ្តល់សេវា';
+
+  @override
+  String adminProviderApprovedNotice(String provider) {
+    return '$provider ត្រូវបានអនុម័ត សកម្ម និងអាចទទួលការកក់ពីអតិថិជនបាន។';
+  }
+
+  @override
+  String get adminPendingVerificationNotice =>
+      'អ្នកផ្តល់សេវានេះកំពុងរង់ចាំការផ្ទៀងផ្ទាត់ ហើយមិនទាន់បង្ហាញក្នុងការស្វែងរករបស់អតិថិជនទេ។';
+
+  @override
+  String get adminVerificationChecklistTitle => 'ព័ត៌មានផ្ទៀងផ្ទាត់';
+
+  @override
+  String get adminContactEmailLabel => 'អ៊ីមែល';
+
+  @override
+  String get adminContactPhoneLabel => 'លេខទូរស័ព្ទទំនាក់ទំនង';
+
+  @override
+  String get adminAccessDeniedTitle => 'តម្រូវឱ្យមានសិទ្ធិអ្នកគ្រប់គ្រង';
+
+  @override
+  String get adminAccessDeniedMessage =>
+      'មានតែអ្នកគ្រប់គ្រងប្រព័ន្ធប៉ុណ្ណោះដែលអាចពិនិត្យ ឬអនុម័តគណនីអ្នកផ្តល់សេវាបាន។';
+
+  @override
+  String get adminViewCustomerProfileButton => 'មើលទម្រង់សម្រាប់អតិថិជន';
 }

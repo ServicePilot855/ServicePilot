@@ -1,8 +1,71 @@
+import 'package:service_pilot/core/constants/app_roles.dart';
+import 'package:service_pilot/features/auth/models/user_model.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
 
-/// Contract for provider retrieval and query operations.
+/// Thrown when a requested provider ID does not exist.
+class ProviderNotFoundException implements Exception {
+  final String providerId;
+  final String message;
+
+  const ProviderNotFoundException(
+    this.providerId, [
+    this.message = 'The requested service provider could not be found.',
+  ]);
+
+  @override
+  String toString() => 'ProviderNotFoundException($providerId): $message';
+}
+
+/// Thrown when a non-admin or unauthenticated account attempts to review or approve a provider.
 ///
-/// Corresponds to US-10 (SCRUM-55) & US-11 (SCRUM-54).
+/// Enforces ADM-2 (SCRUM-94 / SCRUM-162) AC:
+/// "A non-admin account cannot approve a provider."
+class UnauthorizedProviderApprovalException implements Exception {
+  final String? providerId;
+  final String? userId;
+  final String? role;
+  final String message;
+
+  const UnauthorizedProviderApprovalException({
+    this.providerId,
+    this.userId,
+    this.role,
+    this.message =
+        'Only an authorized Platform Admin can approve a provider application.',
+  });
+
+  @override
+  String toString() =>
+      'UnauthorizedProviderApprovalException(providerId: $providerId, userId: $userId, role: $role): $message';
+}
+
+/// Thrown when an approval is attempted on a provider record that is not in
+/// `pending_verification` status.
+///
+/// Enforces ADM-2 (SCRUM-94 / SCRUM-162) AC:
+/// "An authorized admin can approve a Pending Verification provider."
+class InvalidProviderApprovalStateException implements Exception {
+  final String providerId;
+  final String currentStatus;
+  final String message;
+
+  InvalidProviderApprovalStateException({
+    required this.providerId,
+    required this.currentStatus,
+    String? message,
+  }) : message =
+           message ??
+           'Cannot approve provider "$providerId" with status "$currentStatus". '
+               'Only Pending Verification providers can be approved.';
+
+  @override
+  String toString() =>
+      'InvalidProviderApprovalStateException(providerId: $providerId, status: $currentStatus): $message';
+}
+
+/// Contract for provider retrieval, query, and admin approval operations.
+///
+/// Corresponds to US-10 (SCRUM-55), US-11 (SCRUM-54), and ADM-2 (SCRUM-94).
 abstract class IProviderService {
   /// Fetches providers, optionally filtered by category and active status.
   Future<List<ProviderModel>> getProviders({
@@ -22,6 +85,25 @@ abstract class IProviderService {
     String? categoryId,
   });
 
+  /// Fetches providers currently in `pending_verification` status for admin review.
+  ///
+  /// Throws [UnauthorizedProviderApprovalException] if [actor] is not a Platform Admin.
+  Future<List<ProviderModel>> getPendingProviders({
+    required UserModel? actor,
+  });
+
+  /// Approves a `pending_verification` provider so it becomes `active`, verified,
+  /// and eligible for customer discovery and bookings (ADM-2 / SCRUM-94).
+  ///
+  /// Throws:
+  /// - [UnauthorizedProviderApprovalException] if [actor] is null or not [AppRole.admin].
+  /// - [ProviderNotFoundException] if [providerId] does not exist.
+  /// - [InvalidProviderApprovalStateException] if the provider is not in `pending_verification` status.
+  Future<ProviderModel> approveProvider({
+    required String providerId,
+    required UserModel? actor,
+  });
+
   /// Seeds initial demo providers into the database for rapid testing and bootstrapping.
   Future<void> seedInitialProviders();
 }
@@ -31,7 +113,9 @@ class ProviderService implements IProviderService {
   final List<ProviderModel> _providers;
 
   ProviderService({List<ProviderModel>? initialProviders})
-      : _providers = initialProviders ?? defaultProviders;
+      : _providers = List<ProviderModel>.from(
+          initialProviders ?? defaultProviders,
+        );
 
   /// Default verified providers seeded for Phnom Penh districts.
   static final List<ProviderModel> defaultProviders = [
@@ -218,6 +302,54 @@ class ProviderService implements IProviderService {
       email: 'company@test.com',
       status: 'active',
     ),
+    // Pending verification providers for Admin Review & Approval (ADM-1 / ADM-2 / SCRUM-94)
+    const ProviderModel(
+      id: 'prov-pending-sokha',
+      name: 'Sokha Pich',
+      type: ProviderType.independent,
+      description: 'Residential Split AC & Ventilation Technician',
+      bio:
+          'Independent AC repair technician with 5 years of field experience in Sen Sok and Toul Kork. Submitted national ID and trade certificate for platform review.',
+      specialties: [
+        'Split AC Chemical Wash',
+        'Capacitor & Fan Motor Repair',
+        'Drainage Line Unblocking',
+      ],
+      coverageAreas: ['Sen Sok', 'Toul Kork'],
+      serviceArea: 'Sen Sok, Toul Kork, Phnom Penh',
+      categoryIds: ['cat-ac'],
+      yearsExperience: 5,
+      hourlyRate: 16.0,
+      isAvailable: true,
+      phone: '+855 96 445 566',
+      email: 'sokha.pich@servicepilot.kh',
+      isVerified: false,
+      status: 'pending_verification',
+    ),
+    const ProviderModel(
+      id: 'prov-pending-mekong-co',
+      name: 'Channary Rath',
+      businessName: 'Mekong Home Repair Co., Ltd.',
+      type: ProviderType.company,
+      description: 'Licensed Plumbing & Electrical Maintenance Company',
+      bio:
+          'Phnom Penh home maintenance company with 6 full-time technicians covering Chamkarmon and Boeung Keng Kang. Business registration submitted for verification.',
+      specialties: [
+        'Emergency Pipe Leak Repair',
+        'Breaker Panel Upgrades',
+        'Water Heater Installation',
+      ],
+      coverageAreas: ['Chamkarmon', 'Boeung Keng Kang'],
+      serviceArea: 'Chamkarmon, Boeung Keng Kang, Phnom Penh',
+      categoryIds: ['cat-plumbing', 'cat-electrical'],
+      yearsExperience: 4,
+      hourlyRate: 22.0,
+      isAvailable: true,
+      phone: '+855 23 555 789',
+      email: 'contact@mekonghomerepair.kh',
+      isVerified: false,
+      status: 'pending_verification',
+    ),
   ];
 
   @override
@@ -226,7 +358,7 @@ class ProviderService implements IProviderService {
     bool activeOnly = true,
   }) async {
     return _providers.where((p) {
-      if (activeOnly && !p.isActive) return false;
+      if (activeOnly && !p.isApprovedAndActive) return false;
       if (categoryId != null && !p.categoryIds.contains(categoryId)) {
         return false;
       }
@@ -272,6 +404,57 @@ class ProviderService implements IProviderService {
           matchSpecialty ||
           matchArea;
     }).toList();
+  }
+
+  @override
+  Future<List<ProviderModel>> getPendingProviders({
+    required UserModel? actor,
+  }) async {
+    if (actor == null || !actor.isAdmin) {
+      throw UnauthorizedProviderApprovalException(
+        userId: actor?.id,
+        role: actor?.role.value,
+      );
+    }
+
+    return List.unmodifiable(
+      _providers.where((p) => p.isPendingVerification),
+    );
+  }
+
+  @override
+  Future<ProviderModel> approveProvider({
+    required String providerId,
+    required UserModel? actor,
+  }) async {
+    if (actor == null || !actor.isAdmin) {
+      throw UnauthorizedProviderApprovalException(
+        providerId: providerId,
+        userId: actor?.id,
+        role: actor?.role.value,
+      );
+    }
+
+    final index = _providers.indexWhere((p) => p.id == providerId);
+    if (index == -1) {
+      throw ProviderNotFoundException(providerId);
+    }
+
+    final current = _providers[index];
+    if (!current.isPendingVerification) {
+      throw InvalidProviderApprovalStateException(
+        providerId: providerId,
+        currentStatus: current.status,
+      );
+    }
+
+    final approved = current.copyWith(
+      status: 'active',
+      isVerified: true,
+      updatedAt: DateTime.now(),
+    );
+    _providers[index] = approved;
+    return approved;
   }
 
   @override

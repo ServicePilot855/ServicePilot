@@ -177,11 +177,13 @@ class CustomerHome extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      l10n.discoveryHomeBookings,
-                      style: AppTheme.display(
-                        size: 18,
-                        color: AppTheme.browseInk,
+                    Expanded(
+                      child: Text(
+                        l10n.discoveryHomeBookings,
+                        style: AppTheme.display(
+                          size: 18,
+                          color: AppTheme.browseInk,
+                        ),
                       ),
                     ),
                     TextButton(

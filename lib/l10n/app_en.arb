@@ -361,5 +361,27 @@
   "bookingSummaryWhen": "Date and time",
   "bookingSummaryAddress": "Address",
   "bookingSentViewStatus": "View booking status",
-  "bookingSentBackHome": "Back to home"
+  "bookingSentBackHome": "Back to home",
+
+  "@_ADMIN": {},
+  "adminDashboardTitle": "Platform Administration",
+  "adminPendingProvidersSection": "Pending provider applications",
+  "adminApprovedProvidersSection": "Approved active providers",
+  "adminPendingProvidersEmpty": "No pending provider applications require review right now.",
+  "adminPendingBadge": "Pending verification",
+  "adminApprovedBadge": "Approved & active",
+  "adminProviderReviewTitle": "Review provider",
+  "adminReviewAction": "Review application",
+  "adminApproveProviderButton": "Approve provider",
+  "adminProviderApprovedNotice": "{provider} is now approved, active, and eligible for customer bookings.",
+  "@adminProviderApprovedNotice": {
+    "placeholders": {"provider": {"type": "String"}}
+  },
+  "adminPendingVerificationNotice": "This provider is awaiting verification and is hidden from customer search and bookings.",
+  "adminVerificationChecklistTitle": "Verification details",
+  "adminContactEmailLabel": "Email address",
+  "adminContactPhoneLabel": "Contact phone",
+  "adminAccessDeniedTitle": "Admin access required",
+  "adminAccessDeniedMessage": "Only Platform Admins can review or approve provider accounts.",
+  "adminViewCustomerProfileButton": "Preview customer profile"
 }
