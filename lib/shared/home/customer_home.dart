@@ -173,10 +173,30 @@ class CustomerHome extends ConsumerWidget {
                 ),
                 const SizedBox(height: 24),
 
-                // My Repair Bookings Section (US-13 / US-14)
-                Text(
-                  l10n.discoveryHomeBookings,
-                  style: AppTheme.display(size: 18, color: AppTheme.browseInk),
+                // My Repair Bookings Section (US-13 / US-14 / US-15)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      l10n.discoveryHomeBookings,
+                      style: AppTheme.display(
+                        size: 18,
+                        color: AppTheme.browseInk,
+                      ),
+                    ),
+                    TextButton(
+                      key: const Key('home_view_booking_history_button'),
+                      onPressed: () => context.push('/bookings/history'),
+                      child: Text(
+                        'View all',
+                        style: AppTheme.text(
+                          size: 13.5,
+                          weight: FontWeight.w600,
+                          color: AppTheme.primary,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 10),
                 bookingsAsync.when(
