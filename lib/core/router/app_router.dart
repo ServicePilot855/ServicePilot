@@ -16,9 +16,10 @@ import 'package:service_pilot/features/auth/screens/forgot_password_screen.dart'
 import 'package:service_pilot/features/auth/screens/reset_password_screen.dart';
 import 'package:service_pilot/features/bookings/models/booking_model.dart';
 import 'package:service_pilot/features/bookings/screens/booking_confirmation_screen.dart';
+import 'package:service_pilot/features/bookings/screens/booking_history_screen.dart';
+import 'package:service_pilot/features/bookings/screens/booking_tracking_screen.dart';
 import 'package:service_pilot/features/bookings/screens/create_booking_screen.dart';
 import 'package:service_pilot/features/bookings/screens/location_picker_screen.dart';
-import 'package:service_pilot/features/bookings/screens/booking_tracking_screen.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
 import 'package:service_pilot/features/providers/screens/provider_detail_screen.dart';
 import 'package:service_pilot/features/providers/screens/provider_list_screen.dart';
@@ -177,6 +178,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             booking: booking,
           );
         },
+      ),
+
+      // ── Booking History (US-15 / SCRUM-46) ────────────────────────────
+      GoRoute(
+        path: '/bookings/history',
+        builder: (_, __) => const BookingHistoryScreen(),
       ),
 
       // ── Bookings & Cancellation (US-13 / US-14) ───────────────────────
