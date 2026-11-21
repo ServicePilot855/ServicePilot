@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/core/auth/auth_state.dart';
 import 'package:service_pilot/core/constants/app_roles.dart';
+import 'package:service_pilot/features/admin/screens/admin_pending_providers_screen.dart';
 import 'package:service_pilot/features/auth/screens/splash_screen.dart';
 import 'package:service_pilot/features/auth/screens/role_select_screen.dart';
 import 'package:service_pilot/features/auth/screens/login_screen.dart';
@@ -197,6 +198,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             initialBooking: booking,
           );
         },
+      ),
+
+      // ── Admin: Pending Provider Applications (ADM-1 / SCRUM-93) ───────
+      GoRoute(
+        path: '/admin/providers/pending',
+        builder: (_, __) => const AdminPendingProvidersScreen(),
       ),
 
       // ── Protected home routes ─────────────────────────────────────────

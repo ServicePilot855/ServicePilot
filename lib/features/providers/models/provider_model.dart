@@ -127,6 +127,10 @@ class ProviderModel {
   /// Whether the provider status is active.
   bool get isActive => status.toLowerCase() == 'active';
 
+  /// Whether the provider is awaiting administrative verification (ADM-1 / SCRUM-93).
+  bool get isPendingVerification =>
+      status.toLowerCase() == 'pending_verification';
+
   /// Only active approved providers can be listed for customer booking (US-10 AC).
   bool get isApprovedAndActive => status.toLowerCase() == 'active';
 
