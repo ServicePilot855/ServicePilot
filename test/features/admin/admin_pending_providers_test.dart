@@ -225,9 +225,12 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('Provider Applications'), findsOneWidget);
-        expect(find.text('2 Pending'), findsOneWidget);
-        expect(find.text('View Pending Applications'), findsOneWidget);
+        expect(find.text('Pending provider applications'), findsOneWidget);
+        expect(find.text('Awaiting review'), findsOneWidget);
+        expect(
+          find.byKey(const Key('admin_home_view_all_pending_button')),
+          findsOneWidget,
+        );
       },
     );
   });
