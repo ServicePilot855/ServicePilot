@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:service_pilot/core/constants/booking_status.dart';
 import 'package:service_pilot/features/bookings/models/booking_model.dart';
 import 'package:service_pilot/features/bookings/models/booking_request.dart';
@@ -171,6 +173,13 @@ abstract class IBookingService {
     required String bookingId,
     required BookingStatus newStatus,
   });
+
+  /// Emits real-time updates for a single booking identified by [bookingId].
+  ///
+  /// Corresponds to US-13 (SCRUM-44) AC #3 and DoD #2:
+  /// "Status changes made by authorized service providers or technicians are
+  /// reflected in the customer's booking view."
+  Stream<BookingModel?> watchBookingById(String bookingId);
 }
 
 /// Production and testable implementation of [IBookingService].
@@ -178,6 +187,18 @@ class BookingService implements IBookingService {
   static const String defaultCustomerId = 'customer-1';
 
   final List<BookingModel> _bookings;
+  final StreamController<List<BookingModel>> _updatesController =
+      StreamController<List<BookingModel>>.broadcast();
+
+  void _notifyListeners() {
+    if (!_updatesController.isClosed) {
+      _updatesController.add(List.unmodifiable(_bookings));
+    }
+  }
+
+  void dispose() {
+    _updatesController.close();
+  }
 
   BookingService({
     List<BookingModel>? initialBookings,
@@ -336,6 +357,7 @@ class BookingService implements IBookingService {
       ],
     );
     _bookings.add(booking);
+    _notifyListeners();
     return booking;
   }
 
@@ -400,6 +422,7 @@ class BookingService implements IBookingService {
     );
 
     _bookings[index] = updatedBooking;
+    _notifyListeners();
     return updatedBooking;
   }
 
@@ -444,6 +467,7 @@ class BookingService implements IBookingService {
       updatedAt: DateTime.now(),
     );
     _bookings[index] = updated;
+    _notifyListeners();
     return updated;
   }
 
@@ -484,6 +508,27 @@ class BookingService implements IBookingService {
       updatedAt: DateTime.now(),
     );
     _bookings[index] = updated;
+    _notifyListeners();
     return updated;
+  }
+
+  @override
+  Stream<BookingModel?> watchBookingById(String bookingId) async* {
+    BookingModel? findCurrent() {
+      for (final booking in _bookings) {
+        if (booking.id == bookingId) {
+          return booking;
+        }
+      }
+      return null;
+    }
+
+    yield findCurrent();
+    yield* _updatesController.stream.map((list) {
+      for (final b in list) {
+        if (b.id == bookingId) return b;
+      }
+      return null;
+    });
   }
 }

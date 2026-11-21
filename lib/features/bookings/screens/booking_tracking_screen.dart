@@ -7,6 +7,7 @@ import 'package:service_pilot/core/theme/app_theme.dart';
 import 'package:service_pilot/features/bookings/models/booking_model.dart';
 import 'package:service_pilot/features/bookings/providers/booking_provider.dart';
 import 'package:service_pilot/features/bookings/services/booking_service.dart';
+import 'package:service_pilot/features/bookings/widgets/booking_status_stepper.dart';
 import 'package:service_pilot/features/bookings/widgets/cancel_booking_dialog.dart';
 import 'package:service_pilot/shared/widgets/sp_button.dart';
 import 'package:service_pilot/shared/widgets/sp_layout.dart';
@@ -100,7 +101,7 @@ class _BookingTrackingScreenState extends ConsumerState<BookingTrackingScreen> {
   @override
   Widget build(BuildContext context) {
     final currentUserId = ref.watch(activeCustomerIdProvider);
-    final bookingAsync = ref.watch(bookingDetailProvider(widget.bookingId));
+    final bookingAsync = ref.watch(liveBookingDetailProvider(widget.bookingId));
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -123,7 +124,7 @@ class _BookingTrackingScreenState extends ConsumerState<BookingTrackingScreen> {
       ),
       body: bookingAsync.when(
         data: (fetchedBooking) {
-          final booking = _currentBooking ?? fetchedBooking;
+          final booking = fetchedBooking ?? _currentBooking;
           if (booking == null) {
             return Center(
               child: SpContentWidth(
@@ -192,88 +193,103 @@ class _BookingTrackingScreenState extends ConsumerState<BookingTrackingScreen> {
       'EEE, d MMM yyyy • h:mm a',
     ).format(booking.preferredDateTime);
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppTheme.gutter),
-      child: SpContentWidth(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (_feedbackMessage != null) ...[
-              SpNotice(
-                key: const Key('booking_cancelled_success_notice'),
-                icon: Icons.check_circle_outline_rounded,
-                message: _feedbackMessage!,
-                tone: SpTone.success,
-              ),
-              const SizedBox(height: 16),
-            ],
+    return RefreshIndicator(
+      key: const Key('booking_tracking_refresh_indicator'),
+      color: AppTheme.primary,
+      onRefresh: () async {
+        ref.invalidate(bookingDetailProvider(widget.bookingId));
+        ref.invalidate(liveBookingDetailProvider(widget.bookingId));
+      },
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(AppTheme.gutter),
+        child: SpContentWidth(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (_feedbackMessage != null) ...[
+                SpNotice(
+                  key: const Key('booking_cancelled_success_notice'),
+                  icon: Icons.check_circle_outline_rounded,
+                  message: _feedbackMessage!,
+                  tone: SpTone.success,
+                ),
+                const SizedBox(height: 16),
+              ],
 
-            // Status & Summary Card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: AppTheme.surface,
-                borderRadius: BorderRadius.circular(AppTheme.radiusCard),
-                border: Border.all(color: AppTheme.border),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
+              // Status & Summary Card
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: AppTheme.surface,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusCard),
+                  border: Border.all(color: AppTheme.border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'ID: ${booking.id}',
+                          style: AppTheme.text(
+                            size: 12.5,
+                            weight: FontWeight.w600,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                        StatusBadge(
+                          key: const Key('booking_detail_status_badge'),
+                          status: booking.status,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      booking.serviceTitle,
+                      style: AppTheme.display(size: 20),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      booking.serviceCategory,
+                      style: AppTheme.text(
+                        size: 14,
+                        weight: FontWeight.w600,
+                        color: AppTheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SpNotice(
+                      icon: booking.status.icon,
+                      message: booking.status.description,
+                      tone: booking.status.tone,
+                    ),
+                    if (booking.status == BookingStatus.cancelled &&
+                        booking.cancellationReason != null &&
+                        booking.cancellationReason!.isNotEmpty) ...[
+                      const SizedBox(height: 10),
                       Text(
-                        'ID: ${booking.id}',
+                        'Cancellation reason: ${booking.cancellationReason}',
+                        key: const Key('booking_cancellation_reason_text'),
                         style: AppTheme.text(
-                          size: 12.5,
-                          weight: FontWeight.w600,
+                          size: 13.5,
                           color: AppTheme.textSecondary,
                         ),
                       ),
-                      StatusBadge(
-                        key: const Key('booking_detail_status_badge'),
-                        status: booking.status,
-                      ),
                     ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    booking.serviceTitle,
-                    style: AppTheme.display(size: 20),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    booking.serviceCategory,
-                    style: AppTheme.text(
-                      size: 14,
-                      weight: FontWeight.w600,
-                      color: AppTheme.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  SpNotice(
-                    icon: booking.status.icon,
-                    message: booking.status.description,
-                    tone: booking.status.tone,
-                  ),
-                  if (booking.status == BookingStatus.cancelled &&
-                      booking.cancellationReason != null &&
-                      booking.cancellationReason!.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    Text(
-                      'Cancellation reason: ${booking.cancellationReason}',
-                      key: const Key('booking_cancellation_reason_text'),
-                      style: AppTheme.text(
-                        size: 13.5,
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
                   ],
-                ],
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
+
+              // Visual Progress Stepper / Timeline (US-13 DoD #1)
+              BookingStatusStepper(
+                key: const Key('booking_status_stepper'),
+                booking: booking,
+              ),
+              const SizedBox(height: 16),
 
             // Service Details Card
             Container(
@@ -363,8 +379,9 @@ class _BookingTrackingScreenState extends ConsumerState<BookingTrackingScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   String _restrictionMessageForStatus(BookingStatus status) {
     switch (status) {
