@@ -103,6 +103,15 @@ class FirestoreBookingService implements IBookingService {
   }
 
   @override
+  Stream<BookingModel?> watchBookingById(String bookingId) {
+    return _bookings.doc(bookingId).snapshots().map((doc) {
+      final data = doc.data();
+      if (!doc.exists || data == null) return null;
+      return BookingModel.fromFirestore(doc.id, data);
+    });
+  }
+
+  @override
   Future<BookingModel> cancelBooking({
     required String bookingId,
     required String customerId,
