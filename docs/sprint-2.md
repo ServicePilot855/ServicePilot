@@ -12,9 +12,9 @@
 | SCRUM-55 | US-10: Browse and select service providers | 8 | Taing Sothyvan (`TS`) | To Do |
 | SCRUM-54 | US-11: View service provider details | 5 | TIEK Chhunhour (`TC`) | Done |
 | SCRUM-43 | US-12: Submit a repair booking request | 13 | KHENG Sokthearith (`KS`) | To Do |
-| SCRUM-44 | US-13: Track repair booking status | 8 | YEAT David (`YD`) | To Do |
+| SCRUM-44 | US-13: Track repair booking status | 8 | YEAT David (`YD`) | Done |
 | SCRUM-45 | US-14: Cancel a repair booking | 3 | HEM Eamsocheat (`HE`) | Done |
-| SCRUM-46 | US-15: View repair booking history | 5 | YEAT David (`YD`) | To Do |
+| SCRUM-46 | US-15: View repair booking history | 5 | YEAT David (`YD`) | Done |
 
 **Total Story Points:** 55 pts
 
@@ -149,20 +149,20 @@
 > As a customer, I want to track the status of my repair booking so that I can monitor the progress of my repair request.
 
 #### Acceptance Criteria
-- [ ] Customers can view the current status of their bookings.
-- [ ] Booking statuses include: `Pending`, `Assigned`, `Confirmed`, `In Progress`, `Completed`, `Cancelled`, and `Declined`.
-- [ ] Status changes made by authorized service providers or technicians are reflected in the customer's booking view.
-- [ ] Customers can view the assigned technician's information once available.
-- [ ] Customers can only track bookings belonging to their accounts (tenant/user security rule).
-- [ ] Customers can view the latest status when they reopen or refresh their booking details.
+- [x] Customers can view the current status of their bookings.
+- [x] Booking statuses include: `Pending`, `Assigned`, `Confirmed`, `In Progress`, `Completed`, `Cancelled`, and `Declined`.
+- [x] Status changes made by authorized service providers or technicians are reflected in the customer's booking view.
+- [x] Customers can view the assigned technician's information once available.
+- [x] Customers can only track bookings belonging to their accounts (tenant/user security rule).
+- [x] Customers can view the latest status when they reopen or refresh their booking details.
 
 #### Definition of Done
-- [ ] Booking status tracking interface is implemented with a timeline/stepper UI.
-- [ ] Booking statuses are correctly retrieved in real-time or on-demand from the database.
-- [ ] Status updates from service providers and technicians are correctly displayed.
-- [ ] Security access restrictions are implemented and tested.
-- [ ] Status tracking widget and unit tests pass.
-- [ ] Code is peer-reviewed and the feature is demonstrated.
+- [x] Booking status tracking interface is implemented with a timeline/stepper UI.
+- [x] Booking statuses are correctly retrieved in real-time or on-demand from the database.
+- [x] Status updates from service providers and technicians are correctly displayed.
+- [x] Security access restrictions are implemented and tested.
+- [x] Status tracking widget and unit tests pass.
+- [x] Code is peer-reviewed and the feature is demonstrated.
 
 #### Technical Notes
 - Status Lifecycle:
@@ -209,20 +209,20 @@
 > As a customer, I want to view my previous and current repair bookings so that I can keep track of the repair services I have requested.
 
 #### Acceptance Criteria
-- [ ] Customers can view a list of their bookings.
-- [ ] Each booking card displays the service type, provider name, requested appointment date, and current status tag.
-- [ ] Customers can select a booking to view its full details.
-- [ ] Customers can view completed, cancelled, and declined bookings (tabbed or grouped into Active vs. Past).
-- [ ] Customers cannot view another customer's booking history.
-- [ ] Customers without booking history see an appropriate empty-state message.
+- [x] Customers can view a list of their bookings.
+- [x] Each booking card displays the service type, provider name, requested appointment date, and current status tag.
+- [x] Customers can select a booking to view its full details.
+- [x] Customers can view completed, cancelled, and declined bookings (tabbed or grouped into Active vs. Past).
+- [x] Customers cannot view another customer's booking history.
+- [x] Customers without booking history see an appropriate empty-state message.
 
 #### Definition of Done
-- [ ] Booking history interface is implemented with tabs (`Upcoming / Active` and `Past / History`).
-- [ ] Booking records are correctly queried from the database filtered by `customerId == currentUserId`.
-- [ ] Booking details and status badges are styled accurately.
-- [ ] Customer data access restrictions are tested.
-- [ ] Empty-state handling and booking history tests pass.
-- [ ] Code is peer-reviewed and the feature is demonstrated.
+- [x] Booking history interface is implemented with tabs (`Upcoming / Active` and `Past / History`).
+- [x] Booking records are correctly queried from the database filtered by `customerId == currentUserId`.
+- [x] Booking details and status badges are styled accurately.
+- [x] Customer data access restrictions are tested.
+- [x] Empty-state handling and booking history tests pass.
+- [x] Code is peer-reviewed and the feature is demonstrated.
 
 #### Technical Notes
 - Route: `/bookings/history`.
