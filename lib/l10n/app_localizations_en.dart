@@ -936,4 +936,60 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bookingSentBackHome => 'Back to home';
+
+  @override
+  String get adminDashboardTitle => 'Platform Administration';
+
+  @override
+  String get adminPendingProvidersSection => 'Pending provider applications';
+
+  @override
+  String get adminApprovedProvidersSection => 'Approved active providers';
+
+  @override
+  String get adminPendingProvidersEmpty =>
+      'No pending provider applications require review right now.';
+
+  @override
+  String get adminPendingBadge => 'Pending verification';
+
+  @override
+  String get adminApprovedBadge => 'Approved & active';
+
+  @override
+  String get adminProviderReviewTitle => 'Review provider';
+
+  @override
+  String get adminReviewAction => 'Review application';
+
+  @override
+  String get adminApproveProviderButton => 'Approve provider';
+
+  @override
+  String adminProviderApprovedNotice(String provider) {
+    return '$provider is now approved, active, and eligible for customer bookings.';
+  }
+
+  @override
+  String get adminPendingVerificationNotice =>
+      'This provider is awaiting verification and is hidden from customer search and bookings.';
+
+  @override
+  String get adminVerificationChecklistTitle => 'Verification details';
+
+  @override
+  String get adminContactEmailLabel => 'Email address';
+
+  @override
+  String get adminContactPhoneLabel => 'Contact phone';
+
+  @override
+  String get adminAccessDeniedTitle => 'Admin access required';
+
+  @override
+  String get adminAccessDeniedMessage =>
+      'Only Platform Admins can review or approve provider accounts.';
+
+  @override
+  String get adminViewCustomerProfileButton => 'Preview customer profile';
 }

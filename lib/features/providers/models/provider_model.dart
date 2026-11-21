@@ -127,8 +127,12 @@ class ProviderModel {
   /// Whether the provider status is active.
   bool get isActive => status.toLowerCase() == 'active';
 
-  /// Only active approved providers can be listed for customer booking (US-10 AC).
-  bool get isApprovedAndActive => status.toLowerCase() == 'active';
+  /// Whether the provider is awaiting platform administrator verification (ADM-1 / ADM-2).
+  bool get isPendingVerification =>
+      status.toLowerCase() == 'pending_verification';
+
+  /// Only active approved providers can be listed for customer booking (US-10 AC & ADM-2 AC).
+  bool get isApprovedAndActive => isActive && isVerified;
 
   /// Whether the provider is currently available to accept new booking requests (US-11 AC).
   bool get canAcceptBookings => isApprovedAndActive && isAvailable;
@@ -342,6 +346,7 @@ class ProviderModel {
           name == other.name &&
           type == other.type &&
           isAvailable == other.isAvailable &&
+          isVerified == other.isVerified &&
           status == other.status;
 
   @override
@@ -350,5 +355,6 @@ class ProviderModel {
       name.hashCode ^
       type.hashCode ^
       isAvailable.hashCode ^
+      isVerified.hashCode ^
       status.hashCode;
 }

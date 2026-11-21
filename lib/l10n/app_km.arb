@@ -44,5 +44,22 @@
   "providerReviewCount": "ការវាយតម្លៃ {count}",
   "providerRatingSummary": "{score} · {reviews}",
   "providerRatingAnnouncement": "{score} លើ ៥ ពិន្ទុ។ {reviews}",
-  "providerContinueBooking": "បន្តទៅការកក់"
+  "providerContinueBooking": "បន្តទៅការកក់",
+  "adminDashboardTitle": "ការគ្រប់គ្រងប្រព័ន្ធ",
+  "adminPendingProvidersSection": "ពាក្យស្នើសុំអ្នកផ្តល់សេវាដែលកំពុងរង់ចាំ",
+  "adminApprovedProvidersSection": "អ្នកផ្តល់សេវាដែលបានអនុម័ត",
+  "adminPendingProvidersEmpty": "មិនមានពាក្យស្នើសុំអ្នកផ្តល់សេវាដែលត្រូវពិនិត្យទេ។",
+  "adminPendingBadge": "កំពុងរង់ចាំការផ្ទៀងផ្ទាត់",
+  "adminApprovedBadge": "បានអនុម័ត និងសកម្ម",
+  "adminProviderReviewTitle": "ពិនិត្យអ្នកផ្តល់សេវា",
+  "adminReviewAction": "ពិនិត្យពាក្យស្នើសុំ",
+  "adminApproveProviderButton": "អនុម័តអ្នកផ្តល់សេវា",
+  "adminProviderApprovedNotice": "{provider} ត្រូវបានអនុម័ត សកម្ម និងអាចទទួលការកក់ពីអតិថិជនបាន។",
+  "adminPendingVerificationNotice": "អ្នកផ្តល់សេវានេះកំពុងរង់ចាំការផ្ទៀងផ្ទាត់ ហើយមិនទាន់បង្ហាញក្នុងការស្វែងរករបស់អតិថិជនទេ។",
+  "adminVerificationChecklistTitle": "ព័ត៌មានផ្ទៀងផ្ទាត់",
+  "adminContactEmailLabel": "អ៊ីមែល",
+  "adminContactPhoneLabel": "លេខទូរស័ព្ទទំនាក់ទំនង",
+  "adminAccessDeniedTitle": "តម្រូវឱ្យមានសិទ្ធិអ្នកគ្រប់គ្រង",
+  "adminAccessDeniedMessage": "មានតែអ្នកគ្រប់គ្រងប្រព័ន្ធប៉ុណ្ណោះដែលអាចពិនិត្យ ឬអនុម័តគណនីអ្នកផ្តល់សេវាបាន។",
+  "adminViewCustomerProfileButton": "មើលទម្រង់សម្រាប់អតិថិជន"
 }

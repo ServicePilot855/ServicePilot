@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/core/auth/auth_state.dart';
 import 'package:service_pilot/core/constants/app_roles.dart';
+import 'package:service_pilot/features/admin/screens/provider_review_screen.dart';
 import 'package:service_pilot/features/auth/screens/splash_screen.dart';
 import 'package:service_pilot/features/auth/screens/role_select_screen.dart';
 import 'package:service_pilot/features/auth/screens/login_screen.dart';
@@ -50,18 +51,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (BuildContext context, GoRouterState state) {
       final authState = authNotifier.value;
       final isAuthenticated = authState is AuthStateAuthenticated;
+      final isGoingToAdmin = state.matchedLocation.startsWith('/home/admin') ||
+          state.matchedLocation.startsWith('/admin');
       final isGoingToHome = state.matchedLocation.startsWith('/home') ||
           state.matchedLocation.startsWith('/categories') ||
           state.matchedLocation.startsWith('/providers') ||
-          state.matchedLocation.startsWith('/bookings');
+          state.matchedLocation.startsWith('/bookings') ||
+          isGoingToAdmin;
       final isGoingToLogin = state.matchedLocation == '/login';
       final isGoingToSplash = state.matchedLocation == '/splash';
 
       // Let the splash screen handle its own routing.
       if (isGoingToSplash) return null;
 
-      // Unauthenticated users cannot access home or category screens.
+      // Unauthenticated users cannot access home, category, booking, or admin screens.
       if (!isAuthenticated && isGoingToHome) return '/login';
+
+      // Non-admin authenticated users cannot access Platform Admin routes (SCRUM-94 / ADM-2).
+      if (isAuthenticated && isGoingToAdmin && !authState.user.isAdmin) {
+        return authState.user.role.homeRoute;
+      }
 
       // Authenticated users are redirected away from /login to their home.
       if (isAuthenticated && isGoingToLogin) {
@@ -219,6 +228,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/home/admin',
         builder: (_, __) => const AdminHome(),
+      ),
+      GoRoute(
+        path: '/admin/providers/:providerId',
+        builder: (_, state) {
+          final providerId = state.pathParameters['providerId'] ?? '';
+          final provider = state.extra as ProviderModel?;
+          return ProviderReviewScreen(
+            providerId: providerId,
+            initialProvider: provider,
+          );
+        },
       ),
     ],
   );
