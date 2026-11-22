@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +11,7 @@ import 'package:service_pilot/features/providers/providers/provider_provider.dar
 import 'package:service_pilot/features/services/models/offering_model.dart';
 import 'package:service_pilot/features/services/providers/category_provider.dart';
 import 'package:service_pilot/features/services/providers/offering_provider.dart';
+import 'package:service_pilot/l10n/l10n.dart';
 import 'package:service_pilot/shared/widgets/sp_button.dart';
 import 'package:service_pilot/shared/widgets/sp_layout.dart';
 import 'package:service_pilot/shared/widgets/sp_text_field.dart';
@@ -70,13 +72,15 @@ class _CreateOfferingScreenState extends ConsumerState<CreateOfferingScreen> {
   }
 
   Future<void> _submitOffering() async {
+    final l10n = context.l10n;
+
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
     if (_selectedCategoryId == null || _selectedCategoryId!.isEmpty) {
       setState(() {
-        _errorMessage = 'Please select a service category.';
+        _errorMessage = l10n.offeringCategoryRequired;
       });
       return;
     }
@@ -88,27 +92,97 @@ class _CreateOfferingScreenState extends ConsumerState<CreateOfferingScreen> {
 
     try {
       final authState = ref.read(authProvider);
+
+      // ── Authorization & Role Restriction (Issue 2) ─────────────────────
+      if (authState is! AuthStateAuthenticated) {
+        setState(() {
+          _errorMessage = l10n.offeringUnauthorized;
+          _isSubmitting = false;
+        });
+        return;
+      }
+
+      final user = authState.user;
+      final allowedRoles = [
+        AppRole.independentProvider,
+        AppRole.company,
+        AppRole.admin,
+      ];
+
+      if (!allowedRoles.contains(user.role)) {
+        setState(() {
+          _errorMessage = l10n.offeringUnauthorized;
+          _isSubmitting = false;
+        });
+        return;
+      }
+
+      // ── Provider Identification & Active Check (Issue 1) ───────────────
       final resolvedId = ref.read(currentProviderIdProvider);
       String providerId = widget.initialProviderId ?? '';
-      String providerName = 'Verified Provider';
-      ProviderType providerType = ProviderType.independent;
-
       if (providerId.isEmpty && resolvedId.isNotEmpty) {
         providerId = resolvedId;
       }
+      if (providerId.isEmpty) {
+        providerId = user.id;
+      }
+      if (providerId.isEmpty) {
+        providerId = 'prov-virak-ac';
+      }
 
-      if (authState is AuthStateAuthenticated) {
-        if (providerId.isEmpty) {
-          providerId = authState.user.id;
-        }
-        providerName = authState.user.fullName;
-        if (authState.user.role == AppRole.company) {
-          providerType = ProviderType.company;
+      final providerService = ref.read(providerServiceProvider);
+      final provider = await providerService.getProviderById(providerId);
+
+      final isProviderActive = provider != null
+          ? provider.isApprovedAndActive
+          : (user.status.toLowerCase() == 'active' && Firebase.apps.isEmpty);
+
+      if (!isProviderActive) {
+        setState(() {
+          _errorMessage = l10n.offeringActiveRequired;
+          _isSubmitting = false;
+        });
+        return;
+      }
+
+      // ── Provider Name & Company Listing Display (Issue 7) ───────────────
+      String providerName = provider?.displayName ?? user.fullName;
+      ProviderType providerType = provider?.type ?? ProviderType.independent;
+
+      if (user.role == AppRole.company || provider?.isCompany == true) {
+        providerType = ProviderType.company;
+        final companyName = user.companyName?.trim();
+        if (companyName != null && companyName.isNotEmpty) {
+          providerName = companyName;
+        } else if (provider?.businessName != null &&
+            provider!.businessName!.trim().isNotEmpty) {
+          providerName = provider.businessName!.trim();
+        } else if (provider != null && provider.name.isNotEmpty) {
+          providerName = provider.name;
         }
       }
 
-      if (providerId.isEmpty) {
-        providerId = 'prov-virak-ac';
+      // ── Resolve Category Name (Issue 8) ─────────────────────────────────
+      if (_selectedCategoryName == null || _selectedCategoryName!.isEmpty) {
+        final categories = ref.read(categoriesListProvider).valueOrNull;
+        if (categories != null && categories.isNotEmpty) {
+          final match = categories.where((c) => c.id == _selectedCategoryId);
+          if (match.isNotEmpty) {
+            _selectedCategoryName = match.first.name;
+          }
+        }
+        if (_selectedCategoryName == null || _selectedCategoryName!.isEmpty) {
+          try {
+            final cat = await ref
+                .read(categoryServiceProvider)
+                .getCategoryById(_selectedCategoryId!);
+            if (cat != null) {
+              _selectedCategoryName = cat.name;
+            }
+          } catch (e) {
+            debugPrint('[CreateOfferingScreen] Failed to resolve category name: $e');
+          }
+        }
       }
 
       final double? parsedPrice = _pricingMode == OfferingPricingMode.fixed
@@ -145,11 +219,7 @@ class _CreateOfferingScreenState extends ConsumerState<CreateOfferingScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            _pricingMode == OfferingPricingMode.quoteRequired
-                ? 'Quote-required offering published successfully!'
-                : 'Offering published successfully!',
-          ),
+          content: Text(l10n.offeringSuccessSnackbar),
           backgroundColor: AppTheme.success,
         ),
       );
@@ -165,6 +235,7 @@ class _CreateOfferingScreenState extends ConsumerState<CreateOfferingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final categoriesAsync = ref.watch(categoriesListProvider);
 
     return Scaffold(
@@ -173,7 +244,7 @@ class _CreateOfferingScreenState extends ConsumerState<CreateOfferingScreen> {
         backgroundColor: AppTheme.surface,
         leading: SpBackButton(onPressed: () => _leave(context)),
         title: Text(
-          'Add Service Offering',
+          l10n.offeringCreateTitle,
           style: AppTheme.display(size: 18, color: AppTheme.textPrimary),
         ),
       ),
@@ -186,10 +257,9 @@ class _CreateOfferingScreenState extends ConsumerState<CreateOfferingScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SpPageHeader(
-                    title: 'New Service Offering',
-                    subtitle:
-                        'Publish a repair or maintenance offering. Choose Quote Required for variable jobs or Fixed Price for standard tasks.',
+                  SpPageHeader(
+                    title: l10n.offeringHeaderTitle,
+                    subtitle: l10n.offeringCreateSubtitle,
                   ),
                   const SizedBox(height: 24),
                   if (_errorMessage != null) ...[
@@ -201,9 +271,9 @@ class _CreateOfferingScreenState extends ConsumerState<CreateOfferingScreen> {
                     const SizedBox(height: 16),
                   ],
 
-                  // ── Category Selector ──────────────────────────────────
+                  // ── Category Selector (Issue 8 & 11) ───────────────────
                   Text(
-                    'Service Category',
+                    l10n.offeringCategoryLabel,
                     style: AppTheme.text(
                       size: 14,
                       weight: FontWeight.w600,
@@ -213,7 +283,15 @@ class _CreateOfferingScreenState extends ConsumerState<CreateOfferingScreen> {
                   const SizedBox(height: 6),
                   categoriesAsync.when(
                     data: (categories) {
-                      if (_selectedCategoryId == null &&
+                      if (_selectedCategoryId != null &&
+                          (_selectedCategoryName == null ||
+                              _selectedCategoryName!.isEmpty)) {
+                        final match = categories
+                            .where((c) => c.id == _selectedCategoryId);
+                        if (match.isNotEmpty) {
+                          _selectedCategoryName = match.first.name;
+                        }
+                      } else if (_selectedCategoryId == null &&
                           categories.isNotEmpty) {
                         _selectedCategoryId = categories.first.id;
                         _selectedCategoryName = categories.first.name;
@@ -225,7 +303,8 @@ class _CreateOfferingScreenState extends ConsumerState<CreateOfferingScreen> {
                         items: categories.map((cat) {
                           return DropdownMenuItem<String>(
                             value: cat.id,
-                            child: Text(cat.name, style: AppTheme.text(size: 15)),
+                            child:
+                                Text(cat.name, style: AppTheme.text(size: 15)),
                           );
                         }).toList(),
                         onChanged: (val) {
@@ -241,7 +320,7 @@ class _CreateOfferingScreenState extends ConsumerState<CreateOfferingScreen> {
                           }
                         },
                         decoration: InputDecoration(
-                          hintText: 'Select category',
+                          hintText: l10n.offeringCategoryHint,
                           fillColor: AppTheme.inputFill,
                           filled: true,
                           border: OutlineInputBorder(
@@ -261,49 +340,48 @@ class _CreateOfferingScreenState extends ConsumerState<CreateOfferingScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // ── Title Field ─────────────────────────────────────────
+                  // ── Title Field (Issue 11) ──────────────────────────────
                   SpTextField(
                     key: const Key('offering_title_field'),
-                    label: 'Service Title',
-                    hint: 'e.g., Inverter Mainboard & PCB Replacement',
+                    label: l10n.offeringTitleLabel,
+                    hint: l10n.offeringTitleHint,
                     controller: _titleController,
                     validator: (val) {
                       if (val == null || val.trim().isEmpty) {
-                        return 'Please enter a service title.';
+                        return l10n.offeringTitleRequired;
                       }
                       if (val.trim().length < 3) {
-                        return 'Title must be at least 3 characters.';
+                        return l10n.offeringTitleMinLength;
                       }
                       return null;
                     },
                   ),
                   const SizedBox(height: 16),
 
-                  // ── Description Field ───────────────────────────────────
+                  // ── Description Field (Issue 11) ────────────────────────
                   SpTextField(
                     key: const Key('offering_description_field'),
-                    label: 'Service Scope & Description',
-                    hint:
-                        'Describe what is included, inspection procedure, and diagnostic methods...',
+                    label: l10n.offeringDescLabel,
+                    hint: l10n.offeringDescHint,
                     controller: _descriptionController,
                     maxLines: 4,
                     validator: (val) {
                       if (val == null || val.trim().isEmpty) {
-                        return 'Please describe the service offering.';
+                        return l10n.offeringDescRequired;
                       }
                       if (val.trim().length < 10) {
-                        return 'Description must be at least 10 characters.';
+                        return l10n.offeringDescMinLength;
                       }
                       return null;
                     },
                   ),
                   const SizedBox(height: 24),
 
-                  // ── Pricing Mode Selector (OFFER-2 / SCRUM-119) ─────────
+                  // ── Pricing Mode Selector (Issue 11) ────────────────────
                   Semantics(
                     header: true,
                     child: Text(
-                      'Pricing Mode',
+                      l10n.offeringPricingModeLabel,
                       style: AppTheme.text(
                         size: 14,
                         weight: FontWeight.w600,
@@ -332,14 +410,14 @@ class _CreateOfferingScreenState extends ConsumerState<CreateOfferingScreen> {
                             value: OfferingPricingMode.quoteRequired,
                             activeColor: AppTheme.primary,
                             title: Text(
-                              'Quote Required (OFFER-2)',
+                              l10n.offeringModeQuote,
                               style: AppTheme.text(
                                 size: 15,
                                 weight: FontWeight.w600,
                               ),
                             ),
                             subtitle: Text(
-                              'Price is determined after job assessment. Homeowners submit quote requests instead of fixed-price checkout.',
+                              l10n.offeringModeQuoteDesc,
                               style: AppTheme.text(
                                 size: 13,
                                 color: AppTheme.textSecondary,
@@ -352,14 +430,14 @@ class _CreateOfferingScreenState extends ConsumerState<CreateOfferingScreen> {
                             value: OfferingPricingMode.fixed,
                             activeColor: AppTheme.primary,
                             title: Text(
-                              'Fixed Price',
+                              l10n.offeringModeFixed,
                               style: AppTheme.text(
                                 size: 15,
                                 weight: FontWeight.w600,
                               ),
                             ),
                             subtitle: Text(
-                              'Standard fixed rate available for direct booking and standard cart checkout.',
+                              l10n.offeringModeFixedDesc,
                               style: AppTheme.text(
                                 size: 13,
                                 color: AppTheme.textSecondary,
@@ -374,11 +452,10 @@ class _CreateOfferingScreenState extends ConsumerState<CreateOfferingScreen> {
 
                   // ── Conditional Pricing Input Or Quote Notice ───────────
                   if (_pricingMode == OfferingPricingMode.quoteRequired) ...[
-                    const SpNotice(
-                      key: Key('quote_mode_notice'),
+                    SpNotice(
+                      key: const Key('quote_mode_notice'),
                       icon: Icons.request_quote_rounded,
-                      message:
-                          'Quote Mode Active: Fixed price checkout is disabled. Homeowners will be guided to submit problem details and photos for quote intake.',
+                      message: l10n.offeringNoticeQuoteMode,
                       tone: SpTone.waiting,
                     ),
                   ] else ...[
@@ -389,7 +466,7 @@ class _CreateOfferingScreenState extends ConsumerState<CreateOfferingScreen> {
                           flex: 3,
                           child: SpTextField(
                             key: const Key('offering_price_field'),
-                            label: 'Standard Price (\$ USD)',
+                            label: l10n.offeringPriceLabel,
                             hint: '25.00',
                             keyboardType: const TextInputType.numberWithOptions(
                               decimal: true,
@@ -398,11 +475,11 @@ class _CreateOfferingScreenState extends ConsumerState<CreateOfferingScreen> {
                             validator: (val) {
                               if (_pricingMode == OfferingPricingMode.fixed) {
                                 if (val == null || val.trim().isEmpty) {
-                                  return 'Enter price';
+                                  return l10n.offeringPriceRequired;
                                 }
                                 final p = double.tryParse(val.trim());
                                 if (p == null || p <= 0) {
-                                  return 'Must be > 0';
+                                  return l10n.offeringPricePositive;
                                 }
                               }
                               return null;
@@ -414,8 +491,8 @@ class _CreateOfferingScreenState extends ConsumerState<CreateOfferingScreen> {
                           flex: 2,
                           child: SpTextField(
                             key: const Key('offering_unit_field'),
-                            label: 'Unit',
-                            hint: 'e.g. job, hour',
+                            label: l10n.offeringUnitLabel,
+                            hint: l10n.offeringUnitHint,
                             controller: _unitController,
                           ),
                         ),
@@ -424,10 +501,10 @@ class _CreateOfferingScreenState extends ConsumerState<CreateOfferingScreen> {
                   ],
                   const SizedBox(height: 32),
 
-                  // ── Submit Button ───────────────────────────────────────
+                  // ── Submit Button (Issue 11) ────────────────────────────
                   SpPrimaryButton(
                     key: const Key('publish_offering_button'),
-                    label: 'Publish Offering',
+                    label: l10n.offeringCreateButton,
                     isLoading: _isSubmitting,
                     onPressed: _isSubmitting ? null : _submitOffering,
                   ),

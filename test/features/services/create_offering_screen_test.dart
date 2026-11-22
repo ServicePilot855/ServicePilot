@@ -6,6 +6,7 @@ import 'package:service_pilot/core/auth/auth_state.dart';
 import 'package:service_pilot/core/constants/app_roles.dart';
 import 'package:service_pilot/core/theme/app_theme.dart';
 import 'package:service_pilot/features/auth/models/user_model.dart';
+import 'package:service_pilot/features/providers/models/provider_model.dart';
 import 'package:service_pilot/features/services/models/category_model.dart';
 import 'package:service_pilot/features/services/models/offering_model.dart';
 import 'package:service_pilot/features/services/providers/category_provider.dart';
@@ -16,17 +17,26 @@ import 'package:service_pilot/features/services/services/offering_service.dart';
 import 'package:service_pilot/l10n/app_localizations.dart';
 
 class _MockAuthNotifier extends AuthNotifier {
+  final UserModel? _mockUser;
+
+  _MockAuthNotifier([this._mockUser]);
+
   @override
-  AuthState build() => const AuthStateAuthenticated(
-        UserModel(
-          id: 'prov-tech-1',
-          fullName: 'Tech Lead',
-          email: 'tech@test.com',
-          phoneNumber: '+85512345678',
-          role: AppRole.independentProvider,
-          status: 'active',
-        ),
-      );
+  AuthState build() {
+    if (_mockUser != null) {
+      return AuthStateAuthenticated(_mockUser!);
+    }
+    return const AuthStateAuthenticated(
+      UserModel(
+        id: 'prov-tech-1',
+        fullName: 'Tech Lead',
+        email: 'tech@test.com',
+        phoneNumber: '+85512345678',
+        role: AppRole.independentProvider,
+        status: 'active',
+      ),
+    );
+  }
 }
 
 void main() {
@@ -45,6 +55,7 @@ void main() {
   Widget buildTestApp({
     IOfferingService? customOfferingService,
     ICategoryService? customCategoryService,
+    UserModel? mockUser,
   }) {
     return ProviderScope(
       overrides: [
@@ -52,7 +63,7 @@ void main() {
           offeringServiceProvider.overrideWithValue(customOfferingService),
         if (customCategoryService != null)
           categoryServiceProvider.overrideWithValue(customCategoryService),
-        authProvider.overrideWith(() => _MockAuthNotifier()),
+        authProvider.overrideWith(() => _MockAuthNotifier(mockUser)),
       ],
       child: MaterialApp(
         theme: AppTheme.lightTheme,
@@ -129,7 +140,7 @@ void main() {
     });
 
     testWidgets(
-        'Submitting a Quote-Required offering saves with quoteRequired mode and price null',
+        'Submitting a Quote-Required offering saves with quoteRequired mode and resolves category name',
         (tester) async {
       setupViewport(tester);
       final categoryService =
@@ -169,6 +180,141 @@ void main() {
       expect(saved.isQuoteRequired, isTrue);
       expect(saved.price, isNull);
       expect(saved.canAddToCart, isFalse);
+      // Issue 8: resolved category name
+      expect(saved.categoryName, 'Air Conditioner Repair & Care');
+    });
+
+    testWidgets(
+        'Issue 2: Restrict offering creation to provider and company roles (rejects homeowner)',
+        (tester) async {
+      setupViewport(tester);
+      final categoryService =
+          CategoryService(initialCategories: testCategories);
+      final offeringService = OfferingService(initialOfferings: []);
+
+      const homeownerUser = UserModel(
+        id: 'homeowner-1',
+        fullName: 'John Homeowner',
+        email: 'john@example.com',
+        phoneNumber: '+85511223344',
+        role: AppRole.homeowner,
+        status: 'active',
+      );
+
+      await tester.pumpWidget(buildTestApp(
+        customCategoryService: categoryService,
+        customOfferingService: offeringService,
+        mockUser: homeownerUser,
+      ));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('offering_title_field')),
+        'Unauthorized Offering Attempt',
+      );
+      await tester.enterText(
+        find.byKey(const Key('offering_description_field')),
+        'This should be blocked because user is a homeowner.',
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('publish_offering_button')));
+      await tester.pumpAndSettle();
+
+      // Verify no offerings were saved
+      final offerings = await offeringService.getOfferings();
+      expect(offerings, isEmpty);
+
+      // Verify error notice is displayed
+      expect(find.text('Only registered service providers and companies can publish offerings.'), findsOneWidget);
+    });
+
+    testWidgets(
+        'Issue 1: Require an active provider before publishing an offering (rejects suspended)',
+        (tester) async {
+      setupViewport(tester);
+      final categoryService =
+          CategoryService(initialCategories: testCategories);
+      final offeringService = OfferingService(initialOfferings: []);
+
+      const suspendedTech = UserModel(
+        id: 'tech-suspended-1',
+        fullName: 'Suspended Tech',
+        email: 'suspended@example.com',
+        phoneNumber: '+85511223344',
+        role: AppRole.independentProvider,
+        status: 'suspended',
+      );
+
+      await tester.pumpWidget(buildTestApp(
+        customCategoryService: categoryService,
+        customOfferingService: offeringService,
+        mockUser: suspendedTech,
+      ));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('offering_title_field')),
+        'Suspended Provider Service',
+      );
+      await tester.enterText(
+        find.byKey(const Key('offering_description_field')),
+        'This should be blocked because provider status is suspended.',
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('publish_offering_button')));
+      await tester.pumpAndSettle();
+
+      final offerings = await offeringService.getOfferings();
+      expect(offerings, isEmpty);
+
+      expect(find.text('Provider account must be active to publish service offerings.'), findsOneWidget);
+    });
+
+    testWidgets(
+        'Issue 7: Use the company name for company offering listings',
+        (tester) async {
+      setupViewport(tester);
+      final categoryService =
+          CategoryService(initialCategories: testCategories);
+      final offeringService = OfferingService(initialOfferings: []);
+
+      const companyUser = UserModel(
+        id: 'company-user-1',
+        fullName: 'Chan Dara Admin',
+        email: 'admin@aircarepro.com',
+        phoneNumber: '+85511223344',
+        role: AppRole.company,
+        status: 'active',
+        companyName: 'AirCare Pro Cambodia Co., Ltd.',
+      );
+
+      await tester.pumpWidget(buildTestApp(
+        customCategoryService: categoryService,
+        customOfferingService: offeringService,
+        mockUser: companyUser,
+      ));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('offering_title_field')),
+        'Commercial HVAC Overhaul',
+      );
+      await tester.enterText(
+        find.byKey(const Key('offering_description_field')),
+        'Full industrial and commercial heating and cooling maintenance and overhaul.',
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('publish_offering_button')));
+      await tester.pumpAndSettle();
+
+      final offerings = await offeringService.getOfferings();
+      expect(offerings.length, 1);
+      final saved = offerings.first;
+      expect(saved.providerName, 'AirCare Pro Cambodia Co., Ltd.');
+      expect(saved.providerType, ProviderType.company);
     });
   });
 }

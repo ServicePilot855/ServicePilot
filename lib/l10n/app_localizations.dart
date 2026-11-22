@@ -1729,6 +1729,228 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Back to home'**
   String get bookingSentBackHome;
+
+  /// No description provided for @offeringCreateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Service Offering'**
+  String get offeringCreateTitle;
+
+  /// No description provided for @offeringHeaderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New Service Offering'**
+  String get offeringHeaderTitle;
+
+  /// No description provided for @offeringCreateSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish a new service offering with fixed or custom quote pricing.'**
+  String get offeringCreateSubtitle;
+
+  /// No description provided for @offeringCategoryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Category'**
+  String get offeringCategoryLabel;
+
+  /// No description provided for @offeringCategoryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select category'**
+  String get offeringCategoryHint;
+
+  /// No description provided for @offeringCategoryRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a service category.'**
+  String get offeringCategoryRequired;
+
+  /// No description provided for @offeringTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Title'**
+  String get offeringTitleLabel;
+
+  /// No description provided for @offeringTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., Inverter Mainboard & PCB Replacement'**
+  String get offeringTitleHint;
+
+  /// No description provided for @offeringTitleRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a service title.'**
+  String get offeringTitleRequired;
+
+  /// No description provided for @offeringTitleMinLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Title must be at least 3 characters.'**
+  String get offeringTitleMinLength;
+
+  /// No description provided for @offeringDescLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get offeringDescLabel;
+
+  /// No description provided for @offeringDescHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Explain the scope, prerequisites, or diagnosis required...'**
+  String get offeringDescHint;
+
+  /// No description provided for @offeringDescRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a description.'**
+  String get offeringDescRequired;
+
+  /// No description provided for @offeringDescMinLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Description must be at least 10 characters.'**
+  String get offeringDescMinLength;
+
+  /// No description provided for @offeringPricingModeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pricing Mode'**
+  String get offeringPricingModeLabel;
+
+  /// No description provided for @offeringModeQuote.
+  ///
+  /// In en, this message translates to:
+  /// **'Requires custom quote'**
+  String get offeringModeQuote;
+
+  /// No description provided for @offeringModeQuoteDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Excluded from fixed cart checkout. Customers submit inquiry for custom on-site estimation.'**
+  String get offeringModeQuoteDesc;
+
+  /// No description provided for @offeringNoticeQuoteMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote Mode Active: Fixed price checkout is disabled. Homeowners will be guided to submit problem details and photos for quote intake.'**
+  String get offeringNoticeQuoteMode;
+
+  /// No description provided for @offeringBadgeQuoteRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote Required'**
+  String get offeringBadgeQuoteRequired;
+
+  /// No description provided for @offeringCtaRequestQuote.
+  ///
+  /// In en, this message translates to:
+  /// **'Request a Quote'**
+  String get offeringCtaRequestQuote;
+
+  /// No description provided for @offeringCtaBookService.
+  ///
+  /// In en, this message translates to:
+  /// **'Book Service'**
+  String get offeringCtaBookService;
+
+  /// No description provided for @offeringNoticeQuoteRequiredBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'You are requesting a custom quote for this service. You will not be charged upfront. The provider will review your scope and provide a formal price estimate before work begins.'**
+  String get offeringNoticeQuoteRequiredBooking;
+
+  /// No description provided for @offeringModeFixed.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed upfront price'**
+  String get offeringModeFixed;
+
+  /// No description provided for @offeringModeFixedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Upfront transparent flat-rate pricing.'**
+  String get offeringModeFixedDesc;
+
+  /// No description provided for @offeringPriceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Base Price (\$)'**
+  String get offeringPriceLabel;
+
+  /// No description provided for @offeringPriceRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid base price.'**
+  String get offeringPriceRequired;
+
+  /// No description provided for @offeringPricePositive.
+  ///
+  /// In en, this message translates to:
+  /// **'Price must be greater than zero.'**
+  String get offeringPricePositive;
+
+  /// No description provided for @offeringUnitLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pricing Unit (Optional)'**
+  String get offeringUnitLabel;
+
+  /// No description provided for @offeringUnitHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., job, hour, unit'**
+  String get offeringUnitHint;
+
+  /// No description provided for @offeringCreateButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish Offering'**
+  String get offeringCreateButton;
+
+  /// No description provided for @offeringSuccessSnackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Service offering published successfully!'**
+  String get offeringSuccessSnackbar;
+
+  /// No description provided for @offeringUnauthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'Only registered service providers and companies can publish offerings.'**
+  String get offeringUnauthorized;
+
+  /// No description provided for @offeringActiveRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider account must be active to publish service offerings.'**
+  String get offeringActiveRequired;
+
+  /// No description provided for @offeringDashboardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My Service Offerings'**
+  String get offeringDashboardTitle;
+
+  /// No description provided for @offeringAddButton.
+  ///
+  /// In en, this message translates to:
+  /// **'+ Add Offering'**
+  String get offeringAddButton;
+
+  /// No description provided for @offeringEmptyNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'You have not published any service offerings yet. Tap \"+ Add Offering\" to add fixed-price or quote-required services.'**
+  String get offeringEmptyNotice;
+
+  /// No description provided for @offeringLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load service offerings right now. Please check your connection and try again.'**
+  String get offeringLoadError;
 }
 
 class _AppLocalizationsDelegate

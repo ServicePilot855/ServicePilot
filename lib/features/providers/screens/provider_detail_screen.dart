@@ -333,6 +333,7 @@ class _OfferingsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final offeringsAsync = ref.watch(offeringsByProviderProvider(provider.id));
 
     return offeringsAsync.when(
@@ -392,7 +393,7 @@ class _OfferingsSection extends ConsumerWidget {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  'Quote Required',
+                                  l10n.offeringBadgeQuoteRequired,
                                   style: AppTheme.text(
                                     size: 11.5,
                                     weight: FontWeight.w700,
@@ -437,8 +438,8 @@ class _OfferingsSection extends ConsumerWidget {
                               weight: FontWeight.w500,
                             ),
                           ),
-                        SizedBox(
-                          height: 34,
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(minHeight: 48),
                           child: OutlinedButton.icon(
                             key: Key(isQuote
                                 ? 'btn_quote_${offering.id}'
@@ -447,18 +448,23 @@ class _OfferingsSection extends ConsumerWidget {
                               isQuote
                                   ? Icons.request_quote_rounded
                                   : Icons.calendar_today_rounded,
-                              size: 16,
+                              size: 18,
                             ),
                             label: Text(
-                              isQuote ? 'Request a Quote' : 'Book Service',
+                              isQuote
+                                  ? l10n.offeringCtaRequestQuote
+                                  : l10n.offeringCtaBookService,
                               style: AppTheme.text(
-                                size: 13,
+                                size: 13.5,
                                 weight: FontWeight.w600,
                               ),
                             ),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size(0, 48),
+                            ),
                             onPressed: provider.canAcceptBookings
                                 ? () => context.push(
-                                      '/providers/${Uri.encodeComponent(provider.id)}/book',
+                                      '/providers/${Uri.encodeComponent(provider.id)}/book?serviceTitle=${Uri.encodeComponent(offering.title)}&offeringId=${Uri.encodeComponent(offering.id)}&pricingMode=${Uri.encodeComponent(offering.pricingMode.value)}',
                                       extra: provider,
                                     )
                                 : null,

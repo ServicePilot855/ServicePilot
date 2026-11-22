@@ -69,6 +69,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return (authState).user.role.homeRoute;
       }
 
+      // Restrict /offerings/create to providers and companies only (Issue 2)
+      if (isAuthenticated && state.matchedLocation.startsWith('/offerings')) {
+        final role = (authState).user.role;
+        if (role != AppRole.independentProvider &&
+            role != AppRole.company &&
+            role != AppRole.admin) {
+          return role.homeRoute;
+        }
+      }
+
       return null; // No redirect needed.
     },
 
@@ -162,15 +172,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
-      // ── Booking request (US-12) ───────────────────────────────────────
+      // ── Booking request (US-12 / OFFER-2) ─────────────────────────────
       GoRoute(
         path: '/providers/:providerId/book',
         builder: (_, state) {
           final providerId = state.pathParameters['providerId'] ?? '';
           final provider = state.extra as ProviderModel?;
+          final serviceTitle = state.uri.queryParameters['serviceTitle'];
+          final offeringId = state.uri.queryParameters['offeringId'];
+          final isQuoteRequired =
+              state.uri.queryParameters['pricingMode'] == 'quoteRequired';
           return CreateBookingScreen(
             providerId: providerId,
             initialProvider: provider,
+            initialServiceTitle: serviceTitle,
+            initialOfferingId: offeringId,
+            isQuoteRequired: isQuoteRequired,
           );
         },
       ),

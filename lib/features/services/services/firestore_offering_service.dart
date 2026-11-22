@@ -46,7 +46,10 @@ class FirestoreOfferingService implements IOfferingService {
         }
 
         final snapshot = await query.get();
-        if (snapshot.docs.isNotEmpty) {
+        // Return live Firestore results. When filtering for a specific provider,
+        // if they have 0 offerings, return an empty list rather than leaking
+        // another provider's demo seed offerings.
+        if (snapshot.docs.isNotEmpty || (providerId != null && providerId.isNotEmpty)) {
           return snapshot.docs
               .map((doc) => OfferingModel.fromFirestore(doc))
               .toList();
@@ -73,6 +76,8 @@ class FirestoreOfferingService implements IOfferingService {
         if (doc.exists) {
           return OfferingModel.fromFirestore(doc);
         }
+        // If document definitely does not exist in Firestore, return null
+        return null;
       } catch (e) {
         debugPrint(
           '[FirestoreOfferingService] Get offering error ($e); falling back to memory seed.',
@@ -102,7 +107,12 @@ class FirestoreOfferingService implements IOfferingService {
         );
 
         await docRef.set(finalOffering.toMap());
-        await _fallbackService.createOffering(finalOffering);
+        // Best-effort in-memory fallback cache update
+        try {
+          await _fallbackService.createOffering(finalOffering);
+        } catch (e) {
+          debugPrint('[FirestoreOfferingService] Fallback cache create error (ignored): $e');
+        }
         return finalOffering;
       } catch (e) {
         debugPrint(
@@ -128,7 +138,12 @@ class FirestoreOfferingService implements IOfferingService {
             .doc(finalOffering.id)
             .update(finalOffering.toMap());
 
-        await _fallbackService.updateOffering(finalOffering);
+        // Best-effort in-memory fallback cache update
+        try {
+          await _fallbackService.updateOffering(finalOffering);
+        } catch (e) {
+          debugPrint('[FirestoreOfferingService] Fallback cache update error (ignored): $e');
+        }
         return finalOffering;
       } catch (e) {
         debugPrint(
@@ -149,6 +164,11 @@ class FirestoreOfferingService implements IOfferingService {
         debugPrint('[FirestoreOfferingService] Delete offering error ($e)');
       }
     }
-    await _fallbackService.deleteOffering(id);
+    // Best-effort in-memory fallback cache delete
+    try {
+      await _fallbackService.deleteOffering(id);
+    } catch (e) {
+      debugPrint('[FirestoreOfferingService] Fallback cache delete error (ignored): $e');
+    }
   }
 }

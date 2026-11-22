@@ -98,7 +98,7 @@ rules_version = '2';
 //   - title: string (required, 1-150 chars) - Service offering title
 //   - description: string (required, 1-2000 chars) - Service offering description
 //   - pricingMode: string (required) - One of ['quote_required', 'quoteRequired', 'fixed']
-//   - price: number (optional, >= 0) - Fixed price or starting rate
+//   - price: number (optional, >= 0 for fixed pricing; null/absent for quote_required)
 //   - unit: string (optional, max 50 chars) - Pricing unit (e.g., 'unit', 'hour')
 //   - isActive: bool (required) - Listing visibility flag
 //   - createdAt: timestamp | string (optional, immutable)
@@ -328,7 +328,11 @@ service cloud.firestore {
         (!('providerName' in data) || data.providerName == null || (data.providerName is string && data.providerName.size() <= 150)) &&
         (!('providerType' in data) || data.providerType == null || (data.providerType is string && data.providerType in ['independent', 'company'])) &&
         (!('categoryName' in data) || data.categoryName == null || (data.categoryName is string && data.categoryName.size() <= 100)) &&
-        (!('price' in data) || data.price == null || (data.price is number && data.price >= 0)) &&
+        (
+          (data.pricingMode in ['quote_required', 'quoteRequired']) ?
+            (!('price' in data) || data.price == null) :
+            (data.price is number && data.price >= 0)
+        ) &&
         (!('unit' in data) || data.unit == null || (data.unit is string && data.unit.size() <= 50)) &&
         (!('createdAt' in data) || data.createdAt == null || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
         (!('updatedAt' in data) || data.updatedAt == null || data.updatedAt is timestamp || (data.updatedAt is string && data.updatedAt.size() <= 50));
@@ -514,23 +518,37 @@ service cloud.firestore {
     // ===============================================================
 
     match /offerings/{offeringId} {
+      function isOfferingPublisher(providerId) {
+        return isAdmin() || (
+          isOfferingOwner(providerId) &&
+          // Provider profile must exist and have status == 'active'
+          exists(/databases/$(database)/documents/providers/$(providerId)) &&
+          get(/databases/$(database)/documents/providers/$(providerId)).data.status == 'active' &&
+          // Requesting user must have a provider or company role (or admin)
+          (
+            !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['independent_provider', 'company', 'admin']
+          )
+        );
+      }
+
       // Read: Active offerings are public; owners can read their own regardless of status; admins can read all
       allow read: if resource.data.isActive == true ||
                      isOfferingOwner(resource.data.providerId) ||
                      isAdmin();
 
       // Create: Provider (owner) or platform admin. Document ID must match id field.
-      allow create: if (isOfferingOwner(request.resource.data.providerId) || isAdmin()) &&
+      allow create: if isOfferingPublisher(request.resource.data.providerId) &&
                        isValidOffering(request.resource.data) &&
                        request.resource.data.id == offeringId;
 
       // Update: Provider (owner) or platform admin. Enforces immutable fields.
-      allow update: if (isOfferingOwner(resource.data.providerId) || isAdmin()) &&
+      allow update: if isOfferingPublisher(resource.data.providerId) &&
                        isValidOffering(request.resource.data) &&
                        areImmutableFieldsUnchanged(['id', 'providerId', 'createdAt']);
 
       // Delete: Provider (owner) or platform admin
-      allow delete: if isOfferingOwner(resource.data.providerId) || isAdmin();
+      allow delete: if (isOfferingOwner(resource.data.providerId) || isAdmin());
     }
   }
 }

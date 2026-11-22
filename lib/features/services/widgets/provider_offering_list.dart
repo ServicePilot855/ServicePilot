@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:service_pilot/core/theme/app_theme.dart';
 import 'package:service_pilot/features/services/models/offering_model.dart';
 import 'package:service_pilot/features/services/providers/offering_provider.dart';
+import 'package:service_pilot/l10n/l10n.dart';
 import 'package:service_pilot/shared/widgets/sp_layout.dart';
 
 /// Dashboard section displaying published service offerings for a provider
@@ -20,6 +21,7 @@ class ProviderOfferingList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final offeringsAsync = ref.watch(offeringsByProviderProvider(providerId));
 
     return Column(
@@ -34,24 +36,26 @@ class ProviderOfferingList extends ConsumerWidget {
             Semantics(
               header: true,
               child: Text(
-                'My Service Offerings',
+                l10n.offeringDashboardTitle,
                 style: AppTheme.display(size: 20, color: AppTheme.textPrimary),
               ),
             ),
-            SizedBox(
-              height: 36,
+            ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 48),
               child: OutlinedButton.icon(
                 key: const Key('add_offering_button'),
-                icon: const Icon(Icons.add_rounded, size: 18),
-                label: const Text('+ Add Offering'),
+                icon: const Icon(Icons.add_rounded, size: 20),
+                label: Text(l10n.offeringAddButton),
                 style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(0, 48),
                   foregroundColor: AppTheme.primary,
                   side: const BorderSide(color: AppTheme.border),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusControl),
                   ),
                 ),
-                onPressed: () => context.push('/offerings/create?providerId=$providerId'),
+                onPressed: () =>
+                    context.push('/offerings/create?providerId=$providerId'),
               ),
             ),
           ],
@@ -60,10 +64,9 @@ class ProviderOfferingList extends ConsumerWidget {
         offeringsAsync.when(
           data: (offerings) {
             if (offerings.isEmpty) {
-              return const SpNotice(
+              return SpNotice(
                 icon: Icons.list_alt_rounded,
-                message:
-                    'You have not published any service offerings yet. Tap "+ Add Offering" to add fixed-price or quote-required services.',
+                message: l10n.offeringEmptyNotice,
                 tone: SpTone.neutral,
               );
             }
@@ -85,11 +88,14 @@ class ProviderOfferingList extends ConsumerWidget {
               child: CircularProgressIndicator(),
             ),
           ),
-          error: (err, _) => SpNotice(
-            icon: Icons.error_outline_rounded,
-            message: 'Unable to load offerings: $err',
-            tone: SpTone.danger,
-          ),
+          error: (err, _) {
+            debugPrint('[ProviderOfferingList] offerings load error: $err');
+            return SpNotice(
+              icon: Icons.error_outline_rounded,
+              message: l10n.offeringLoadError,
+              tone: SpTone.danger,
+            );
+          },
         ),
       ],
     );
@@ -103,6 +109,7 @@ class _OfferingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isQuote = offering.isQuoteRequired;
 
     return Container(
@@ -157,7 +164,7 @@ class _OfferingCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        'Quote Required',
+                        l10n.offeringBadgeQuoteRequired,
                         style: AppTheme.text(
                           size: 12,
                           weight: FontWeight.w700,

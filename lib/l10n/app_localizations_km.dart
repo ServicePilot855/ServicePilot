@@ -927,4 +927,123 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get bookingSentBackHome => 'Back to home';
+
+  @override
+  String get offeringCreateTitle => 'បន្ថែមសេវាកម្ម';
+
+  @override
+  String get offeringHeaderTitle => 'សេវាកម្មថ្មី';
+
+  @override
+  String get offeringCreateSubtitle =>
+      'ផ្សព្វផ្សាយសេវាកម្មថ្មីជាមួយតម្លៃកំណត់ ឬតម្លៃស្នើសុំសម្រង់តម្លៃ។';
+
+  @override
+  String get offeringCategoryLabel => 'ប្រភេទសេវាកម្ម';
+
+  @override
+  String get offeringCategoryHint => 'ជ្រើសរើសប្រភេទ';
+
+  @override
+  String get offeringCategoryRequired => 'សូមជ្រើសរើសប្រភេទសេវាកម្ម។';
+
+  @override
+  String get offeringTitleLabel => 'ឈ្មោះសេវាកម្ម';
+
+  @override
+  String get offeringTitleHint => 'ឧ. ការផ្លាស់ប្តូរផ្ទាំងសៀគ្វីម៉ាស៊ីនត្រជាក់';
+
+  @override
+  String get offeringTitleRequired => 'សូមបញ្ចូលឈ្មោះសេវាកម្ម។';
+
+  @override
+  String get offeringTitleMinLength => 'ឈ្មោះត្រូវមានយ៉ាងតិច ៣ តួអក្សរ។';
+
+  @override
+  String get offeringDescLabel => 'ការពិពណ៌នា';
+
+  @override
+  String get offeringDescHint => 'ពន្យល់ពីទំហំការងារ ឬការធ្វើរោគវិនិច្ឆ័យ...';
+
+  @override
+  String get offeringDescRequired => 'សូមបញ្ចូលការពិពណ៌នា។';
+
+  @override
+  String get offeringDescMinLength => 'ការពិពណ៌នាត្រូវមានយ៉ាងតិច ១០ តួអក្សរ។';
+
+  @override
+  String get offeringPricingModeLabel => 'ទម្រង់កំណត់តម្លៃ';
+
+  @override
+  String get offeringModeQuote => 'ត្រូវការសម្រង់តម្លៃផ្ទាល់ខ្លួន';
+
+  @override
+  String get offeringModeQuoteDesc =>
+      'មិនដាក់ក្នុងកន្ត្រកផ្ទាល់ឡើយ។ អតិថិជនដាក់សំណើដើម្បីទទួលបានការប៉ាន់ស្មានតម្លៃ។';
+
+  @override
+  String get offeringNoticeQuoteMode =>
+      'ទម្រង់សម្រង់តម្លៃសកម្ម៖ ការទិញក្នុងតម្លៃថេរត្រូវបានបិទ។ អតិថិជននឹងត្រូវស្នើសុំផ្ញើព័ត៌មានលម្អិត និងរូបថតសម្រាប់ការវាយតម្លៃ។';
+
+  @override
+  String get offeringBadgeQuoteRequired => 'ត្រូវការសម្រង់តម្លៃ';
+
+  @override
+  String get offeringCtaRequestQuote => 'ស្នើសុំសម្រង់តម្លៃ';
+
+  @override
+  String get offeringCtaBookService => 'កក់សេវាកម្ម';
+
+  @override
+  String get offeringNoticeQuoteRequiredBooking =>
+      'អ្នកកំពុងស្នើសុំសម្រង់តម្លៃផ្ទាល់ខ្លួនសម្រាប់សេវាកម្មនេះ។ អ្នកនឹងមិនត្រូវបានគិតប្រាក់ជាមុនទេ។ អ្នកផ្តល់សេវានឹងពិនិត្យមើលការងារ និងផ្តល់ការប៉ាន់ស្មានតម្លៃជាផ្លូវការមុនពេលចាប់ផ្តើម។';
+
+  @override
+  String get offeringModeFixed => 'តម្លៃកំណត់ថេរ';
+
+  @override
+  String get offeringModeFixedDesc => 'តម្លៃថេរជាក់លាក់ជាមុន។';
+
+  @override
+  String get offeringPriceLabel => 'តម្លៃគោល (\$)';
+
+  @override
+  String get offeringPriceRequired => 'សូមបញ្ចូលតម្លៃគោលត្រឹមត្រូវ។';
+
+  @override
+  String get offeringPricePositive => 'តម្លៃត្រូវតែធំជាងសូន្យ។';
+
+  @override
+  String get offeringUnitLabel => 'ខ្នាតតម្លៃ (ជម្រើស)';
+
+  @override
+  String get offeringUnitHint => 'ឧ. ការងារ, ម៉ោង, គ្រឿង';
+
+  @override
+  String get offeringCreateButton => 'ផ្សព្វផ្សាយសេវាកម្ម';
+
+  @override
+  String get offeringSuccessSnackbar => 'សេវាកម្មត្រូវបានផ្សព្វផ្សាយដោយជោគជ័យ!';
+
+  @override
+  String get offeringUnauthorized =>
+      'មានតែគណនីអ្នកផ្តល់សេវា និងក្រុមហ៊ុនប៉ុណ្ណោះដែលអាចផ្សព្វផ្សាយសេវាកម្មបាន។';
+
+  @override
+  String get offeringActiveRequired =>
+      'គណនីអ្នកផ្តល់សេវាត្រូវតែសកម្មដើម្បីផ្សព្វផ្សាយសេវាកម្ម។';
+
+  @override
+  String get offeringDashboardTitle => 'សេវាកម្មរបស់ខ្ញុំ';
+
+  @override
+  String get offeringAddButton => '+ បន្ថែមសេវាកម្ម';
+
+  @override
+  String get offeringEmptyNotice =>
+      'អ្នកមិនទាន់បានផ្សព្វផ្សាយសេវាកម្មណាមួយនៅឡើយទេ។ ចុច \"+ បន្ថែមសេវាកម្ម\" ដើម្បីបន្ថែម។';
+
+  @override
+  String get offeringLoadError =>
+      'មិនអាចផ្ទុកសេវាកម្មបាននៅពេលនេះទេ។ សូមពិនិត្យការតភ្ជាប់អ៊ីនធឺណិត ហើយព្យាយាមម្តងទៀត។';
 }
