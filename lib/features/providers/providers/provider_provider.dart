@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
 import 'package:service_pilot/features/providers/services/firestore_provider_service.dart';
 import 'package:service_pilot/features/providers/services/provider_service.dart';
@@ -6,6 +7,17 @@ import 'package:service_pilot/features/providers/services/provider_service.dart'
 /// Provides the active [IProviderService] instance.
 final providerServiceProvider = Provider<IProviderService>((ref) {
   return FirestoreProviderService();
+});
+
+/// Resolves the provider document ID for the authenticated user based on role & email.
+final currentProviderIdProvider = Provider<String>((ref) {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return '';
+  final email = user.email.toLowerCase().trim();
+  if (email == 'technician@test.com') return 'prov-virak-ac';
+  if (email == 'company@test.com') return 'prov-fixco-company';
+  if (email.contains('sophea.plumb')) return 'prov-dara-plumbing';
+  return user.id;
 });
 
 /// Fetches a single provider by ID for US-11 (SCRUM-54).

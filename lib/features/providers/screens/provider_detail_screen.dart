@@ -6,6 +6,7 @@ import 'package:service_pilot/features/providers/models/provider_model.dart';
 import 'package:service_pilot/features/providers/providers/provider_provider.dart';
 import 'package:service_pilot/features/providers/widgets/provider_rating_summary.dart';
 import 'package:service_pilot/features/providers/widgets/provider_type_badge.dart';
+import 'package:service_pilot/features/services/providers/offering_provider.dart';
 import 'package:service_pilot/l10n/l10n.dart';
 import 'package:service_pilot/shared/widgets/sp_button.dart';
 import 'package:service_pilot/shared/widgets/sp_layout.dart';
@@ -99,13 +100,13 @@ class ProviderDetailScreen extends ConsumerWidget {
   }
 }
 
-class _ProviderProfile extends StatelessWidget {
+class _ProviderProfile extends ConsumerWidget {
   const _ProviderProfile({required this.provider});
 
   final ProviderModel provider;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final canBook = provider.canAcceptBookings;
     final unavailableReason = provider.unavailableReason?.trim();
@@ -210,6 +211,7 @@ class _ProviderProfile extends StatelessWidget {
                         ],
                       ),
                     ),
+                  _OfferingsSection(provider: provider),
                 ],
               ),
             ),
@@ -320,6 +322,159 @@ class _ProviderMessage extends StatelessWidget {
           children: [message, const SizedBox(height: 16), action],
         ),
       ),
+    );
+  }
+}
+
+class _OfferingsSection extends ConsumerWidget {
+  const _OfferingsSection({required this.provider});
+
+  final ProviderModel provider;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final offeringsAsync = ref.watch(offeringsByProviderProvider(provider.id));
+
+    return offeringsAsync.when(
+      data: (offerings) {
+        if (offerings.isEmpty) return const SizedBox.shrink();
+
+        return _ProfileSection(
+          title: 'Available Services & Offerings',
+          child: Column(
+            children: offerings.map((offering) {
+              final isQuote = offering.isQuoteRequired;
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.surface,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusControl),
+                  border: Border.all(
+                    color: isQuote ? AppTheme.accent : AppTheme.browseBorder,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            offering.title,
+                            style: AppTheme.display(
+                              size: 15,
+                              color: AppTheme.browseInk,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        if (isQuote)
+                          Container(
+                            key: Key('badge_quote_${offering.id}'),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.accentSoft,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: AppTheme.accent),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.request_quote_rounded,
+                                  size: 13,
+                                  color: AppTheme.accentDeep,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Quote Required',
+                                  style: AppTheme.text(
+                                    size: 11.5,
+                                    weight: FontWeight.w700,
+                                    color: AppTheme.accentDeep,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        else
+                          Text(
+                            offering.priceDisplay,
+                            style: AppTheme.display(
+                              size: 14,
+                              color: AppTheme.primary,
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      offering.description,
+                      style: AppTheme.text(
+                        size: 13.5,
+                        color: AppTheme.browseSecondary,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        if (isQuote)
+                          Text(
+                            'Excluded from direct cart checkout',
+                            style: AppTheme.text(
+                              size: 12,
+                              color: AppTheme.textMuted,
+                              weight: FontWeight.w500,
+                            ),
+                          ),
+                        SizedBox(
+                          height: 34,
+                          child: OutlinedButton.icon(
+                            key: Key(isQuote
+                                ? 'btn_quote_${offering.id}'
+                                : 'btn_book_${offering.id}'),
+                            icon: Icon(
+                              isQuote
+                                  ? Icons.request_quote_rounded
+                                  : Icons.calendar_today_rounded,
+                              size: 16,
+                            ),
+                            label: Text(
+                              isQuote ? 'Request a Quote' : 'Book Service',
+                              style: AppTheme.text(
+                                size: 13,
+                                weight: FontWeight.w600,
+                              ),
+                            ),
+                            onPressed: provider.canAcceptBookings
+                                ? () => context.push(
+                                      '/providers/${Uri.encodeComponent(provider.id)}/book',
+                                      extra: provider,
+                                    )
+                                : null,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 }

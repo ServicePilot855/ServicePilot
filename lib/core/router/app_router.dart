@@ -24,6 +24,7 @@ import 'package:service_pilot/features/providers/screens/provider_detail_screen.
 import 'package:service_pilot/features/providers/screens/provider_list_screen.dart';
 import 'package:service_pilot/features/services/models/category_model.dart';
 import 'package:service_pilot/features/services/screens/categories_screen.dart';
+import 'package:service_pilot/features/services/screens/create_offering_screen.dart';
 import 'package:service_pilot/shared/home/customer_home.dart';
 import 'package:service_pilot/shared/home/technician_home.dart';
 import 'package:service_pilot/shared/home/company_home.dart';
@@ -52,7 +53,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isGoingToHome = state.matchedLocation.startsWith('/home') ||
           state.matchedLocation.startsWith('/categories') ||
           state.matchedLocation.startsWith('/providers') ||
-          state.matchedLocation.startsWith('/bookings');
+          state.matchedLocation.startsWith('/bookings') ||
+          state.matchedLocation.startsWith('/offerings');
       final isGoingToLogin = state.matchedLocation == '/login';
       final isGoingToSplash = state.matchedLocation == '/splash';
 
@@ -125,6 +127,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/categories',
         builder: (_, __) => const CategoriesScreen(),
+      ),
+      GoRoute(
+        path: '/offerings/create',
+        builder: (_, state) {
+          final categoryId = state.uri.queryParameters['categoryId'];
+          final providerId = state.uri.queryParameters['providerId'];
+          return CreateOfferingScreen(
+            initialCategoryId: categoryId,
+            initialProviderId: providerId,
+          );
+        },
       ),
       GoRoute(
         path: '/categories/:categoryId/providers',
