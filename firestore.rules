@@ -17,7 +17,7 @@ rules_version = '2';
 //   - status: string (required) - One of ['active', 'pending_verification', 'suspended']
 //   - serviceArea: string (optional, max 300 chars) - Service coverage area
 //   - companyId: string (optional, max 100 chars) - Associated company ID
-//   - companyName: string (optional, max 100 chars) - Associated company name
+//   - companyName: string (optional, max 150 chars) - Associated company name
 //   - createdAt: timestamp | string (optional, immutable) - Account creation timestamp
 //   - updatedAt: timestamp | string (optional) - Last update timestamp
 //
@@ -109,15 +109,11 @@ service cloud.firestore {
     function isAdmin() {
       return isAuthenticated() &&
         (
-          request.auth.token.admin == true ||
-          request.auth.token.role == 'admin' ||
+          request.auth.token.get('admin', false) == true ||
+          request.auth.token.get('role', '') == 'admin' ||
           (
-            request.auth.token.email != null &&
-            request.auth.token.email_verified == true &&
-            (
-              request.auth.token.email.matches('.*admin.*@servicepilot\\.app') ||
-              request.auth.token.email.matches('.*admin@.*')
-            )
+            request.auth.token.get('email_verified', false) == true &&
+            request.auth.token.get('email', '').matches('^[^@]*admin[^@]*@servicepilot\\.app$')
           )
         );
     }
@@ -174,7 +170,7 @@ service cloud.firestore {
         data.status in ['active', 'pending_verification', 'suspended'] &&
         (!('serviceArea' in data) || (data.serviceArea is string && data.serviceArea.size() <= 300)) &&
         (!('companyId' in data) || (data.companyId is string && data.companyId.size() <= 100)) &&
-        (!('companyName' in data) || (data.companyName is string && data.companyName.size() <= 100)) &&
+        (!('companyName' in data) || (data.companyName is string && data.companyName.size() <= 150)) &&
         (!('createdAt' in data) || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
         (!('updatedAt' in data) || data.updatedAt is timestamp || (data.updatedAt is string && data.updatedAt.size() <= 50));
     }
@@ -183,10 +179,10 @@ service cloud.firestore {
     function isValidProvider(data) {
       return hasOnlyAllowedFields(data, [
           'id', 'name', 'fullName', 'businessName', 'email', 'phoneNumber',
-          'providerType', 'status', 'serviceArea', 'serviceAreas',
+          'providerType', 'status', 'isVerified', 'serviceArea', 'serviceAreas',
           'categoryIds', 'categories', 'rating', 'reviewCount',
           'description', 'bio', 'avatarUrl', 'photoUrl', 'isAvailable',
-          'createdAt', 'updatedAt'
+          'telegramUrl', 'messengerUrl', 'createdAt', 'updatedAt'
         ]) &&
         hasRequiredFields(data, ['id', 'status']) &&
         data.id is string && data.id.size() >= 1 && data.id.size() <= 128 &&
@@ -199,6 +195,7 @@ service cloud.firestore {
         (!('email' in data) || isValidEmail(data.email)) &&
         (!('phoneNumber' in data) || (data.phoneNumber is string && data.phoneNumber.size() <= 30)) &&
         (!('providerType' in data) || (data.providerType is string && data.providerType.size() <= 50)) &&
+        (!('isVerified' in data) || data.isVerified is bool) &&
         (!('serviceArea' in data) || (data.serviceArea is string && data.serviceArea.size() <= 300)) &&
         (!('serviceAreas' in data) || (data.serviceAreas is list && data.serviceAreas.size() <= 20)) &&
         (!('categoryIds' in data) || (data.categoryIds is list && data.categoryIds.size() <= 20)) &&
@@ -210,8 +207,50 @@ service cloud.firestore {
         (!('avatarUrl' in data) || isValidUrl(data.avatarUrl)) &&
         (!('photoUrl' in data) || isValidUrl(data.photoUrl)) &&
         (!('isAvailable' in data) || data.isAvailable is bool) &&
+        validContactLinks(data) &&
         (!('createdAt' in data) || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
         (!('updatedAt' in data) || data.updatedAt is timestamp || (data.updatedAt is string && data.updatedAt.size() <= 50));
+    }
+
+    function isCompanyProfile(data) {
+      return data.get('type', data.get('providerType', '')) == 'company';
+    }
+
+    function validContactLinks(data) {
+      return (!('telegramUrl' in data) ||
+          (data.telegramUrl is string && data.telegramUrl.size() <= 500 &&
+           data.telegramUrl.matches('^https://t\\.me/[A-Za-z0-9_.+-]+/?$'))) &&
+        (!('messengerUrl' in data) ||
+          (data.messengerUrl is string && data.messengerUrl.size() <= 500 &&
+           data.messengerUrl.matches('^https://m\\.me/[A-Za-z0-9_.+-]+/?$')));
+    }
+
+    function canEditCompanyProfile(providerId) {
+      let account = /databases/$(database)/documents/users/$(providerId);
+      return isOwner(providerId) && isCompanyProfile(resource.data) &&
+        resource.data.status in ['pending_verification', 'active', 'inactive'] &&
+        (exists(account)
+          ? get(account).data.role == 'company' &&
+            get(account).data.get('companyId', providerId) == providerId &&
+            get(account).data.status != 'suspended'
+          : resource.data.status in ['active', 'inactive']);
+    }
+
+    function isValidCompanyProfileEdit() {
+      let data = request.resource.data;
+      let changed = data.diff(resource.data).affectedKeys();
+      return changed.hasOnly([
+          'businessName', 'description', 'serviceArea', 'coverageAreas',
+          'serviceAreas', 'telegramUrl', 'messengerUrl', 'updatedAt'
+        ]) &&
+        data.businessName is string && data.businessName.size() <= 150 &&
+        data.businessName.matches('(?s).*\\S.*') &&
+        data.description is string && data.description.size() <= 2000 &&
+        data.serviceArea is string && data.serviceArea.size() <= 300 &&
+        data.serviceArea.matches('(?s).*\\S.*') &&
+        (!changed.hasAny(['coverageAreas']) || !('coverageAreas' in data)) &&
+        (!changed.hasAny(['serviceAreas']) || !('serviceAreas' in data)) &&
+        validContactLinks(data) && data.updatedAt == request.time;
     }
 
     // Validate /categories/{categoryId} document schema and field constraints
@@ -291,8 +330,9 @@ service cloud.firestore {
     // ===============================================================
 
     match /users/{userId} {
-      // Read: Any authenticated user can read basic user profile info
-      allow read: if isAuthenticated();
+      // Company registration details belong to the owner and Platform Admins.
+      allow read: if isOwner(userId) || isAdmin() ||
+        (isAuthenticated() && resource.data.role != 'company');
 
       // Create: User themselves or platform admin.
       // Privilege escalation protection: non-admins cannot assign themselves the 'admin' role.
@@ -337,24 +377,29 @@ service cloud.firestore {
       allow create: if (isOwner(providerId) || isAdmin()) &&
                        isValidProvider(request.resource.data) &&
                        request.resource.data.id == providerId &&
-                       (isAdmin() || request.resource.data.status in ['pending_verification', 'inactive']);
+                       (isAdmin() ||
+                         (request.resource.data.status in ['pending_verification', 'inactive'] &&
+                          request.resource.data.get('isVerified', false) == false));
 
       // Update: Provider themselves or platform admin.
       // Providers cannot self-verify from pending/suspended to active, and cannot forge ratings.
-      allow update: if (isOwner(providerId) || isAdmin()) &&
+      allow update: if (canEditCompanyProfile(providerId) && isValidCompanyProfileEdit()) ||
+                       ((isOwner(providerId) || isAdmin()) &&
                        isValidProvider(request.resource.data) &&
                        areImmutableFieldsUnchanged(['id', 'createdAt']) &&
                        (
                          isAdmin() ||
                          (
+                           !isCompanyProfile(resource.data) &&
+                           !isCompanyProfile(request.resource.data) &&
                            (
                              request.resource.data.status == resource.data.status ||
                              (resource.data.status == 'active' && request.resource.data.status == 'inactive') ||
                              (resource.data.status == 'inactive' && request.resource.data.status == 'active')
                            ) &&
-                           areImmutableFieldsUnchanged(['rating', 'reviewCount'])
+                           areImmutableFieldsUnchanged(['rating', 'reviewCount', 'isVerified'])
                          )
-                       );
+                       ));
 
       // Delete: Provider themselves or platform admin
       allow delete: if isOwner(providerId) || isAdmin();

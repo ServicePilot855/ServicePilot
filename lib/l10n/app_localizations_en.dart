@@ -992,4 +992,68 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminViewCustomerProfileButton => 'Preview customer profile';
+
+  @override
+  String get companyProfileEdit => 'Edit company profile';
+
+  @override
+  String get companyProfileDescription => 'Description (optional)';
+
+  @override
+  String get companyProfileDescriptionHint =>
+      'Home plumbing and electrical repairs';
+
+  @override
+  String get companyProfileAreaHint => 'Sen Sok, Tuol Kork';
+
+  @override
+  String get companyProfileAreaRequired => 'Enter a service area.';
+
+  @override
+  String get companyProfileContacts => 'Contact links';
+
+  @override
+  String get companyProfileOptionalContacts => 'Contact links (optional)';
+
+  @override
+  String get companyProfileTelegram => 'Telegram';
+
+  @override
+  String get companyProfileTelegramExample => 'https://t.me/coolair';
+
+  @override
+  String get companyProfileMessenger => 'Messenger';
+
+  @override
+  String get companyProfileMessengerExample => 'https://m.me/coolair';
+
+  @override
+  String companyProfileInvalidLink(String example) {
+    return 'Enter a link like $example.';
+  }
+
+  @override
+  String companyProfileLengthError(int limit) {
+    return 'Use $limit characters or fewer.';
+  }
+
+  @override
+  String get companyProfileUnavailable =>
+      'No editable company profile is linked to this account.';
+
+  @override
+  String get companyProfileLoading => 'Loading company profile';
+
+  @override
+  String get companyProfileLoadError => 'Could not load your company profile.';
+
+  @override
+  String get companyProfileSaveError =>
+      'Could not save your changes. Try again.';
+
+  @override
+  String get companyProfileSave => 'Save changes';
+
+  @override
+  String get companyProfileSaved => 'Company profile saved.';
 }

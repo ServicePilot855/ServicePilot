@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -5,6 +8,8 @@ import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/core/auth/firebase_auth_service.dart';
 import 'package:service_pilot/core/constants/app_roles.dart';
 import 'package:service_pilot/features/auth/screens/register_company_screen.dart';
+import 'package:service_pilot/features/providers/models/provider_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../helpers/test_firebase_helper.dart';
 
@@ -18,6 +23,67 @@ void main() {
     setUp(() async {
       fakeAuth = FakeFirebaseAuth();
       authService = await createTestFirebaseAuthService(fakeAuth: fakeAuth);
+    });
+
+    test('registration records the owner and pending company in Firestore', () async {
+      final firestore = FakeFirebaseFirestore();
+      final service = FirebaseAuthService(
+        firebaseAuth: fakeAuth,
+        firestore: firestore,
+      );
+      final user = await service.registerCompany(
+        ownerFullName: 'Sophea Lim',
+        email: 'owner@coolair.example',
+        phoneNumber: '+85511223344',
+        companyName: 'CoolAir Service Co.',
+        serviceArea: 'Toul Kork, Sen Sok',
+        password: 'password123',
+      );
+
+      final membership = await firestore.collection('users').doc(user.id).get();
+      expect(membership.data(), containsPair('companyId', user.id));
+      final profile = await firestore.collection('providers').doc(user.id).get();
+      expect(profile.data(), containsPair('providerType', 'company'));
+      expect(profile.data(), containsPair('status', 'pending_verification'));
+      expect(profile.data(), containsPair('isVerified', false));
+      expect(ProviderModel.fromFirestore(profile).isVerified, isFalse);
+
+      await service.logout();
+      SharedPreferences.setMockInitialValues({});
+      final restored = await service.login(user.email, 'password123');
+      expect(restored.role, AppRole.company);
+      expect(restored.companyId, user.id);
+    });
+
+    test('a legacy company login links the UID to a pending profile once', () async {
+      const uid = 'existing-company-uid';
+      const email = 'owner@coolair.example';
+      fakeAuth.seedUser(uid: uid, email: email, password: 'password123');
+      final legacyCache = {
+        'sp_user_profile_$uid': jsonEncode({
+          'id': uid,
+          'fullName': 'Sophea Lim',
+          'email': email,
+          'phoneNumber': '+85511223344',
+          'role': 'company',
+          'status': 'pending_verification',
+          'companyName': 'CoolAir Service Co.',
+          'serviceArea': 'Toul Kork',
+        }),
+      };
+      SharedPreferences.setMockInitialValues(legacyCache);
+      final firestore = FakeFirebaseFirestore();
+      final service = FirebaseAuthService(firebaseAuth: fakeAuth, firestore: firestore);
+      final user = await service.login(email, 'password123');
+      expect(user.companyId, uid);
+
+      final provider = firestore.collection('providers').doc(uid);
+      expect((await provider.get()).data(), containsPair('status', 'pending_verification'));
+      await provider.update({'businessName': 'Revised Company', 'status': 'active'});
+      SharedPreferences.setMockInitialValues(legacyCache);
+      await service.login(email, 'password123');
+      expect((await provider.get()).data(), containsPair('businessName', 'Revised Company'));
+      expect((await provider.get()).data(), containsPair('status', 'active'));
     });
 
     test('registerCompany creates company account with pending_verification status', () async {

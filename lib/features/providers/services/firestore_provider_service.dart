@@ -134,7 +134,7 @@ class FirestoreProviderService implements IProviderService {
 
   @override
   Future<ProviderModel?> getProviderById(String providerId) async {
-    if (Firebase.apps.isNotEmpty) {
+    if (_injectedFirestore != null || Firebase.apps.isNotEmpty) {
       try {
         final doc =
             await _firestore.collection(collectionName).doc(providerId).get();

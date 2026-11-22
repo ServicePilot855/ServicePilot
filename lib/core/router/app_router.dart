@@ -23,6 +23,7 @@ import 'package:service_pilot/features/bookings/screens/booking_tracking_screen.
 import 'package:service_pilot/features/bookings/screens/create_booking_screen.dart';
 import 'package:service_pilot/features/bookings/screens/location_picker_screen.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
+import 'package:service_pilot/features/providers/screens/company_profile_edit_screen.dart';
 import 'package:service_pilot/features/providers/screens/provider_detail_screen.dart';
 import 'package:service_pilot/features/providers/screens/provider_list_screen.dart';
 import 'package:service_pilot/features/services/models/category_model.dart';
@@ -70,6 +71,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       // Non-admin authenticated users cannot access Platform Admin routes (SCRUM-94 / ADM-2).
       if (isAuthenticated && isGoingToAdmin && !authState.user.isAdmin) {
+        return authState.user.role.homeRoute;
+      }
+
+      if (isAuthenticated &&
+          state.matchedLocation == '/home/company/profile' &&
+          (!authState.user.isCompany || authState.user.isSuspended)) {
         return authState.user.role.homeRoute;
       }
 
@@ -227,6 +234,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/home/company',
         builder: (_, __) => const CompanyHome(),
+        routes: [
+          GoRoute(
+            path: 'profile',
+            builder: (_, __) => const CompanyProfileEditScreen(),
+          ),
+        ],
       ),
       GoRoute(
         path: '/home/company-technician',

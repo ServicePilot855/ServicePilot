@@ -1831,6 +1831,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Preview customer profile'**
   String get adminViewCustomerProfileButton;
+
+  /// No description provided for @companyProfileEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit company profile'**
+  String get companyProfileEdit;
+
+  /// No description provided for @companyProfileDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description (optional)'**
+  String get companyProfileDescription;
+
+  /// No description provided for @companyProfileDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Home plumbing and electrical repairs'**
+  String get companyProfileDescriptionHint;
+
+  /// No description provided for @companyProfileAreaHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sen Sok, Tuol Kork'**
+  String get companyProfileAreaHint;
+
+  /// No description provided for @companyProfileAreaRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a service area.'**
+  String get companyProfileAreaRequired;
+
+  /// No description provided for @companyProfileContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact links'**
+  String get companyProfileContacts;
+
+  /// No description provided for @companyProfileOptionalContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact links (optional)'**
+  String get companyProfileOptionalContacts;
+
+  /// No description provided for @companyProfileTelegram.
+  ///
+  /// In en, this message translates to:
+  /// **'Telegram'**
+  String get companyProfileTelegram;
+
+  /// No description provided for @companyProfileTelegramExample.
+  ///
+  /// In en, this message translates to:
+  /// **'https://t.me/coolair'**
+  String get companyProfileTelegramExample;
+
+  /// No description provided for @companyProfileMessenger.
+  ///
+  /// In en, this message translates to:
+  /// **'Messenger'**
+  String get companyProfileMessenger;
+
+  /// No description provided for @companyProfileMessengerExample.
+  ///
+  /// In en, this message translates to:
+  /// **'https://m.me/coolair'**
+  String get companyProfileMessengerExample;
+
+  /// No description provided for @companyProfileInvalidLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a link like {example}.'**
+  String companyProfileInvalidLink(String example);
+
+  /// No description provided for @companyProfileLengthError.
+  ///
+  /// In en, this message translates to:
+  /// **'Use {limit} characters or fewer.'**
+  String companyProfileLengthError(int limit);
+
+  /// No description provided for @companyProfileUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No editable company profile is linked to this account.'**
+  String get companyProfileUnavailable;
+
+  /// No description provided for @companyProfileLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading company profile'**
+  String get companyProfileLoading;
+
+  /// No description provided for @companyProfileLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load your company profile.'**
+  String get companyProfileLoadError;
+
+  /// No description provided for @companyProfileSaveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save your changes. Try again.'**
+  String get companyProfileSaveError;
+
+  /// No description provided for @companyProfileSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get companyProfileSave;
+
+  /// No description provided for @companyProfileSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Company profile saved.'**
+  String get companyProfileSaved;
 }
 
 class _AppLocalizationsDelegate

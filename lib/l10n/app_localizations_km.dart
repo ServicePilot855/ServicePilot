@@ -397,13 +397,13 @@ class AppLocalizationsKm extends AppLocalizations {
   String get registerCompanyOwnerNameRequired => 'Owner full name is required';
 
   @override
-  String get registerCompanyNameLabel => 'Company Name';
+  String get registerCompanyNameLabel => 'ឈ្មោះក្រុមហ៊ុន';
 
   @override
-  String get registerCompanyNameHint => 'CoolAir Service Co.';
+  String get registerCompanyNameHint => 'ក្រុមហ៊ុនសេវាជួសជុល CoolAir';
 
   @override
-  String get registerCompanyNameRequired => 'Company name is required';
+  String get registerCompanyNameRequired => 'សូមបញ្ចូលឈ្មោះក្រុមហ៊ុន។';
 
   @override
   String get registerCompanyNameTooLong => 'Must be 150 characters or fewer';
@@ -984,4 +984,69 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get adminViewCustomerProfileButton => 'មើលទម្រង់សម្រាប់អតិថិជន';
+
+  @override
+  String get companyProfileEdit => 'កែព័ត៌មានក្រុមហ៊ុន';
+
+  @override
+  String get companyProfileDescription => 'ការពិពណ៌នា (ស្រេចចិត្ត)';
+
+  @override
+  String get companyProfileDescriptionHint =>
+      'ជួសជុលប្រព័ន្ធទឹក និងអគ្គិសនីតាមផ្ទះ';
+
+  @override
+  String get companyProfileAreaHint => 'សែនសុខ ទួលគោក';
+
+  @override
+  String get companyProfileAreaRequired => 'សូមបញ្ចូលតំបន់ផ្តល់សេវា។';
+
+  @override
+  String get companyProfileContacts => 'តំណទំនាក់ទំនង';
+
+  @override
+  String get companyProfileOptionalContacts => 'តំណទំនាក់ទំនង (ស្រេចចិត្ត)';
+
+  @override
+  String get companyProfileTelegram => 'Telegram';
+
+  @override
+  String get companyProfileTelegramExample => 'https://t.me/coolair';
+
+  @override
+  String get companyProfileMessenger => 'Messenger';
+
+  @override
+  String get companyProfileMessengerExample => 'https://m.me/coolair';
+
+  @override
+  String companyProfileInvalidLink(String example) {
+    return 'សូមបញ្ចូលតំណដូចជា $example។';
+  }
+
+  @override
+  String companyProfileLengthError(int limit) {
+    return 'សូមប្រើអក្សរមិនលើសពី $limit តួ។';
+  }
+
+  @override
+  String get companyProfileUnavailable =>
+      'គណនីនេះមិនមានព័ត៌មានក្រុមហ៊ុនដែលអាចកែបានទេ។';
+
+  @override
+  String get companyProfileLoading => 'កំពុងផ្ទុកព័ត៌មានក្រុមហ៊ុន';
+
+  @override
+  String get companyProfileLoadError =>
+      'មិនអាចផ្ទុកព័ត៌មានក្រុមហ៊ុនរបស់អ្នកបានទេ។';
+
+  @override
+  String get companyProfileSaveError =>
+      'មិនអាចរក្សាទុកការកែប្រែបានទេ។ សូមព្យាយាមម្តងទៀត។';
+
+  @override
+  String get companyProfileSave => 'រក្សាទុកការកែប្រែ';
+
+  @override
+  String get companyProfileSaved => 'បានរក្សាទុកព័ត៌មានក្រុមហ៊ុនហើយ។';
 }
