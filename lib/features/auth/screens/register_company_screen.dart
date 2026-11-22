@@ -109,6 +109,7 @@ class _RegisterCompanyScreenState extends ConsumerState<RegisterCompanyScreen> {
             if (v == null || v.trim().isEmpty) {
               return l10n.registerCompanyOwnerNameRequired;
             }
+            if (v.trim().length > 100) return l10n.companyProfileLengthError(100);
             return null;
           },
         ),
@@ -141,6 +142,7 @@ class _RegisterCompanyScreenState extends ConsumerState<RegisterCompanyScreen> {
             if (v == null || v.trim().isEmpty) {
               return l10n.commonEmailRequired;
             }
+            if (v.trim().length > 150) return l10n.companyProfileLengthError(150);
             if (!EmailValidator.validate(v.trim())) {
               return l10n.commonEmailInvalid;
             }
@@ -159,6 +161,7 @@ class _RegisterCompanyScreenState extends ConsumerState<RegisterCompanyScreen> {
             if (v == null || v.trim().isEmpty) {
               return l10n.commonPhoneRequired;
             }
+            if (v.trim().length > 30) return l10n.companyProfileLengthError(30);
             return null;
           },
         ),
@@ -172,6 +175,7 @@ class _RegisterCompanyScreenState extends ConsumerState<RegisterCompanyScreen> {
             if (v == null || v.trim().isEmpty) {
               return l10n.registerCompanyAddressRequired;
             }
+            if (v.trim().length > 300) return l10n.companyProfileLengthError(300);
             return null;
           },
         ),

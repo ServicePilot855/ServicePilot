@@ -18,7 +18,7 @@ class UserModel {
   /// Required for [AppRole.independentProvider].
   final String? serviceArea;
 
-  /// Only set for [AppRole.companyTechnician] users.
+  /// The provider record associated with a company administrator or technician.
   final String? companyId;
   final String? companyName;
 
