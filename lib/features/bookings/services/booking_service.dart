@@ -184,11 +184,10 @@ abstract class IBookingService {
   /// - [UnauthorizedBookingConfirmationException] if [providerId] does not own the booking.
   /// - [InvalidBookingTransitionException] if the booking was cancelled
   ///   or cannot transition to [BookingStatus.confirmed].
-  Future<BookingModel> acceptBooking({
+  Future<void> acceptBooking({
     required String bookingId,
     required String providerId,
     DateTime? confirmedAppointmentAt,
-    String? confirmedBy,
   });
 
   /// Company/provider assigns a technician (`Assigned`) to a booking.
@@ -514,7 +513,6 @@ class BookingService implements IBookingService {
     }
 
     final booking = _bookings[index];
-
     // US-14 AC #6: Only the customer who created the booking can cancel it.
     if (!booking.isOwnedBy(customerId)) {
       throw UnauthorizedBookingCancellationException(
@@ -551,11 +549,10 @@ class BookingService implements IBookingService {
   }
 
   @override
-  Future<BookingModel> acceptBooking({
+  Future<void> acceptBooking({
     required String bookingId,
     required String providerId,
     DateTime? confirmedAppointmentAt,
-    String? confirmedBy,
   }) async {
     final index = _bookings.indexWhere((b) => b.id == bookingId);
     if (index == -1) {
@@ -582,18 +579,22 @@ class BookingService implements IBookingService {
     }
 
     final now = DateTime.now();
+    if (confirmedAppointmentAt != null &&
+        !confirmedAppointmentAt.isAtSameMomentAs(booking.preferredDateTime)) {
+      throw const BookingSubmissionException(
+        'The preferred appointment is unavailable or has changed.',
+      );
+    }
     final updated = booking.copyWith(
       status: BookingStatus.confirmed,
       clearAssignment: true,
-      confirmedAppointmentAt:
-          confirmedAppointmentAt ?? booking.preferredDateTime,
+      confirmedAppointmentAt: booking.preferredDateTime,
       confirmedAt: now,
-      confirmedBy: confirmedBy ?? providerId,
+      confirmedBy: providerId,
       updatedAt: now,
     );
     _bookings[index] = updated;
     _notifyListeners();
-    return updated;
   }
 
   @override
@@ -662,10 +663,15 @@ class BookingService implements IBookingService {
       );
     }
 
+    final now = DateTime.now();
+    final confirming = newStatus == BookingStatus.confirmed;
     final updated = booking.copyWith(
       status: newStatus,
-      clearAssignment: newStatus == BookingStatus.confirmed,
-      updatedAt: DateTime.now(),
+      clearAssignment: confirming,
+      confirmedAppointmentAt: confirming ? booking.preferredDateTime : null,
+      confirmedAt: confirming ? now : null,
+      confirmedBy: confirming ? booking.providerId : null,
+      updatedAt: now,
     );
     _bookings[index] = updated;
     _notifyListeners();

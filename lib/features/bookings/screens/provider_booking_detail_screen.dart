@@ -34,7 +34,6 @@ class ProviderBookingDetailScreen extends ConsumerStatefulWidget {
 
 class _ProviderBookingDetailScreenState
     extends ConsumerState<ProviderBookingDetailScreen> {
-  BookingModel? _localOverride;
   bool _isConfirming = false;
   String? _successMessage;
   String? _errorMessage;
@@ -52,7 +51,7 @@ class _ProviderBookingDetailScreenState
 
     try {
       final service = ref.read(bookingServiceProvider);
-      final updated = await service.acceptBooking(
+      await service.acceptBooking(
         bookingId: widget.bookingId,
         providerId: providerId,
         confirmedAppointmentAt: preferredTime,
@@ -67,7 +66,6 @@ class _ProviderBookingDetailScreenState
       ref.invalidate(liveProviderBookingsProvider(providerId));
 
       setState(() {
-        _localOverride = updated;
         _isConfirming = false;
         _successMessage = l10n.providerBookingConfirmSuccess;
       });
@@ -105,11 +103,8 @@ class _ProviderBookingDetailScreenState
     final providerId = user?.id ?? '';
     final pendingProvider = incomingBookingRequestProvider(widget.bookingId);
     final Widget body;
-    final confirmed = _localOverride;
     if (user?.canViewBookingInbox != true) {
       body = _unavailable(context);
-    } else if (confirmed != null && confirmed.isOwnedByProvider(providerId)) {
-      body = _buildBody(context, confirmed, providerId);
     } else {
       body = ref.watch(pendingProvider).when(
             skipLoadingOnRefresh: false,
@@ -292,7 +287,8 @@ class _ProviderBookingDetailScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (_successMessage != null) ...[
+            if (_successMessage != null &&
+                booking.status == BookingStatus.confirmed) ...[
               SpNotice(
                 key: const Key('provider_booking_confirmed_notice'),
                 icon: Icons.check_circle_outline_rounded,

@@ -150,18 +150,23 @@ if (storage) {
   for (const actor of [company, companyTechnician, outsider]) await readPhoto(actor.token, false);
 }
 
-const decide = (confirmedBy, appointment = job.appointmentDate) => [
-  {
-    ...update(booking, { ...fields({ status: 'confirmed', confirmedBy }), confirmedAppointmentAt: appointment }),
-    updateMask: { fieldPaths: ['status', 'confirmedBy', 'confirmedAppointmentAt'] },
-    updateTransforms: [{ fieldPath: 'confirmedAt', setToServerValue: 'REQUEST_TIME' }],
-  },
+const confirmWrite = (confirmedBy, appointment = job.appointmentDate) => ({
+  ...update(booking, { ...fields({ status: 'confirmed', confirmedBy }), confirmedAppointmentAt: appointment }),
+  updateMask: { fieldPaths: ['status', 'confirmedBy', 'confirmedAppointmentAt', 'technicianId', 'technicianName'] },
+  updateTransforms: [{ fieldPath: 'confirmedAt', setToServerValue: 'REQUEST_TIME' }],
+});
+const decide = (confirmedBy, appointment) => [
+  confirmWrite(confirmedBy, appointment),
   { delete: `${prefix}/${preview}` },
 ];
 await commit(outsider.token, decide(outsider.id), 403);
 await commit(companyTechnician.token, decide(companyTechnician.id), 403);
 await commit(company.token, decide(outsider.id), 403);
 await commit(company.token, decide(company.id, { timestampValue: '2026-12-02T03:00:00Z' }), 403);
+await commit(company.token, [
+  { ...update(booking, fields({ status: 'confirmed' })), updateMask: { fieldPaths: ['status'] } },
+  { delete: `${prefix}/${preview}` },
+], 403);
 await commit(company.token, decide(company.id));
 await request(`${documents}/${preview}`, { token: company.token, status: 404 });
 const confirmedFields = (await request(`${documents}/${booking}`, { token: company.token })).fields;
@@ -200,10 +205,7 @@ await updateBooking(company.token, { status: 'assigned', technicianId: outsider.
 await updateBooking(company.token, { status: 'assigned', technicianId: companyTechnician.id });
 assert.deepEqual((await request(`${documents}/${booking}`, { token: companyTechnician.token })).fields.address, original.address);
 await updateBooking(company.token, { status: 'confirmed' }, 403);
-await commit(company.token, [{
-  ...update(booking, fields({ status: 'confirmed' })),
-  updateMask: { fieldPaths: ['status', 'technicianId', 'technicianName'] },
-}]);
+await commit(company.token, [confirmWrite(company.id)]);
 await request(`${documents}/${booking}`, { token: companyTechnician.token, status: 403 });
 if (storage) await readPhoto(companyTechnician.token, false);
 

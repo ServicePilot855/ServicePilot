@@ -196,6 +196,45 @@ void main() {
     );
 
     testWidgets(
+      'A customer cancellation updates the open provider confirmation screen',
+      (tester) async {
+        setupViewport(tester);
+        final booking = buildBooking(id: 'bk-live', providerId: providerUser.id);
+        final service = BookingService(initialBookings: [booking]);
+        addTearDown(service.dispose);
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              bookingServiceProvider.overrideWithValue(service),
+              authProvider.overrideWith(() => _MockAuthNotifier(providerUser)),
+            ],
+            child: MaterialApp(
+              theme: AppTheme.lightTheme,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: ProviderBookingDetailScreen(bookingId: booking.id),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('provider_confirm_booking_button')));
+        await tester.pumpAndSettle();
+        expect(find.text(booking.address), findsOneWidget);
+
+        await service.cancelBooking(
+          bookingId: booking.id,
+          customerId: customerUser.id,
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('This booking request is unavailable.'), findsOneWidget);
+        expect(find.text(booking.address), findsNothing);
+        expect(find.byKey(const Key('provider_booking_confirmed_notice')), findsNothing);
+      },
+    );
+
+    testWidgets(
       'Ineligible booking (Cancelled) cannot be confirmed in provider view',
       (tester) async {
         setupViewport(tester);

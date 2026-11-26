@@ -195,27 +195,37 @@ void main() {
         final pending = await bookingService.getBookingById('bk-pending-01');
         expect(pending, isNotNull);
 
-        final confirmed = await bookingService.acceptBooking(
+        await bookingService.acceptBooking(
           bookingId: 'bk-pending-01',
           providerId: 'prov-ac-01',
         );
-
-        expect(confirmed.status, equals(BookingStatus.confirmed));
-        expect(
-          confirmed.confirmedAppointmentAt,
-          equals(pending!.preferredDateTime),
-        );
-        expect(confirmed.confirmedAt, isNotNull);
-        expect(confirmed.confirmedBy, equals('prov-ac-01'));
 
         final persisted = await bookingService.getBookingById('bk-pending-01');
         expect(persisted?.status, equals(BookingStatus.confirmed));
         expect(
           persisted?.confirmedAppointmentAt,
-          equals(pending.preferredDateTime),
+          equals(pending!.preferredDateTime),
         );
+        expect(persisted?.confirmedAt, isNotNull);
+        expect(persisted?.confirmedBy, equals('prov-ac-01'));
       },
     );
+
+    test('an out-of-date appointment leaves the booking Pending', () async {
+      final booking = (await bookingService.getBookingById('bk-pending-01'))!;
+      await expectLater(
+        bookingService.acceptBooking(
+          bookingId: booking.id,
+          providerId: booking.providerId,
+          confirmedAppointmentAt:
+              booking.preferredDateTime.add(const Duration(minutes: 30)),
+        ),
+        throwsA(isA<BookingSubmissionException>()),
+      );
+      final stored = await bookingService.getBookingById(booking.id);
+      expect(stored?.status, BookingStatus.pending);
+      expect(stored?.confirmedAppointmentAt, isNull);
+    });
 
     test(
       'another provider cannot confirm a booking they do not own',
