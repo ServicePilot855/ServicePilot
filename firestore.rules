@@ -83,6 +83,9 @@ rules_version = '2';
 //   - technicianName: string (optional, max 100 chars) - Assigned technician name
 //   - cancelledAt: timestamp | string (optional) - When the customer cancelled
 //   - cancelledBy: string (optional, max 128 chars) - UID of who cancelled
+//   - confirmedAppointmentAt: timestamp | string | null (optional) - Confirmed appointment date & time
+//   - confirmedAt: timestamp | string | null (optional) - When the booking was confirmed
+//   - confirmedBy: string | null (optional, max 128 chars) - UID of who confirmed
 //   - location: latlng (optional) - Map pin for the repair address (GeoPoint)
 //   - cancellationReason: string (optional, max 300 chars) - Reason for cancellation
 //   - declinedReason: string (optional, max 300 chars) - Reason for decline
@@ -351,7 +354,8 @@ service cloud.firestore {
           'appointmentDate', 'timeSlot', 'address', 'serviceArea', 'district',
           'notes', 'description', 'photos', 'totalPrice', 'price',
           'technicianId', 'technicianName', 'cancellationReason', 'declinedReason',
-          'cancelledAt', 'cancelledBy', 'location', 'createdAt', 'updatedAt'
+          'cancelledAt', 'cancelledBy', 'confirmedAppointmentAt', 'confirmedAt', 'confirmedBy',
+          'location', 'createdAt', 'updatedAt'
         ]) &&
         hasRequiredFields(data, ['customerId', 'providerId', 'status']) &&
         data.customerId is string && data.customerId.size() >= 1 && data.customerId.size() <= 128 &&
@@ -384,6 +388,9 @@ service cloud.firestore {
         (!('declinedReason' in data) || (data.declinedReason is string && data.declinedReason.size() <= 300)) &&
         (!('cancelledAt' in data) || data.cancelledAt is timestamp || (data.cancelledAt is string && data.cancelledAt.size() <= 50)) &&
         (!('cancelledBy' in data) || (data.cancelledBy is string && data.cancelledBy.size() <= 128)) &&
+        (!('confirmedAppointmentAt' in data) || data.confirmedAppointmentAt == null || data.confirmedAppointmentAt is timestamp || (data.confirmedAppointmentAt is string && data.confirmedAppointmentAt.size() <= 50)) &&
+        (!('confirmedAt' in data) || data.confirmedAt == null || data.confirmedAt is timestamp || (data.confirmedAt is string && data.confirmedAt.size() <= 50)) &&
+        (!('confirmedBy' in data) || data.confirmedBy == null || (data.confirmedBy is string && data.confirmedBy.size() <= 128)) &&
         (!('location' in data) || data.location is latlng) &&
         (!('createdAt' in data) || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
         (!('updatedAt' in data) || data.updatedAt is timestamp || (data.updatedAt is string && data.updatedAt.size() <= 50));
@@ -611,12 +618,17 @@ service cloud.firestore {
                              ) ||
                              // Provider or assigned technician: progress status transitions
                              // US-14 (SCRUM-45) AC: Cancelled bookings cannot be accepted, assigned, or started afterward.
+                             // BOOK-2 (SCRUM-104) AC: Only pending or assigned bookings can transition to 'confirmed'.
                              (
                                (
                                  resource.data.providerId == request.auth.uid ||
                                  ('technicianId' in resource.data && resource.data.technicianId == request.auth.uid)
                                ) &&
                                !(resource.data.status in ['cancelled', 'completed', 'declined']) &&
+                               (
+                                 request.resource.data.status != 'confirmed' ||
+                                 resource.data.status in ['pending', 'assigned']
+                               ) &&
                                request.resource.data.status in [
                                  'pending', 'confirmed', 'assigned', 'in_progress', 'completed', 'declined'
                                ]

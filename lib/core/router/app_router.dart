@@ -22,6 +22,7 @@ import 'package:service_pilot/features/bookings/screens/booking_history_screen.d
 import 'package:service_pilot/features/bookings/screens/booking_tracking_screen.dart';
 import 'package:service_pilot/features/bookings/screens/create_booking_screen.dart';
 import 'package:service_pilot/features/bookings/screens/location_picker_screen.dart';
+import 'package:service_pilot/features/bookings/screens/provider_booking_detail_screen.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
 import 'package:service_pilot/features/providers/screens/company_profile_edit_screen.dart';
 import 'package:service_pilot/features/providers/screens/provider_detail_screen.dart';
@@ -62,6 +63,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           state.matchedLocation.startsWith('/providers') ||
           state.matchedLocation.startsWith('/bookings') ||
           state.matchedLocation.startsWith('/offerings') ||
+          state.matchedLocation.startsWith('/provider/') ||
           isGoingToAdmin;
       final isGoingToLogin = state.matchedLocation == '/login';
       final isGoingToSplash = state.matchedLocation == '/splash';
@@ -94,8 +96,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return (authState).user.role.homeRoute;
       }
 
-      // Restrict /offerings/create to providers and companies only (Issue 2)
-      if (isAuthenticated && state.matchedLocation.startsWith('/offerings')) {
+      // Restrict /offerings and /provider/bookings to providers and companies only
+      if (isAuthenticated &&
+          (state.matchedLocation.startsWith('/offerings') ||
+              state.matchedLocation.startsWith('/provider/bookings'))) {
         final role = (authState).user.role;
         if (role != AppRole.independentProvider &&
             role != AppRole.company &&
@@ -230,6 +234,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return BookingConfirmationScreen(
             bookingId: bookingId,
             booking: booking,
+          );
+        },
+      ),
+      // ── Provider Booking Confirmation (BOOK-2 / SCRUM-104) ─────────────
+      GoRoute(
+        path: '/provider/bookings/:bookingId',
+        builder: (_, state) {
+          final bookingId = state.pathParameters['bookingId'] ?? '';
+          final booking = state.extra as BookingModel?;
+          return ProviderBookingDetailScreen(
+            bookingId: bookingId,
+            initialBooking: booking,
           );
         },
       ),

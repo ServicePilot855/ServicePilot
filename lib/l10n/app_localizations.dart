@@ -2323,6 +2323,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Available Services & Offerings'**
   String get providerOfferingsSection;
+
+  /// No description provided for @bookingConfirmedAppointmentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed Appointment'**
+  String get bookingConfirmedAppointmentLabel;
+
+  /// No description provided for @bookingPreferredAppointmentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred Date & Time'**
+  String get bookingPreferredAppointmentLabel;
+
+  /// No description provided for @providerBookingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming Booking Requests'**
+  String get providerBookingsTitle;
+
+  /// No description provided for @providerBookingsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No incoming booking requests yet.'**
+  String get providerBookingsEmpty;
+
+  /// No description provided for @providerBookingsLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load booking requests right now. Please try again.'**
+  String get providerBookingsLoadError;
+
+  /// No description provided for @providerBookingDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking Request'**
+  String get providerBookingDetailTitle;
+
+  /// No description provided for @providerBookingConfirmButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Appointment'**
+  String get providerBookingConfirmButton;
+
+  /// No description provided for @providerBookingConfirmSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Appointment confirmed! The homeowner can now see the confirmed date and time.'**
+  String get providerBookingConfirmSuccess;
+
+  /// No description provided for @providerBookingNotAuthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'You are not authorized to confirm this booking.'**
+  String get providerBookingNotAuthorized;
+
+  /// No description provided for @providerBookingIneligible.
+  ///
+  /// In en, this message translates to:
+  /// **'This booking cannot be confirmed in its current state.'**
+  String get providerBookingIneligible;
+
+  /// No description provided for @providerBookingReviewAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get providerBookingReviewAction;
 }
 
 class _AppLocalizationsDelegate

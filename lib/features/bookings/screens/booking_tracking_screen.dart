@@ -9,6 +9,7 @@ import 'package:service_pilot/features/bookings/providers/booking_provider.dart'
 import 'package:service_pilot/features/bookings/services/booking_service.dart';
 import 'package:service_pilot/features/bookings/widgets/booking_status_stepper.dart';
 import 'package:service_pilot/features/bookings/widgets/cancel_booking_dialog.dart';
+import 'package:service_pilot/l10n/l10n.dart';
 import 'package:service_pilot/shared/widgets/sp_button.dart';
 import 'package:service_pilot/shared/widgets/sp_layout.dart';
 import 'package:service_pilot/shared/widgets/status_badge.dart';
@@ -324,9 +325,22 @@ class _BookingTrackingScreenState extends ConsumerState<BookingTrackingScreen> {
                   const SizedBox(height: 12),
                   _DetailRow(
                     icon: Icons.calendar_today_rounded,
-                    label: 'Preferred Date & Time',
+                    label: context.l10n.bookingPreferredAppointmentLabel,
                     value: dateFormatted,
                   ),
+                  if (booking.confirmedAppointmentAt != null ||
+                      booking.status == BookingStatus.confirmed) ...[
+                    const SizedBox(height: 12),
+                    _DetailRow(
+                      key: const Key('booking_confirmed_appointment_row'),
+                      icon: Icons.event_available_rounded,
+                      label: context.l10n.bookingConfirmedAppointmentLabel,
+                      value: DateFormat('EEE, d MMM yyyy • h:mm a').format(
+                        booking.confirmedAppointmentAt ??
+                            booking.preferredDateTime,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 12),
                   _DetailRow(
                     icon: Icons.location_on_outlined,
@@ -407,6 +421,7 @@ class _DetailRow extends StatelessWidget {
   final String value;
 
   const _DetailRow({
+    super.key,
     required this.icon,
     required this.label,
     required this.value,

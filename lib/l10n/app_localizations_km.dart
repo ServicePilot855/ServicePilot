@@ -1257,4 +1257,42 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get providerOfferingsSection => 'សេវាកម្ម និងការផ្តល់ជូនដែលមាន';
+
+  @override
+  String get bookingConfirmedAppointmentLabel => 'ពេលវេលាណាត់ជួបដែលបានបញ្ជាក់';
+
+  @override
+  String get bookingPreferredAppointmentLabel =>
+      'កាលបរិច្ឆេទ និងពេលវេលាដែលចង់បាន';
+
+  @override
+  String get providerBookingsTitle => 'សំណើកក់សេវាកម្មថ្មី';
+
+  @override
+  String get providerBookingsEmpty => 'មិនទាន់មានសំណើកក់សេវាកម្មនៅឡើយទេ។';
+
+  @override
+  String get providerBookingsLoadError =>
+      'មិនអាចផ្ទុកសំណើកក់បានទេ។ សូមព្យាយាមម្តងទៀត។';
+
+  @override
+  String get providerBookingDetailTitle => 'ព័ត៌មានសំណើកក់';
+
+  @override
+  String get providerBookingConfirmButton => 'បញ្ជាក់ការណាត់ជួប';
+
+  @override
+  String get providerBookingConfirmSuccess =>
+      'បានបញ្ជាក់ការណាត់ជួប! អតិថិជនអាចមើលឃើញពេលវេលាដែលបានបញ្ជាក់ហើយ។';
+
+  @override
+  String get providerBookingNotAuthorized =>
+      'អ្នកមិនមានសិទ្ធិបញ្ជាក់ការកក់នេះទេ។';
+
+  @override
+  String get providerBookingIneligible =>
+      'ការកក់នេះមិនអាចបញ្ជាក់បានក្នុងស្ថានភាពបច្ចុប្បន្នទេ។';
+
+  @override
+  String get providerBookingReviewAction => 'ពិនិត្យ';
 }

@@ -95,6 +95,29 @@ class FirestoreBookingService implements IBookingService {
   }
 
   @override
+  Future<List<BookingModel>> getProviderBookings(String providerId) async {
+    final snapshot =
+        await _bookings.where('providerId', isEqualTo: providerId).get();
+    return List.unmodifiable(
+      snapshot.docs.map((d) => BookingModel.fromFirestore(d.id, d.data())),
+    );
+  }
+
+  @override
+  Stream<List<BookingModel>> watchProviderBookings(String providerId) {
+    return _bookings
+        .where('providerId', isEqualTo: providerId)
+        .snapshots()
+        .map(
+          (snapshot) => List.unmodifiable(
+            snapshot.docs.map(
+              (d) => BookingModel.fromFirestore(d.id, d.data()),
+            ),
+          ),
+        );
+  }
+
+  @override
   Future<BookingModel?> getBookingById(String bookingId) async {
     final doc = await _bookings.doc(bookingId).get();
     final data = doc.data();
@@ -148,11 +171,27 @@ class FirestoreBookingService implements IBookingService {
   Future<BookingModel> acceptBooking({
     required String bookingId,
     required String providerId,
+    DateTime? confirmedAppointmentAt,
+    String? confirmedBy,
   }) {
-    return updateBookingStatus(
-      bookingId: bookingId,
-      newStatus: BookingStatus.confirmed,
-    );
+    return _update(bookingId, (booking) {
+      if (!booking.isOwnedByProvider(providerId)) {
+        throw UnauthorizedBookingConfirmationException(
+          bookingId: bookingId,
+          providerId: providerId,
+        );
+      }
+      _checkTransition(booking, BookingStatus.confirmed);
+      final now = DateTime.now();
+      return booking.copyWith(
+        status: BookingStatus.confirmed,
+        confirmedAppointmentAt:
+            confirmedAppointmentAt ?? booking.preferredDateTime,
+        confirmedAt: now,
+        confirmedBy: confirmedBy ?? providerId,
+        updatedAt: now,
+      );
+    });
   }
 
   @override

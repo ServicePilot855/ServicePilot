@@ -63,6 +63,27 @@ class CannotCancelBookingException implements Exception {
       'CannotCancelBookingException(bookingId: $bookingId, status: ${currentStatus.value}): $message';
 }
 
+/// Thrown when a provider attempts to confirm a booking addressed to another
+/// provider.
+///
+/// Enforces BOOK-2 (SCRUM-104) AC:
+/// "A cancelled booking or another provider's booking cannot be confirmed."
+class UnauthorizedBookingConfirmationException implements Exception {
+  final String bookingId;
+  final String providerId;
+  final String message;
+
+  const UnauthorizedBookingConfirmationException({
+    required this.bookingId,
+    required this.providerId,
+    this.message = 'Only the assigned service provider can confirm this booking.',
+  });
+
+  @override
+  String toString() =>
+      'UnauthorizedBookingConfirmationException(bookingId: $bookingId, providerId: $providerId): $message';
+}
+
 /// Thrown when an invalid status transition is attempted on a booking
 /// (e.g., accepting, assigning, or starting a `Cancelled` booking).
 ///
@@ -125,6 +146,12 @@ abstract class IBookingService {
   /// Returns all bookings belonging to [customerId].
   Future<List<BookingModel>> getCustomerBookings(String customerId);
 
+  /// Returns all bookings addressed to [providerId].
+  Future<List<BookingModel>> getProviderBookings(String providerId);
+
+  /// Emits real-time updates for all bookings addressed to [providerId].
+  Stream<List<BookingModel>> watchProviderBookings(String providerId);
+
   /// Fetches a single booking by its [bookingId].
   Future<BookingModel?> getBookingById(String bookingId);
 
@@ -141,13 +168,19 @@ abstract class IBookingService {
     String? reason,
   });
 
-  /// Provider accepts (`Confirmed`) a pending booking.
+  /// Provider confirms (`Confirmed`) an eligible pending/assigned booking and
+  /// records the agreed appointment time.
   ///
-  /// Throws [InvalidBookingTransitionException] if the booking was cancelled
-  /// or cannot transition to [BookingStatus.confirmed].
+  /// Throws:
+  /// - [BookingNotFoundException] if [bookingId] does not exist.
+  /// - [UnauthorizedBookingConfirmationException] if [providerId] does not own the booking.
+  /// - [InvalidBookingTransitionException] if the booking was cancelled
+  ///   or cannot transition to [BookingStatus.confirmed].
   Future<BookingModel> acceptBooking({
     required String bookingId,
     required String providerId,
+    DateTime? confirmedAppointmentAt,
+    String? confirmedBy,
   });
 
   /// Company/provider assigns a technician (`Assigned`) to a booking.
@@ -324,6 +357,37 @@ class BookingService implements IBookingService {
         totalPrice: 20.0,
         createdAt: now.subtract(const Duration(hours: 2)),
       ),
+      // Owned Pending fixtures for demo technician and company accounts (BOOK-2)
+      BookingModel(
+        id: 'bk-virak-pending-01',
+        customerId: 'demo-homeowner-2',
+        providerId: 'prov-virak-ac',
+        providerName: 'Virak Chan',
+        serviceCategory: 'Air Conditioner Repair & Care',
+        serviceTitle: 'Split AC Chemical Wash & Diagnostic',
+        description:
+            'Living room AC leaks water from indoor blower after 20 minutes.',
+        address: 'St. 360, Boeung Keng Kang 3, Chamkarmon, Phnom Penh',
+        preferredDateTime: now.add(const Duration(days: 1, hours: 3)),
+        status: BookingStatus.pending,
+        totalPrice: 25.0,
+        createdAt: now.subtract(const Duration(hours: 1)),
+      ),
+      BookingModel(
+        id: 'bk-fixco-pending-01',
+        customerId: 'demo-homeowner-2',
+        providerId: 'prov-fixco-company',
+        providerName: 'Phnom Penh Fix Co.',
+        serviceCategory: 'Plumbing & Drainage',
+        serviceTitle: 'Water Pump Pressure & Valve Service',
+        description:
+            'Booster pump cycles on and off continuously even with taps closed.',
+        address: 'St. 516, Boeung Kak 1, Toul Kork, Phnom Penh',
+        preferredDateTime: now.add(const Duration(days: 2, hours: 2)),
+        status: BookingStatus.pending,
+        totalPrice: 35.0,
+        createdAt: now.subtract(const Duration(hours: 2)),
+      ),
     ];
   }
 
@@ -365,6 +429,27 @@ class BookingService implements IBookingService {
   Future<List<BookingModel>> getCustomerBookings(String customerId) async {
     return List.unmodifiable(
       _bookings.where((booking) => booking.customerId == customerId),
+    );
+  }
+
+  @override
+  Future<List<BookingModel>> getProviderBookings(String providerId) async {
+    return List.unmodifiable(
+      _bookings.where((booking) => booking.providerId == providerId),
+    );
+  }
+
+  @override
+  Stream<List<BookingModel>> watchProviderBookings(String providerId) async* {
+    List<BookingModel> filter() => List.unmodifiable(
+          _bookings.where((booking) => booking.providerId == providerId),
+        );
+
+    yield filter();
+    yield* _updatesController.stream.map(
+      (list) => List.unmodifiable(
+        list.where((booking) => booking.providerId == providerId),
+      ),
     );
   }
 
@@ -430,11 +515,45 @@ class BookingService implements IBookingService {
   Future<BookingModel> acceptBooking({
     required String bookingId,
     required String providerId,
+    DateTime? confirmedAppointmentAt,
+    String? confirmedBy,
   }) async {
-    return updateBookingStatus(
-      bookingId: bookingId,
-      newStatus: BookingStatus.confirmed,
+    final index = _bookings.indexWhere((b) => b.id == bookingId);
+    if (index == -1) {
+      throw BookingNotFoundException(bookingId);
+    }
+
+    final booking = _bookings[index];
+    if (!booking.isOwnedByProvider(providerId)) {
+      throw UnauthorizedBookingConfirmationException(
+        bookingId: bookingId,
+        providerId: providerId,
+      );
+    }
+
+    if (!booking.status.canTransitionTo(BookingStatus.confirmed)) {
+      throw InvalidBookingTransitionException(
+        bookingId: bookingId,
+        currentStatus: booking.status,
+        targetStatus: BookingStatus.confirmed,
+        message: booking.status == BookingStatus.cancelled
+            ? 'Cancelled bookings cannot be accepted, assigned, or started afterward.'
+            : null,
+      );
+    }
+
+    final now = DateTime.now();
+    final updated = booking.copyWith(
+      status: BookingStatus.confirmed,
+      confirmedAppointmentAt:
+          confirmedAppointmentAt ?? booking.preferredDateTime,
+      confirmedAt: now,
+      confirmedBy: confirmedBy ?? providerId,
+      updatedAt: now,
     );
+    _bookings[index] = updated;
+    _notifyListeners();
+    return updated;
   }
 
   @override

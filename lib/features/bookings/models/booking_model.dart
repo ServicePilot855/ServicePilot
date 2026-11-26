@@ -24,6 +24,11 @@ class BookingModel {
   final String? cancelledBy;
   final String? cancellationReason;
 
+  /// Agreed appointment date & time confirmed by the provider (BOOK-2 / SCRUM-104).
+  final DateTime? confirmedAppointmentAt;
+  final DateTime? confirmedAt;
+  final String? confirmedBy;
+
   /// Map pin the customer dropped for the repair address, if any.
   final double? latitude;
   final double? longitude;
@@ -50,6 +55,9 @@ class BookingModel {
     this.cancelledAt,
     this.cancelledBy,
     this.cancellationReason,
+    this.confirmedAppointmentAt,
+    this.confirmedAt,
+    this.confirmedBy,
     this.latitude,
     this.longitude,
     this.photoUrls = const [],
@@ -65,6 +73,21 @@ class BookingModel {
 
   /// Whether [userId] is the customer who created this booking.
   bool isOwnedBy(String userId) => customerId == userId;
+
+  /// Whether [targetProviderId] is the provider this booking is addressed to.
+  bool isOwnedByProvider(String targetProviderId) =>
+      providerId == targetProviderId;
+
+  /// Whether this booking is in an eligible state for provider confirmation.
+  ///
+  /// Implements BOOK-2 (SCRUM-104): cancelled, declined, completed,
+  /// in-progress, or already confirmed bookings cannot be confirmed.
+  bool get canBeConfirmed =>
+      status == BookingStatus.pending || status == BookingStatus.assigned;
+
+  /// Whether [targetProviderId] is authorized to confirm this booking now.
+  bool canBeConfirmedBy(String targetProviderId) =>
+      isOwnedByProvider(targetProviderId) && canBeConfirmed;
 
   /// US-14 (SCRUM-45) AC:
   /// Only the customer who created the booking can cancel it, and only when
@@ -100,6 +123,13 @@ class BookingModel {
           : null,
       cancelledBy: json['cancelledBy'] as String?,
       cancellationReason: json['cancellationReason'] as String?,
+      confirmedAppointmentAt: json['confirmedAppointmentAt'] != null
+          ? DateTime.tryParse(json['confirmedAppointmentAt'] as String)
+          : null,
+      confirmedAt: json['confirmedAt'] != null
+          ? DateTime.tryParse(json['confirmedAt'] as String)
+          : null,
+      confirmedBy: json['confirmedBy'] as String?,
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
       photoUrls: (json['photoUrls'] as List<dynamic>?)
@@ -131,6 +161,10 @@ class BookingModel {
       if (cancelledAt != null) 'cancelledAt': cancelledAt!.toIso8601String(),
       if (cancelledBy != null) 'cancelledBy': cancelledBy,
       if (cancellationReason != null) 'cancellationReason': cancellationReason,
+      if (confirmedAppointmentAt != null)
+        'confirmedAppointmentAt': confirmedAppointmentAt!.toIso8601String(),
+      if (confirmedAt != null) 'confirmedAt': confirmedAt!.toIso8601String(),
+      if (confirmedBy != null) 'confirmedBy': confirmedBy,
       if (latitude != null) 'latitude': latitude,
       if (longitude != null) 'longitude': longitude,
       if (photoUrls.isNotEmpty) 'photoUrls': photoUrls,
@@ -165,6 +199,10 @@ class BookingModel {
       if (cancelledAt != null) 'cancelledAt': Timestamp.fromDate(cancelledAt!),
       if (cancelledBy != null) 'cancelledBy': cancelledBy,
       if (cancellationReason != null) 'cancellationReason': cancellationReason,
+      if (confirmedAppointmentAt != null)
+        'confirmedAppointmentAt': Timestamp.fromDate(confirmedAppointmentAt!),
+      if (confirmedAt != null) 'confirmedAt': Timestamp.fromDate(confirmedAt!),
+      if (confirmedBy != null) 'confirmedBy': confirmedBy,
       if (hasLocation) 'location': GeoPoint(latitude!, longitude!),
       if (photoUrls.isNotEmpty) 'photos': photoUrls,
     };
@@ -198,6 +236,9 @@ class BookingModel {
       cancelledAt: _readDate(data['cancelledAt']),
       cancelledBy: data['cancelledBy'] as String?,
       cancellationReason: data['cancellationReason'] as String?,
+      confirmedAppointmentAt: _readDate(data['confirmedAppointmentAt']),
+      confirmedAt: _readDate(data['confirmedAt']),
+      confirmedBy: data['confirmedBy'] as String?,
       latitude: (data['location'] as GeoPoint?)?.latitude,
       longitude: (data['location'] as GeoPoint?)?.longitude,
       photoUrls: (data['photos'] as List<dynamic>?)
@@ -232,6 +273,9 @@ class BookingModel {
     DateTime? cancelledAt,
     String? cancelledBy,
     String? cancellationReason,
+    DateTime? confirmedAppointmentAt,
+    DateTime? confirmedAt,
+    String? confirmedBy,
     double? latitude,
     double? longitude,
     List<String>? photoUrls,
@@ -256,6 +300,10 @@ class BookingModel {
       cancelledAt: cancelledAt ?? this.cancelledAt,
       cancelledBy: cancelledBy ?? this.cancelledBy,
       cancellationReason: cancellationReason ?? this.cancellationReason,
+      confirmedAppointmentAt:
+          confirmedAppointmentAt ?? this.confirmedAppointmentAt,
+      confirmedAt: confirmedAt ?? this.confirmedAt,
+      confirmedBy: confirmedBy ?? this.confirmedBy,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       photoUrls: photoUrls ?? this.photoUrls,
@@ -271,10 +319,18 @@ class BookingModel {
         other.providerId == providerId &&
         other.status == status &&
         other.updatedAt == updatedAt &&
-        other.cancelledAt == cancelledAt;
+        other.cancelledAt == cancelledAt &&
+        other.confirmedAppointmentAt == confirmedAppointmentAt;
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, customerId, providerId, status, updatedAt, cancelledAt);
+  int get hashCode => Object.hash(
+        id,
+        customerId,
+        providerId,
+        status,
+        updatedAt,
+        cancelledAt,
+        confirmedAppointmentAt,
+      );
 }

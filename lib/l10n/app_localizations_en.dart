@@ -1268,4 +1268,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get providerOfferingsSection => 'Available Services & Offerings';
+
+  @override
+  String get bookingConfirmedAppointmentLabel => 'Confirmed Appointment';
+
+  @override
+  String get bookingPreferredAppointmentLabel => 'Preferred Date & Time';
+
+  @override
+  String get providerBookingsTitle => 'Incoming Booking Requests';
+
+  @override
+  String get providerBookingsEmpty => 'No incoming booking requests yet.';
+
+  @override
+  String get providerBookingsLoadError =>
+      'Unable to load booking requests right now. Please try again.';
+
+  @override
+  String get providerBookingDetailTitle => 'Booking Request';
+
+  @override
+  String get providerBookingConfirmButton => 'Confirm Appointment';
+
+  @override
+  String get providerBookingConfirmSuccess =>
+      'Appointment confirmed! The homeowner can now see the confirmed date and time.';
+
+  @override
+  String get providerBookingNotAuthorized =>
+      'You are not authorized to confirm this booking.';
+
+  @override
+  String get providerBookingIneligible =>
+      'This booking cannot be confirmed in its current state.';
+
+  @override
+  String get providerBookingReviewAction => 'Review';
 }
