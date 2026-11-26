@@ -522,5 +522,30 @@
   "providerBookingDeclineSuccess": "Request declined. The homeowner can see this booking as Declined in their history.",
   "providerBookingDeclinedNotice": "You declined this request. The homeowner has been told it is Declined.",
   "providerBookingDeclineIneligible": "This request can no longer be declined.",
-  "providerBookingDeclineNotAuthorized": "You are not authorized to decline this request."
+  "providerBookingDeclineNotAuthorized": "You are not authorized to decline this request.",
+
+  "@_CART": {},
+  "cartAddButton": "Add to cart",
+  "cartAddedSnackbar": "Added {serviceTitle} to cart.",
+  "@cartAddedSnackbar": {
+    "placeholders": {"serviceTitle": {"type": "String"}}
+  },
+  "cartErrorDifferentProvider": "Your cart already has services from {providerName}. Clear your cart before adding from another provider.",
+  "@cartErrorDifferentProvider": {
+    "placeholders": {"providerName": {"type": "String"}}
+  },
+  "cartErrorDifferentProviderGeneric": "Your cart already has services from another provider. Clear your cart before adding this service.",
+  "cartErrorQuoteRequired": "Quote-required services cannot be added to the cart. Use Request a Quote instead.",
+  "cartErrorUnavailable": "This service is currently unavailable and cannot be added to the cart.",
+  "cartBadgeLabel": "Cart ({count})",
+  "@cartBadgeLabel": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "cartActiveProviderNotice": "Cart has {count, plural, =1{1 service} other{{count} services}} from {providerName}.",
+  "@cartActiveProviderNotice": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "providerName": {"type": "String"}
+    }
+  }
 }

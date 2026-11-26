@@ -1377,4 +1377,39 @@ class AppLocalizationsKm extends AppLocalizations {
   @override
   String get providerBookingDeclineNotAuthorized =>
       'អ្នកមិនមានសិទ្ធិបដិសេធសំណើនេះទេ។';
+
+  @override
+  String get cartAddButton => 'បន្ថែមទៅកន្ត្រក';
+
+  @override
+  String cartAddedSnackbar(String serviceTitle) {
+    return 'បានបន្ថែម $serviceTitle ទៅក្នុងកន្ត្រក។';
+  }
+
+  @override
+  String cartErrorDifferentProvider(String providerName) {
+    return 'កន្ត្រករបស់អ្នកមានសេវាកម្មពី $providerName រួចហើយ។ សូមសម្អាតកន្ត្រកមុនពេលបន្ថែមពីអ្នកផ្តល់សេវាផ្សេង។';
+  }
+
+  @override
+  String get cartErrorDifferentProviderGeneric =>
+      'កន្ត្រករបស់អ្នកមានសេវាកម្មពីអ្នកផ្តល់សេវាផ្សេងរួចហើយ។ សូមសម្អាតកន្ត្រកមុនពេលបន្ថែមសេវាកម្មនេះ។';
+
+  @override
+  String get cartErrorQuoteRequired =>
+      'សេវាកម្មដែលត្រូវការសម្រង់តម្លៃមិនអាចបន្ថែមទៅក្នុងកន្ត្រកបានទេ។ សូមប្រើ ស្នើសុំសម្រង់តម្លៃ ជំនួសវិញ។';
+
+  @override
+  String get cartErrorUnavailable =>
+      'សេវាកម្មនេះមិនអាចប្រើបាននាពេលបច្ចុប្បន្នទេ ហើយមិនអាចបន្ថែមទៅក្នុងកន្ត្រកបានទេ។';
+
+  @override
+  String cartBadgeLabel(int count) {
+    return 'កន្ត្រក ($count)';
+  }
+
+  @override
+  String cartActiveProviderNotice(int count, String providerName) {
+    return 'កន្ត្រកមានសេវាកម្មចំនួន $count ពី $providerName។';
+  }
 }

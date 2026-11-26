@@ -1387,4 +1387,45 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get providerBookingDeclineNotAuthorized =>
       'You are not authorized to decline this request.';
+
+  @override
+  String get cartAddButton => 'Add to cart';
+
+  @override
+  String cartAddedSnackbar(String serviceTitle) {
+    return 'Added $serviceTitle to cart.';
+  }
+
+  @override
+  String cartErrorDifferentProvider(String providerName) {
+    return 'Your cart already has services from $providerName. Clear your cart before adding from another provider.';
+  }
+
+  @override
+  String get cartErrorDifferentProviderGeneric =>
+      'Your cart already has services from another provider. Clear your cart before adding this service.';
+
+  @override
+  String get cartErrorQuoteRequired =>
+      'Quote-required services cannot be added to the cart. Use Request a Quote instead.';
+
+  @override
+  String get cartErrorUnavailable =>
+      'This service is currently unavailable and cannot be added to the cart.';
+
+  @override
+  String cartBadgeLabel(int count) {
+    return 'Cart ($count)';
+  }
+
+  @override
+  String cartActiveProviderNotice(int count, String providerName) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count services',
+      one: '1 service',
+    );
+    return 'Cart has $_temp0 from $providerName.';
+  }
 }
