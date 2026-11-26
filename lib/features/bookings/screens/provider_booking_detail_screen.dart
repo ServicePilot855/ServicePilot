@@ -123,8 +123,8 @@ class _ProviderBookingDetailScreenState
       ref.invalidate(incomingBookingRequestProvider(widget.bookingId));
       ref.invalidate(bookingDetailProvider(widget.bookingId));
       ref.invalidate(liveBookingDetailProvider(widget.bookingId));
-      ref.invalidate(providerBookingsProvider(providerId));
-      ref.invalidate(liveProviderBookingsProvider(providerId));
+      ref.invalidate(declinedBookingRequestsProvider);
+      ref.invalidate(declinedBookingRequestProvider(widget.bookingId));
       setState(() => _isDeclining = false);
     } on UnauthorizedBookingDeclineException {
       if (!mounted) return;
@@ -159,6 +159,7 @@ class _ProviderBookingDetailScreenState
     final user = ref.watch(currentUserProvider);
     final providerId = user?.id ?? '';
     final pendingProvider = incomingBookingRequestProvider(widget.bookingId);
+    final declinedProvider = declinedBookingRequestProvider(widget.bookingId);
     final Widget body;
     if (user?.canViewBookingInbox != true) {
       body = _unavailable(context);
@@ -167,46 +168,23 @@ class _ProviderBookingDetailScreenState
             skipLoadingOnRefresh: false,
             data: (pending) {
               if (pending != null) {
-                return _buildPending(context, pending, providerId);
+                return _buildRequestPreview(context, pending, providerId);
               }
 
-              return ref
-                  .watch(liveBookingDetailProvider(widget.bookingId))
-                  .when(
-                    data: (booking) => booking != null &&
-                            booking.isOwnedByProvider(providerId) &&
-                            (booking.status.exposesAcceptedDetails ||
-                                booking.status == BookingStatus.declined)
-                        ? _buildBody(context, booking, providerId)
-                        : _unavailable(context),
+              return ref.watch(declinedProvider).when(
+                    skipLoadingOnRefresh: false,
+                    data: (declined) => declined == null
+                        ? _buildAcceptedRequest(context, providerId)
+                        : _buildRequestPreview(context, declined, providerId,
+                            declined: true),
                     loading: _loading,
-                    error: (_, __) => _unavailable(context),
+                    error: (_, __) => _loadError(
+                        context, () => ref.invalidate(declinedProvider)),
                   );
             },
             loading: _loading,
-            error: (_, __) => Center(
-              child: SpContentWidth(
-                child: Padding(
-                  padding: const EdgeInsets.all(AppTheme.gutter),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SpNotice(
-                        icon: Icons.error_outline_rounded,
-                        message: l10n.providerBookingsLoadError,
-                        tone: SpTone.danger,
-                      ),
-                      const SizedBox(height: 12),
-                      SpSecondaryButton(
-                        label: l10n.bookingInboxRetry,
-                        onPressed: () => ref.invalidate(pendingProvider),
-                        wrapLabel: true,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+            error: (_, __) =>
+                _loadError(context, () => ref.invalidate(pendingProvider)),
           );
     }
 
@@ -239,6 +217,41 @@ class _ProviderBookingDetailScreenState
         ),
       );
 
+  Widget _buildAcceptedRequest(BuildContext context, String providerId) =>
+      ref.watch(liveBookingDetailProvider(widget.bookingId)).when(
+            data: (booking) => booking != null &&
+                    booking.isOwnedByProvider(providerId) &&
+                    booking.status.exposesAcceptedDetails
+                ? _buildBody(context, booking, providerId)
+                : _unavailable(context),
+            loading: _loading,
+            error: (_, __) => _unavailable(context),
+          );
+
+  Widget _loadError(BuildContext context, VoidCallback retry) => Center(
+        child: SpContentWidth(
+          child: Padding(
+            padding: const EdgeInsets.all(AppTheme.gutter),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SpNotice(
+                  icon: Icons.error_outline_rounded,
+                  message: context.l10n.providerBookingsLoadError,
+                  tone: SpTone.danger,
+                ),
+                const SizedBox(height: 12),
+                SpSecondaryButton(
+                  label: context.l10n.bookingInboxRetry,
+                  onPressed: retry,
+                  wrapLabel: true,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
   Widget _unavailable(BuildContext context) => Center(
         child: SpContentWidth(
           child: Padding(
@@ -252,13 +265,14 @@ class _ProviderBookingDetailScreenState
         ),
       );
 
-  Widget _buildPending(
+  Widget _buildRequestPreview(
     BuildContext context,
-    IncomingBookingRequest pending,
-    String providerId,
-  ) {
+    IncomingBookingRequest request,
+    String providerId, {
+    bool declined = false,
+  }) {
     final l10n = context.l10n;
-    final date = pending.appointmentDate;
+    final date = request.appointmentDate;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppTheme.gutter),
       child: SpContentWidth(
@@ -266,15 +280,20 @@ class _ProviderBookingDetailScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SpPageHeader(
-              title: pending.serviceTitle.isEmpty
+              title: request.serviceTitle.isEmpty
                   ? l10n.bookingInboxDetailTitle
-                  : pending.serviceTitle,
+                  : request.serviceTitle,
             ),
             const SizedBox(height: 16),
             SpNotice(
-              icon: Icons.schedule_rounded,
-              tone: SpTone.waiting,
-              message: l10n.bookingInboxPending,
+              key: declined
+                  ? const Key('provider_booking_declined_notice')
+                  : null,
+              icon: declined ? Icons.block_rounded : Icons.schedule_rounded,
+              tone: declined ? SpTone.danger : SpTone.waiting,
+              message: declined
+                  ? l10n.providerBookingDeclinedNotice
+                  : l10n.bookingInboxPending,
             ),
             const SizedBox(height: 24),
             SpFormSection(
@@ -291,14 +310,14 @@ class _ProviderBookingDetailScreenState
                 ),
               ],
             ),
-            if (pending.description.isNotEmpty) ...[
+            if (request.description.isNotEmpty) ...[
               const SizedBox(height: 24),
               SpFormSection(
                 title: l10n.bookingInboxJobDetails,
-                children: [Text(pending.description, style: AppTheme.text())],
+                children: [Text(request.description, style: AppTheme.text())],
               ),
             ],
-            if (_errorMessage != null) ...[
+            if (!declined && _errorMessage != null) ...[
               const SizedBox(height: 16),
               SpNotice(
                 icon: Icons.error_outline_rounded,
@@ -306,27 +325,29 @@ class _ProviderBookingDetailScreenState
                 tone: SpTone.danger,
               ),
             ],
-            const SizedBox(height: 24),
-            SpPrimaryButton(
-              key: const Key('provider_confirm_booking_button'),
-              label: l10n.providerBookingConfirmButton,
-              isLoading: _isConfirming,
-              wrapLabel: true,
-              onPressed: _isConfirming || _isDeclining || date == null
-                  ? null
-                  : () => _confirmBooking(date, providerId),
-            ),
-            const SizedBox(height: 12),
-            SpSecondaryButton(
-              key: const Key('provider_decline_booking_button'),
-              label: l10n.providerBookingDeclineButton,
-              icon: Icons.block_rounded,
-              foregroundColor: AppTheme.errorDeep,
-              wrapLabel: true,
-              onPressed: _isConfirming || _isDeclining
-                  ? null
-                  : () => _declineBooking(providerId),
-            ),
+            if (!declined) ...[
+              const SizedBox(height: 24),
+              SpPrimaryButton(
+                key: const Key('provider_confirm_booking_button'),
+                label: l10n.providerBookingConfirmButton,
+                isLoading: _isConfirming,
+                wrapLabel: true,
+                onPressed: _isConfirming || _isDeclining || date == null
+                    ? null
+                    : () => _confirmBooking(date, providerId),
+              ),
+              const SizedBox(height: 12),
+              SpSecondaryButton(
+                key: const Key('provider_decline_booking_button'),
+                label: l10n.providerBookingDeclineButton,
+                icon: Icons.block_rounded,
+                foregroundColor: AppTheme.errorDeep,
+                wrapLabel: true,
+                onPressed: _isConfirming || _isDeclining
+                    ? null
+                    : () => _declineBooking(providerId),
+              ),
+            ],
           ],
         ),
       ),
@@ -356,15 +377,6 @@ class _ProviderBookingDetailScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (booking.status == BookingStatus.declined) ...[
-              SpNotice(
-                key: const Key('provider_booking_declined_notice'),
-                icon: Icons.block_rounded,
-                message: l10n.providerBookingDeclinedNotice,
-                tone: SpTone.danger,
-              ),
-              const SizedBox(height: 16),
-            ],
             if (_successMessage != null &&
                 booking.status == BookingStatus.confirmed) ...[
               SpNotice(
@@ -500,8 +512,7 @@ class _ProviderBookingDetailScreenState
                     : () => _confirmBooking(
                         booking.preferredDateTime, activeProviderId),
               )
-            else if (booking.status != BookingStatus.confirmed &&
-                booking.status != BookingStatus.declined)
+            else if (booking.status != BookingStatus.confirmed)
               SpNotice(
                 key: const Key('provider_booking_ineligible_notice'),
                 icon: Icons.info_outline_rounded,

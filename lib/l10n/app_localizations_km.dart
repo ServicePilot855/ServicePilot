@@ -1369,7 +1369,13 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get providerBookingDeclinedNotice =>
-      'អ្នកបានបដិសេធសំណើនេះ។ អតិថិជនត្រូវបានជូនដំណឹងថាសំណើនេះ «បានបដិសេធ»។';
+      'អ្នកបានបដិសេធសំណើនេះ។ អតិថិជនអាចឃើញស្ថានភាព «បានបដិសេធ» នៅក្នុងប្រវត្តិការកក់របស់ពួកគេ។';
+
+  @override
+  String get providerDeclinedRequestsTitle => 'សំណើដែលបានបដិសេធ';
+
+  @override
+  String get providerDeclinedRequestsEmpty => 'អ្នកមិនមានសំណើដែលបានបដិសេធទេ។';
 
   @override
   String get providerBookingDeclineIneligible => 'សំណើនេះមិនអាចបដិសេធបានទៀតទេ។';

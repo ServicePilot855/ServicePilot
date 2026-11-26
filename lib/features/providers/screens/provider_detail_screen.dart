@@ -444,6 +444,7 @@ class _OfferingsSection extends ConsumerWidget {
         message = l10n.cartErrorQuoteRequired;
       case CartAddRejectionReason.inactiveOffering:
       case CartAddRejectionReason.invalidPrice:
+      case CartAddRejectionReason.notHomeowner:
       case null:
         message = l10n.cartErrorUnavailable;
     }
@@ -455,6 +456,7 @@ class _OfferingsSection extends ConsumerWidget {
     final l10n = context.l10n;
     final offeringsAsync = ref.watch(offeringsByProviderProvider(provider.id));
     final cart = ref.watch(cartProvider);
+    final canUseCart = ref.watch(cartOwnerIdProvider) != null;
 
     return offeringsAsync.when(
       data: (offerings) {
@@ -616,7 +618,7 @@ class _OfferingsSection extends ConsumerWidget {
                             ),
                           ),
                         ),
-                        if (!isQuote)
+                        if (!isQuote && canUseCart)
                           ConstrainedBox(
                             constraints: const BoxConstraints(minHeight: 48),
                             child: OutlinedButton(

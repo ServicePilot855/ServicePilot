@@ -204,6 +204,13 @@ abstract class IBookingService {
     String bookingId,
   );
 
+  Future<List<IncomingBookingRequest>> getDeclinedRequests(String providerId);
+
+  Future<IncomingBookingRequest?> getDeclinedRequest(
+    String providerId,
+    String bookingId,
+  );
+
   /// Fetches a single booking by its [bookingId].
   Future<BookingModel?> getBookingById(String bookingId);
 
@@ -235,13 +242,14 @@ abstract class IBookingService {
   });
 
   /// Provider declines (`Declined`) a `Pending` request addressed to them.
-  /// The record stays in the customer's history.
+  /// The customer history keeps the full booking and the provider history
+  /// keeps a limited request preview.
   ///
   /// Throws:
   /// - [BookingNotFoundException] if [bookingId] does not exist.
   /// - [UnauthorizedBookingDeclineException] if [providerId] does not own the request.
   /// - [InvalidBookingDeclineStateException] if the booking is not `Pending`.
-  Future<BookingModel> declineBooking({
+  Future<void> declineBooking({
     required String bookingId,
     required String providerId,
     String? reason,
@@ -288,11 +296,21 @@ class BookingService implements IBookingService {
   @override
   Future<List<IncomingBookingRequest>> getIncomingRequests(
     String providerId,
+  ) => _requests(providerId, BookingStatus.pending);
+
+  @override
+  Future<List<IncomingBookingRequest>> getDeclinedRequests(
+    String providerId,
+  ) => _requests(providerId, BookingStatus.declined);
+
+  Future<List<IncomingBookingRequest>> _requests(
+    String providerId,
+    BookingStatus status,
   ) async {
     return _bookings
         .where((booking) =>
             booking.providerId == providerId &&
-            booking.status == BookingStatus.pending)
+            booking.status == status)
         .map(IncomingBookingRequest.fromBooking)
         .toList();
   }
@@ -301,11 +319,23 @@ class BookingService implements IBookingService {
   Future<IncomingBookingRequest?> getIncomingRequest(
     String providerId,
     String bookingId,
+  ) => _request(providerId, bookingId, BookingStatus.pending);
+
+  @override
+  Future<IncomingBookingRequest?> getDeclinedRequest(
+    String providerId,
+    String bookingId,
+  ) => _request(providerId, bookingId, BookingStatus.declined);
+
+  Future<IncomingBookingRequest?> _request(
+    String providerId,
+    String bookingId,
+    BookingStatus status,
   ) async {
     final booking = await getBookingById(bookingId);
     if (booking == null ||
         booking.providerId != providerId ||
-        booking.status != BookingStatus.pending) {
+        booking.status != status) {
       return null;
     }
     return IncomingBookingRequest.fromBooking(booking);
@@ -655,7 +685,7 @@ class BookingService implements IBookingService {
   }
 
   @override
-  Future<BookingModel> declineBooking({
+  Future<void> declineBooking({
     required String bookingId,
     required String providerId,
     String? reason,
@@ -683,13 +713,11 @@ class BookingService implements IBookingService {
     final updated = booking.copyWith(
       status: BookingStatus.declined,
       updatedAt: DateTime.now(),
-      declinedReason: (trimmedReason != null && trimmedReason.isNotEmpty)
-          ? trimmedReason
-          : null,
+      declinedReason: trimmedReason,
+      clearDeclinedReason: trimmedReason == null || trimmedReason.isEmpty,
     );
     _bookings[index] = updated;
     _notifyListeners();
-    return updated;
   }
 
   @override

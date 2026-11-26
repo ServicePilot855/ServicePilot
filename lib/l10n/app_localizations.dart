@@ -2519,8 +2519,20 @@ abstract class AppLocalizations {
   /// No description provided for @providerBookingDeclinedNotice.
   ///
   /// In en, this message translates to:
-  /// **'You declined this request. The homeowner has been told it is Declined.'**
+  /// **'You declined this request. The homeowner can see it as Declined in their booking history.'**
   String get providerBookingDeclinedNotice;
+
+  /// No description provided for @providerDeclinedRequestsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Declined requests'**
+  String get providerDeclinedRequestsTitle;
+
+  /// No description provided for @providerDeclinedRequestsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no declined requests.'**
+  String get providerDeclinedRequestsEmpty;
 
   /// No description provided for @providerBookingDeclineIneligible.
   ///

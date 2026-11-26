@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:service_pilot/core/auth/auth_provider.dart';
+import 'package:service_pilot/core/constants/app_roles.dart';
 import 'package:service_pilot/core/theme/app_theme.dart';
+import 'package:service_pilot/features/auth/models/user_model.dart';
 import 'package:service_pilot/features/cart/models/cart_state.dart';
 import 'package:service_pilot/features/cart/providers/cart_provider.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
@@ -16,6 +19,15 @@ import 'package:service_pilot/l10n/app_localizations.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  const homeowner = UserModel(
+    id: 'homeowner-a',
+    fullName: 'Homeowner A',
+    email: 'homeowner-a@example.test',
+    phoneNumber: '',
+    role: AppRole.homeowner,
+    status: 'active',
+  );
 
   const providerA = ProviderModel(
     id: 'prov-a',
@@ -124,6 +136,36 @@ void main() {
   );
 
   group('SCRUM-80 / SCRUM-125 / SCRUM-127: Cart eligibility unit tests', () {
+    test('changing the signed-in homeowner clears the previous cart', () {
+      final session = StateProvider<UserModel?>((ref) => homeowner);
+      final container = ProviderContainer(overrides: [
+        currentUserProvider.overrideWith((ref) => ref.watch(session)),
+      ]);
+      addTearDown(container.dispose);
+
+      expect(
+          container.read(cartProvider.notifier).addOffering(fixedA1).accepted,
+          isTrue);
+      container.read(session.notifier).state =
+          homeowner.copyWith(fullName: 'Updated name');
+      expect(container.read(cartProvider).itemCount, 1);
+
+      container.read(session.notifier).state = null;
+      expect(container.read(cartProvider).isEmpty, isTrue);
+      expect(
+          container.read(cartProvider.notifier).addOffering(fixedA1).accepted,
+          isFalse);
+
+      container.read(session.notifier).state =
+          homeowner.copyWith(id: 'homeowner-b');
+      expect(
+          container.read(cartProvider.notifier).addOffering(fixedB1).accepted,
+          isTrue);
+      expect(container.read(cartProvider).providerId, providerB.id);
+      container.read(session.notifier).state = homeowner;
+      expect(container.read(cartProvider).isEmpty, isTrue);
+    });
+
     test('first fixed-price item sets provider and adds to cart', () {
       final notifier = CartNotifier();
       final result = notifier.addOffering(fixedA1);
@@ -159,7 +201,8 @@ void main() {
       expect(notifier.state.totalPrice, 50.0);
     });
 
-    test('item from another provider is rejected and leaves cart unchanged', () {
+    test('item from another provider is rejected and leaves cart unchanged',
+        () {
       final notifier = CartNotifier();
       notifier.addOffering(fixedA1);
       final beforeItems = List.of(notifier.state.items);
@@ -205,7 +248,8 @@ void main() {
       expect(notifier.state.items.length, 1);
     });
 
-    test('clearing cart resets provider and allows adding another provider', () {
+    test('clearing cart resets provider and allows adding another provider',
+        () {
       final notifier = CartNotifier();
       notifier.addOffering(fixedA1);
       notifier.clear();
@@ -269,6 +313,7 @@ void main() {
 
       return ProviderScope(
         overrides: [
+          currentUserProvider.overrideWithValue(homeowner),
           providerServiceProvider.overrideWithValue(
             ProviderService(
               initialProviders: const [
@@ -310,7 +355,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // Quote-required offering does not expose Add to cart
-      expect(find.byKey(const Key('btn_add_to_cart_off-a-quote')), findsNothing);
+      expect(
+          find.byKey(const Key('btn_add_to_cart_off-a-quote')), findsNothing);
       expect(find.byKey(const Key('btn_quote_off-a-quote')), findsOneWidget);
 
       // Add first fixed-price service
@@ -318,7 +364,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Added Split AC Wash to cart.'), findsOneWidget);
-      expect(find.byKey(const Key('provider_detail_cart_badge')), findsOneWidget);
+      expect(
+          find.byKey(const Key('provider_detail_cart_badge')), findsOneWidget);
       expect(find.text('Cart (1)'), findsOneWidget);
       expect(
         find.text('Cart has 1 service from Dara Technician.'),
@@ -343,6 +390,7 @@ void main() {
       setupViewport(tester);
       final container = ProviderContainer(
         overrides: [
+          currentUserProvider.overrideWithValue(homeowner),
           providerServiceProvider.overrideWithValue(
             ProviderService(
               initialProviders: const [providerA, providerB],

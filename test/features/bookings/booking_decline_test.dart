@@ -1,7 +1,12 @@
+import 'dart:convert';
+
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:service_pilot/core/constants/booking_status.dart';
 import 'package:service_pilot/features/bookings/models/booking_model.dart';
+import 'package:service_pilot/features/bookings/models/incoming_booking_request.dart';
 import 'package:service_pilot/features/bookings/services/booking_service.dart';
+import 'package:service_pilot/features/bookings/services/firestore_booking_service.dart';
 
 void main() {
   const customerId = 'customer-1';
@@ -31,27 +36,75 @@ void main() {
   }
 
   group('SCRUM-105 / BOOK-3: Decline a pending booking', () {
-    test('owner declines a Pending request: status is Declined and reason is kept', () async {
+    test('the Firestore service declines when full booking reads are denied',
+        () async {
+      final firestore = FakeFirebaseFirestore(securityRules: '''
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /bookings/{bookingId} {
+      allow write: if true;
+      allow read: if false;
+    }
+    match /providers/{providerId}/incomingBookingRequests/{bookingId} {
+      allow read, write: if true;
+    }
+    match /providers/{providerId}/declinedBookingRequests/{bookingId} {
+      allow read, write: if true;
+    }
+  }
+}
+''');
+      final service = FirestoreBookingService(firestore: firestore);
+      final booking = buildBooking(id: 'restricted-request');
+      final privateRef = firestore.collection('bookings').doc(booking.id);
+      final preview = IncomingBookingRequest.fromBooking(booking).toFirestore();
+      final provider = firestore.collection('providers').doc(ownerId);
+      final pending =
+          provider.collection('incomingBookingRequests').doc(booking.id);
+      final declined =
+          provider.collection('declinedBookingRequests').doc(booking.id);
+      await privateRef.set({
+        ...booking.toFirestore(),
+        'declinedReason': 'Pre-existing reason',
+      });
+      await pending.set(preview);
+
+      await service.declineBooking(
+        bookingId: booking.id,
+        providerId: ownerId,
+        reason: '   ',
+      );
+
+      expect((await pending.get()).exists, isFalse);
+      expect((await declined.get()).data(), preview);
+      final stored = jsonDecode(firestore.dump())['bookings'][booking.id] as Map;
+      expect(stored['status'], 'declined');
+      expect(stored.containsKey('declinedReason'), isFalse);
+    });
+
+    test(
+        'owner declines a Pending request: status is Declined and reason is kept',
+        () async {
       final service = BookingService(
         initialBookings: [buildBooking(id: 'bk-1')],
         customerId: customerId,
       );
 
-      final declined = await service.declineBooking(
+      await service.declineBooking(
         bookingId: 'bk-1',
         providerId: ownerId,
         reason: '  Outside our service area that day  ',
       );
 
-      expect(declined.status, BookingStatus.declined);
-      expect(declined.declinedReason, 'Outside our service area that day');
-      expect(declined.updatedAt, isNotNull);
-
       final persisted = await service.getBookingById('bk-1');
       expect(persisted?.status, BookingStatus.declined);
+      expect(persisted?.declinedReason, 'Outside our service area that day');
+      expect(persisted?.updatedAt, isNotNull);
     });
 
-    test('declined record stays in the customer history and leaves the provider inbox', () async {
+    test(
+        'declined record stays in the customer history and leaves the provider inbox',
+        () async {
       final service = BookingService(
         initialBookings: [buildBooking(id: 'bk-2')],
         customerId: customerId,
@@ -71,9 +124,13 @@ void main() {
         BookingStatus.declined,
       );
       expect(await service.getIncomingRequests(ownerId), isEmpty);
+      expect((await service.getDeclinedRequests(ownerId)).single.id, 'bk-2');
+      expect(await service.getDeclinedRequests(unrelatedProviderId), isEmpty);
     });
 
-    test('an unrelated provider cannot decline the request and the record is unchanged', () async {
+    test(
+        'an unrelated provider cannot decline the request and the record is unchanged',
+        () async {
       final service = BookingService(
         initialBookings: [buildBooking(id: 'bk-3')],
         customerId: customerId,
@@ -121,7 +178,8 @@ void main() {
       });
     }
 
-    test('a declined request cannot be confirmed or started afterwards', () async {
+    test('a declined request cannot be confirmed or started afterwards',
+        () async {
       final service = BookingService(
         initialBookings: [buildBooking(id: 'bk-4')],
         customerId: customerId,
@@ -144,22 +202,26 @@ void main() {
 
     test('a blank reason is stored as no reason', () async {
       final service = BookingService(
-        initialBookings: [buildBooking(id: 'bk-5')],
+        initialBookings: [
+          buildBooking(id: 'bk-5').copyWith(declinedReason: 'Pre-existing reason'),
+        ],
         customerId: customerId,
       );
 
-      final declined = await service.declineBooking(
+      await service.declineBooking(
         bookingId: 'bk-5',
         providerId: ownerId,
         reason: '   ',
       );
 
-      expect(declined.status, BookingStatus.declined);
-      expect(declined.declinedReason, isNull);
+      final declined = await service.getBookingById('bk-5');
+      expect(declined?.status, BookingStatus.declined);
+      expect(declined?.declinedReason, isNull);
     });
 
     test('throws BookingNotFoundException for an unknown booking', () async {
-      final service = BookingService(initialBookings: const [], customerId: customerId);
+      final service =
+          BookingService(initialBookings: const [], customerId: customerId);
 
       await expectLater(
         service.declineBooking(bookingId: 'bk-missing', providerId: ownerId),

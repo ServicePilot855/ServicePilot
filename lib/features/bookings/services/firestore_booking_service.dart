@@ -43,11 +43,18 @@ class FirestoreBookingService implements IBookingService {
   CollectionReference<Map<String, dynamic>> get _bookings =>
       _firestore.collection(collectionName);
 
+  CollectionReference<Map<String, dynamic>> _providerRequests(
+    String providerId,
+    String collection,
+  ) =>
+      _firestore.collection('providers').doc(providerId).collection(collection);
+
   CollectionReference<Map<String, dynamic>> _inbox(String providerId) =>
-      _firestore
-          .collection('providers')
-          .doc(providerId)
-          .collection('incomingBookingRequests');
+      _providerRequests(providerId, 'incomingBookingRequests');
+
+  CollectionReference<Map<String, dynamic>> _declinedRequests(
+          String providerId) =>
+      _providerRequests(providerId, 'declinedBookingRequests');
 
   @override
   Future<BookingModel> createBooking(BookingRequest request) async {
@@ -103,9 +110,19 @@ class FirestoreBookingService implements IBookingService {
   @override
   Future<List<IncomingBookingRequest>> getIncomingRequests(
     String providerId,
+  ) =>
+      _getRequestPreviews(_inbox(providerId));
+
+  @override
+  Future<List<IncomingBookingRequest>> getDeclinedRequests(
+    String providerId,
+  ) =>
+      _getRequestPreviews(_declinedRequests(providerId));
+
+  Future<List<IncomingBookingRequest>> _getRequestPreviews(
+    CollectionReference<Map<String, dynamic>> requests,
   ) async {
-    final result = await _inbox(providerId)
-        .get(const GetOptions(source: Source.server));
+    final result = await requests.get(const GetOptions(source: Source.server));
     return result.docs
         .map((doc) => IncomingBookingRequest.fromFirestore(doc.id, doc.data()))
         .toList();
@@ -115,14 +132,24 @@ class FirestoreBookingService implements IBookingService {
   Future<IncomingBookingRequest?> getIncomingRequest(
     String providerId,
     String bookingId,
+  ) =>
+      _getRequestPreview(_inbox(providerId).doc(bookingId));
+
+  @override
+  Future<IncomingBookingRequest?> getDeclinedRequest(
+    String providerId,
+    String bookingId,
+  ) =>
+      _getRequestPreview(_declinedRequests(providerId).doc(bookingId));
+
+  Future<IncomingBookingRequest?> _getRequestPreview(
+    DocumentReference<Map<String, dynamic>> request,
   ) async {
-    final result = await _inbox(providerId)
-        .doc(bookingId)
-        .get(const GetOptions(source: Source.server));
+    final result = await request.get(const GetOptions(source: Source.server));
     final data = result.data();
     return data == null
         ? null
-        : IncomingBookingRequest.fromFirestore(bookingId, data);
+        : IncomingBookingRequest.fromFirestore(result.id, data);
   }
 
   @override
@@ -158,14 +185,13 @@ class FirestoreBookingService implements IBookingService {
         );
   }
 
-  Query<Map<String, dynamic>> _acceptedBookings(String providerId) => _bookings
-      .where('providerId', isEqualTo: providerId)
-      .where(
-        'status',
-        whereIn: BookingStatusExtension.acceptedStatuses
-            .map((status) => status.value)
-            .toList(),
-      );
+  Query<Map<String, dynamic>> _acceptedBookings(String providerId) =>
+      _bookings.where('providerId', isEqualTo: providerId).where(
+            'status',
+            whereIn: BookingStatusExtension.acceptedStatuses
+                .map((status) => status.value)
+                .toList(),
+          );
 
   @override
   Future<BookingModel?> getBookingById(String bookingId) async {
@@ -265,7 +291,9 @@ class FirestoreBookingService implements IBookingService {
     });
   }
 
-  Map<String, Object?> _confirmationFields(Object appointment, String providerId) => {
+  Map<String, Object?> _confirmationFields(
+          Object appointment, String providerId) =>
+      {
         'confirmedAppointmentAt': appointment,
         'confirmedAt': FieldValue.serverTimestamp(),
         'confirmedBy': providerId,
@@ -274,33 +302,35 @@ class FirestoreBookingService implements IBookingService {
       };
 
   @override
-  Future<BookingModel> declineBooking({
+  Future<void> declineBooking({
     required String bookingId,
     required String providerId,
     String? reason,
   }) {
-    return _update(bookingId, (booking) {
-      if (!booking.isOwnedByProvider(providerId)) {
-        throw UnauthorizedBookingDeclineException(
-          bookingId: bookingId,
-          providerId: providerId,
-        );
-      }
-      if (booking.status != BookingStatus.pending) {
-        throw InvalidBookingDeclineStateException(
-          bookingId: bookingId,
-          currentStatus: booking.status,
-        );
-      }
-      final trimmedReason = reason?.trim();
-      return booking.copyWith(
-        status: BookingStatus.declined,
-        updatedAt: DateTime.now(),
-        declinedReason: (trimmedReason != null && trimmedReason.isNotEmpty)
-            ? trimmedReason
-            : null,
-      );
-    });
+    final pending = _inbox(providerId).doc(bookingId);
+    final archived = _declinedRequests(providerId).doc(bookingId);
+    final trimmedReason = reason?.trim();
+    return _guard(() => _firestore.runTransaction<void>((transaction) async {
+          final preview = (await transaction.get(pending)).data();
+          if (preview == null) {
+            if ((await transaction.get(archived)).exists) {
+              throw InvalidBookingDeclineStateException(
+                bookingId: bookingId,
+                currentStatus: BookingStatus.declined,
+              );
+            }
+            throw BookingNotFoundException(bookingId);
+          }
+          transaction.update(_bookings.doc(bookingId), {
+            'status': BookingStatus.declined.value,
+            'updatedAt': FieldValue.serverTimestamp(),
+            'declinedReason': trimmedReason != null && trimmedReason.isNotEmpty
+                ? trimmedReason
+                : FieldValue.delete(),
+          });
+          transaction.set(archived, preview);
+          transaction.delete(pending);
+        }));
   }
 
   @override
@@ -381,10 +411,6 @@ class FirestoreBookingService implements IBookingService {
             if (updated.assignedTechnicianName != null)
               'technicianName': updated.assignedTechnicianName,
           },
-          // BOOK-3 (SCRUM-105): the rules allow only status, updatedAt and this field.
-          if (updated.status == BookingStatus.declined &&
-              updated.declinedReason != null)
-            'declinedReason': updated.declinedReason,
           if (updated.status == BookingStatus.cancelled &&
               updated.cancelledAt != null) ...{
             'cancelledAt': Timestamp.fromDate(updated.cancelledAt!),

@@ -264,6 +264,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const IncomingBookingScreen(),
         routes: [
           GoRoute(
+            path: IncomingBookingScreen.historySegment,
+            builder: (_, __) => const IncomingBookingScreen(showDeclined: true),
+          ),
+          GoRoute(
             path: ':bookingId',
             builder: (_, state) => ProviderBookingDetailScreen(
               bookingId: state.pathParameters['bookingId']!,
