@@ -54,3 +54,23 @@ final liveBookingDetailProvider =
       final service = ref.watch(bookingServiceProvider);
       return service.watchBookingById(bookingId);
     });
+
+/// Fetches all repair bookings addressed to [providerId] (BOOK-2 / SCRUM-104).
+final providerBookingsProvider =
+    FutureProvider.autoDispose.family<List<BookingModel>, String>((
+      ref,
+      providerId,
+    ) async {
+      final service = ref.watch(bookingServiceProvider);
+      return service.getProviderBookings(providerId);
+    });
+
+/// Emits live updates for all bookings addressed to [providerId].
+final liveProviderBookingsProvider =
+    StreamProvider.autoDispose.family<List<BookingModel>, String>((
+      ref,
+      providerId,
+    ) {
+      final service = ref.watch(bookingServiceProvider);
+      return service.watchProviderBookings(providerId);
+    });

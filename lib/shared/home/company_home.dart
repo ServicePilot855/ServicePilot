@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/core/constants/app_roles.dart';
+import 'package:service_pilot/features/bookings/widgets/provider_booking_list.dart';
 import 'package:service_pilot/features/providers/providers/provider_provider.dart';
 import 'package:service_pilot/features/providers/services/company_profile_service.dart';
 import 'package:service_pilot/features/services/widgets/provider_offering_list.dart';
@@ -43,9 +44,16 @@ class CompanyHome extends ConsumerWidget {
               onPressed: () => context.push('/home/company/profile'),
             )
           : null,
-      extraContent: ProviderOfferingList(
-        providerId: providerId,
-        providerName: providerName,
+      extraContent: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ProviderBookingList(providerId: providerId),
+          const SizedBox(height: 24),
+          ProviderOfferingList(
+            providerId: providerId,
+            providerName: providerName,
+          ),
+        ],
       ),
     );
   }

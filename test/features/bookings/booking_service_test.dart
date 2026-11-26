@@ -180,4 +180,99 @@ void main() {
       );
     });
   });
+
+  group('SCRUM-104 / BOOK-2: BookingService Confirmation Unit Tests', () {
+    late BookingService bookingService;
+    const customerId = BookingService.defaultCustomerId;
+
+    setUp(() {
+      bookingService = BookingService(customerId: customerId);
+    });
+
+    test(
+      'authorized provider confirms a Pending booking and persists agreed appointment time',
+      () async {
+        final pending = await bookingService.getBookingById('bk-pending-01');
+        expect(pending, isNotNull);
+
+        final confirmed = await bookingService.acceptBooking(
+          bookingId: 'bk-pending-01',
+          providerId: 'prov-ac-01',
+        );
+
+        expect(confirmed.status, equals(BookingStatus.confirmed));
+        expect(
+          confirmed.confirmedAppointmentAt,
+          equals(pending!.preferredDateTime),
+        );
+        expect(confirmed.confirmedAt, isNotNull);
+        expect(confirmed.confirmedBy, equals('prov-ac-01'));
+
+        final persisted = await bookingService.getBookingById('bk-pending-01');
+        expect(persisted?.status, equals(BookingStatus.confirmed));
+        expect(
+          persisted?.confirmedAppointmentAt,
+          equals(pending.preferredDateTime),
+        );
+      },
+    );
+
+    test(
+      'another provider cannot confirm a booking they do not own',
+      () async {
+        expect(
+          () => bookingService.acceptBooking(
+            bookingId: 'bk-pending-01',
+            providerId: 'prov-other-999',
+          ),
+          throwsA(isA<UnauthorizedBookingConfirmationException>()),
+        );
+
+        final untouched = await bookingService.getBookingById('bk-pending-01');
+        expect(untouched?.status, equals(BookingStatus.pending));
+        expect(untouched?.confirmedAppointmentAt, isNull);
+      },
+    );
+
+    test(
+      'ineligible statuses (Cancelled, Declined, Completed, Confirmed, In Progress) cannot be confirmed',
+      () async {
+        // Declined
+        expect(
+          () => bookingService.acceptBooking(
+            bookingId: 'bk-declined-06',
+            providerId: 'prov-elec-02',
+          ),
+          throwsA(isA<InvalidBookingTransitionException>()),
+        );
+
+        // Completed
+        expect(
+          () => bookingService.acceptBooking(
+            bookingId: 'bk-completed-05',
+            providerId: 'prov-clean-01',
+          ),
+          throwsA(isA<InvalidBookingTransitionException>()),
+        );
+
+        // Already Confirmed
+        expect(
+          () => bookingService.acceptBooking(
+            bookingId: 'bk-confirmed-03',
+            providerId: 'prov-elec-01',
+          ),
+          throwsA(isA<InvalidBookingTransitionException>()),
+        );
+
+        // In Progress
+        expect(
+          () => bookingService.acceptBooking(
+            bookingId: 'bk-inprogress-04',
+            providerId: 'prov-app-01',
+          ),
+          throwsA(isA<InvalidBookingTransitionException>()),
+        );
+      },
+    );
+  });
 }
