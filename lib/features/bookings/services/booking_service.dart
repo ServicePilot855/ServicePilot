@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:service_pilot/core/constants/booking_status.dart';
 import 'package:service_pilot/features/bookings/models/booking_model.dart';
 import 'package:service_pilot/features/bookings/models/booking_request.dart';
+import 'package:service_pilot/features/bookings/models/incoming_booking_request.dart';
 
 /// Thrown when a requested booking ID does not exist.
 class BookingNotFoundException implements Exception {
@@ -146,11 +147,18 @@ abstract class IBookingService {
   /// Returns all bookings belonging to [customerId].
   Future<List<BookingModel>> getCustomerBookings(String customerId);
 
-  /// Returns all bookings addressed to [providerId].
+  /// Returns accepted bookings addressed to [providerId].
   Future<List<BookingModel>> getProviderBookings(String providerId);
 
-  /// Emits real-time updates for all bookings addressed to [providerId].
+  /// Emits real-time updates for accepted bookings addressed to [providerId].
   Stream<List<BookingModel>> watchProviderBookings(String providerId);
+
+  Future<List<IncomingBookingRequest>> getIncomingRequests(String providerId);
+
+  Future<IncomingBookingRequest?> getIncomingRequest(
+    String providerId,
+    String bookingId,
+  );
 
   /// Fetches a single booking by its [bookingId].
   Future<BookingModel?> getBookingById(String bookingId);
@@ -176,11 +184,10 @@ abstract class IBookingService {
   /// - [UnauthorizedBookingConfirmationException] if [providerId] does not own the booking.
   /// - [InvalidBookingTransitionException] if the booking was cancelled
   ///   or cannot transition to [BookingStatus.confirmed].
-  Future<BookingModel> acceptBooking({
+  Future<void> acceptBooking({
     required String bookingId,
     required String providerId,
     DateTime? confirmedAppointmentAt,
-    String? confirmedBy,
   });
 
   /// Company/provider assigns a technician (`Assigned`) to a booking.
@@ -220,6 +227,32 @@ class BookingService implements IBookingService {
   static const String defaultCustomerId = 'customer-1';
 
   final List<BookingModel> _bookings;
+
+  @override
+  Future<List<IncomingBookingRequest>> getIncomingRequests(
+    String providerId,
+  ) async {
+    return _bookings
+        .where((booking) =>
+            booking.providerId == providerId &&
+            booking.status == BookingStatus.pending)
+        .map(IncomingBookingRequest.fromBooking)
+        .toList();
+  }
+
+  @override
+  Future<IncomingBookingRequest?> getIncomingRequest(
+    String providerId,
+    String bookingId,
+  ) async {
+    final booking = await getBookingById(bookingId);
+    if (booking == null ||
+        booking.providerId != providerId ||
+        booking.status != BookingStatus.pending) {
+      return null;
+    }
+    return IncomingBookingRequest.fromBooking(booking);
+  }
   final StreamController<List<BookingModel>> _updatesController =
       StreamController<List<BookingModel>>.broadcast();
 
@@ -435,22 +468,27 @@ class BookingService implements IBookingService {
   @override
   Future<List<BookingModel>> getProviderBookings(String providerId) async {
     return List.unmodifiable(
-      _bookings.where((booking) => booking.providerId == providerId),
+      _bookings.where((booking) => _isAcceptedBy(booking, providerId)),
     );
   }
 
   @override
   Stream<List<BookingModel>> watchProviderBookings(String providerId) async* {
     List<BookingModel> filter() => List.unmodifiable(
-          _bookings.where((booking) => booking.providerId == providerId),
+          _bookings.where((booking) => _isAcceptedBy(booking, providerId)),
         );
 
     yield filter();
     yield* _updatesController.stream.map(
       (list) => List.unmodifiable(
-        list.where((booking) => booking.providerId == providerId),
+        list.where((booking) => _isAcceptedBy(booking, providerId)),
       ),
     );
+  }
+
+  bool _isAcceptedBy(BookingModel booking, String providerId) {
+    return booking.providerId == providerId &&
+        booking.status.exposesAcceptedDetails;
   }
 
   @override
@@ -475,7 +513,6 @@ class BookingService implements IBookingService {
     }
 
     final booking = _bookings[index];
-
     // US-14 AC #6: Only the customer who created the booking can cancel it.
     if (!booking.isOwnedBy(customerId)) {
       throw UnauthorizedBookingCancellationException(
@@ -512,11 +549,10 @@ class BookingService implements IBookingService {
   }
 
   @override
-  Future<BookingModel> acceptBooking({
+  Future<void> acceptBooking({
     required String bookingId,
     required String providerId,
     DateTime? confirmedAppointmentAt,
-    String? confirmedBy,
   }) async {
     final index = _bookings.indexWhere((b) => b.id == bookingId);
     if (index == -1) {
@@ -543,17 +579,22 @@ class BookingService implements IBookingService {
     }
 
     final now = DateTime.now();
+    if (confirmedAppointmentAt != null &&
+        !confirmedAppointmentAt.isAtSameMomentAs(booking.preferredDateTime)) {
+      throw const BookingSubmissionException(
+        'The preferred appointment is unavailable or has changed.',
+      );
+    }
     final updated = booking.copyWith(
       status: BookingStatus.confirmed,
-      confirmedAppointmentAt:
-          confirmedAppointmentAt ?? booking.preferredDateTime,
+      clearAssignment: true,
+      confirmedAppointmentAt: booking.preferredDateTime,
       confirmedAt: now,
-      confirmedBy: confirmedBy ?? providerId,
+      confirmedBy: providerId,
       updatedAt: now,
     );
     _bookings[index] = updated;
     _notifyListeners();
-    return updated;
   }
 
   @override
@@ -622,9 +663,15 @@ class BookingService implements IBookingService {
       );
     }
 
+    final now = DateTime.now();
+    final confirming = newStatus == BookingStatus.confirmed;
     final updated = booking.copyWith(
       status: newStatus,
-      updatedAt: DateTime.now(),
+      clearAssignment: confirming,
+      confirmedAppointmentAt: confirming ? booking.preferredDateTime : null,
+      confirmedAt: confirming ? now : null,
+      confirmedBy: confirming ? booking.providerId : null,
+      updatedAt: now,
     );
     _bookings[index] = updated;
     _notifyListeners();

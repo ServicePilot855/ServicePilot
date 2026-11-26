@@ -7,9 +7,9 @@ import 'package:service_pilot/core/constants/app_roles.dart';
 import 'package:service_pilot/core/constants/booking_status.dart';
 import 'package:service_pilot/core/theme/app_theme.dart';
 import 'package:service_pilot/features/bookings/models/booking_model.dart';
+import 'package:service_pilot/features/bookings/models/incoming_booking_request.dart';
 import 'package:service_pilot/features/bookings/providers/booking_provider.dart';
 import 'package:service_pilot/features/bookings/services/booking_service.dart';
-import 'package:service_pilot/features/providers/providers/provider_provider.dart';
 import 'package:service_pilot/l10n/l10n.dart';
 import 'package:service_pilot/shared/widgets/sp_button.dart';
 import 'package:service_pilot/shared/widgets/sp_layout.dart';
@@ -23,11 +23,9 @@ class ProviderBookingDetailScreen extends ConsumerStatefulWidget {
   const ProviderBookingDetailScreen({
     super.key,
     required this.bookingId,
-    this.initialBooking,
   });
 
   final String bookingId;
-  final BookingModel? initialBooking;
 
   @override
   ConsumerState<ProviderBookingDetailScreen> createState() =>
@@ -36,15 +34,13 @@ class ProviderBookingDetailScreen extends ConsumerStatefulWidget {
 
 class _ProviderBookingDetailScreenState
     extends ConsumerState<ProviderBookingDetailScreen> {
-  BookingModel? _localOverride;
   bool _isConfirming = false;
   String? _successMessage;
   String? _errorMessage;
 
   Future<void> _confirmBooking(
-    BookingModel booking,
+    DateTime preferredTime,
     String providerId,
-    String? userId,
   ) async {
     final l10n = context.l10n;
     setState(() {
@@ -55,21 +51,21 @@ class _ProviderBookingDetailScreenState
 
     try {
       final service = ref.read(bookingServiceProvider);
-      final updated = await service.acceptBooking(
-        bookingId: booking.id,
+      await service.acceptBooking(
+        bookingId: widget.bookingId,
         providerId: providerId,
-        confirmedAppointmentAt: booking.preferredDateTime,
-        confirmedBy: userId ?? providerId,
+        confirmedAppointmentAt: preferredTime,
       );
 
+      if (!mounted) return;
+      ref.invalidate(incomingBookingRequestsProvider);
+      ref.invalidate(incomingBookingRequestProvider(widget.bookingId));
       ref.invalidate(bookingDetailProvider(widget.bookingId));
       ref.invalidate(liveBookingDetailProvider(widget.bookingId));
       ref.invalidate(providerBookingsProvider(providerId));
       ref.invalidate(liveProviderBookingsProvider(providerId));
 
-      if (!mounted) return;
       setState(() {
-        _localOverride = updated;
         _isConfirming = false;
         _successMessage = l10n.providerBookingConfirmSuccess;
       });
@@ -104,14 +100,57 @@ class _ProviderBookingDetailScreenState
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final user = ref.watch(currentUserProvider);
-    final resolvedProviderId = ref.watch(currentProviderIdProvider);
-    final activeProviderId = resolvedProviderId.isNotEmpty
-        ? resolvedProviderId
-        : (user?.id ?? '');
+    final providerId = user?.id ?? '';
+    final pendingProvider = incomingBookingRequestProvider(widget.bookingId);
+    final Widget body;
+    if (user?.canViewBookingInbox != true) {
+      body = _unavailable(context);
+    } else {
+      body = ref.watch(pendingProvider).when(
+            skipLoadingOnRefresh: false,
+            data: (pending) {
+              if (pending != null) {
+                return _buildPending(context, pending, providerId);
+              }
 
-    final bookingAsync = ref.watch(liveBookingDetailProvider(widget.bookingId));
-    final booking =
-        _localOverride ?? bookingAsync.valueOrNull ?? widget.initialBooking;
+              return ref
+                  .watch(liveBookingDetailProvider(widget.bookingId))
+                  .when(
+                    data: (booking) => booking != null &&
+                            booking.isOwnedByProvider(providerId) &&
+                            booking.status.exposesAcceptedDetails
+                        ? _buildBody(context, booking, providerId)
+                        : _unavailable(context),
+                    loading: _loading,
+                    error: (_, __) => _unavailable(context),
+                  );
+            },
+            loading: _loading,
+            error: (_, __) => Center(
+              child: SpContentWidth(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppTheme.gutter),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SpNotice(
+                        icon: Icons.error_outline_rounded,
+                        message: l10n.providerBookingsLoadError,
+                        tone: SpTone.danger,
+                      ),
+                      const SizedBox(height: 12),
+                      SpSecondaryButton(
+                        label: l10n.bookingInboxRetry,
+                        onPressed: () => ref.invalidate(pendingProvider),
+                        wrapLabel: true,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+    }
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -132,47 +171,95 @@ class _ProviderBookingDetailScreenState
           style: AppTheme.display(size: 18),
         ),
       ),
-      body: bookingAsync.when(
-        data: (liveBooking) {
-          final resolved = _localOverride ?? liveBooking ?? widget.initialBooking;
-          if (resolved == null) {
-            return _NotFoundBody(
-              onBack: () =>
-                  context.go(user?.role.homeRoute ?? '/home/technician'),
-            );
-          }
-          return _buildBody(
-            context,
-            resolved,
-            activeProviderId,
-            user?.id,
-          );
-        },
-        loading: () {
-          if (booking != null) {
-            return _buildBody(context, booking, activeProviderId, user?.id);
-          }
-          return const Center(
-            child: CircularProgressIndicator(color: AppTheme.primary),
-          );
-        },
-        error: (_, __) {
-          if (booking != null) {
-            return _buildBody(context, booking, activeProviderId, user?.id);
-          }
-          return Center(
-            child: SpContentWidth(
-              child: Padding(
-                padding: const EdgeInsets.all(AppTheme.gutter),
-                child: SpNotice(
-                  icon: Icons.error_outline_rounded,
-                  message: l10n.providerBookingsLoadError,
-                  tone: SpTone.danger,
-                ),
-              ),
+      body: body,
+    );
+  }
+
+  Widget _loading() => Center(
+        child: CircularProgressIndicator(
+          semanticsLabel: context.l10n.bookingInboxLoading,
+        ),
+      );
+
+  Widget _unavailable(BuildContext context) => Center(
+        child: SpContentWidth(
+          child: Padding(
+            padding: const EdgeInsets.all(AppTheme.gutter),
+            child: SpNotice(
+              icon: Icons.lock_outline_rounded,
+              tone: SpTone.neutral,
+              message: context.l10n.bookingInboxUnavailable,
             ),
-          );
-        },
+          ),
+        ),
+      );
+
+  Widget _buildPending(
+    BuildContext context,
+    IncomingBookingRequest pending,
+    String providerId,
+  ) {
+    final l10n = context.l10n;
+    final date = pending.appointmentDate;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppTheme.gutter),
+      child: SpContentWidth(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SpPageHeader(
+              title: pending.serviceTitle.isEmpty
+                  ? l10n.bookingInboxDetailTitle
+                  : pending.serviceTitle,
+            ),
+            const SizedBox(height: 16),
+            SpNotice(
+              icon: Icons.schedule_rounded,
+              tone: SpTone.waiting,
+              message: l10n.bookingInboxPending,
+            ),
+            const SizedBox(height: 24),
+            SpFormSection(
+              title: l10n.bookingSummaryWhen,
+              children: [
+                Text(
+                  date == null
+                      ? l10n.bookingInboxDateUnavailable
+                      : DateFormat.yMMMd(
+                              Localizations.localeOf(context).toString())
+                          .add_jm()
+                          .format(date.toLocal()),
+                  style: AppTheme.text(),
+                ),
+              ],
+            ),
+            if (pending.description.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              SpFormSection(
+                title: l10n.bookingInboxJobDetails,
+                children: [Text(pending.description, style: AppTheme.text())],
+              ),
+            ],
+            if (_errorMessage != null) ...[
+              const SizedBox(height: 16),
+              SpNotice(
+                icon: Icons.error_outline_rounded,
+                message: _errorMessage!,
+                tone: SpTone.danger,
+              ),
+            ],
+            const SizedBox(height: 24),
+            SpPrimaryButton(
+              key: const Key('provider_confirm_booking_button'),
+              label: l10n.providerBookingConfirmButton,
+              isLoading: _isConfirming,
+              wrapLabel: true,
+              onPressed: _isConfirming || date == null
+                  ? null
+                  : () => _confirmBooking(date, providerId),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -181,15 +268,14 @@ class _ProviderBookingDetailScreenState
     BuildContext context,
     BookingModel booking,
     String activeProviderId,
-    String? userId,
   ) {
     final l10n = context.l10n;
-    final isOwned =
-        activeProviderId.isNotEmpty && booking.isOwnedByProvider(activeProviderId);
+    final isOwned = activeProviderId.isNotEmpty &&
+        booking.isOwnedByProvider(activeProviderId);
     final canConfirm = isOwned && booking.canBeConfirmed;
 
-    final preferredFormatted =
-        DateFormat('EEE, d MMM yyyy • h:mm a').format(booking.preferredDateTime);
+    final preferredFormatted = DateFormat('EEE, d MMM yyyy • h:mm a')
+        .format(booking.preferredDateTime);
     final confirmedFormatted = booking.confirmedAppointmentAt != null
         ? DateFormat('EEE, d MMM yyyy • h:mm a')
             .format(booking.confirmedAppointmentAt!)
@@ -201,7 +287,8 @@ class _ProviderBookingDetailScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (_successMessage != null) ...[
+            if (_successMessage != null &&
+                booking.status == BookingStatus.confirmed) ...[
               SpNotice(
                 key: const Key('provider_booking_confirmed_notice'),
                 icon: Icons.check_circle_outline_rounded,
@@ -332,7 +419,8 @@ class _ProviderBookingDetailScreenState
                 isLoading: _isConfirming,
                 onPressed: _isConfirming
                     ? null
-                    : () => _confirmBooking(booking, activeProviderId, userId),
+                    : () => _confirmBooking(
+                        booking.preferredDateTime, activeProviderId),
               )
             else if (booking.status != BookingStatus.confirmed)
               SpNotice(
@@ -392,40 +480,6 @@ class _InfoRow extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _NotFoundBody extends StatelessWidget {
-  const _NotFoundBody({required this.onBack});
-
-  final VoidCallback onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: SpContentWidth(
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.gutter),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.search_off_rounded,
-                size: 48,
-                color: AppTheme.textMuted,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Booking not found',
-                style: AppTheme.display(size: 18),
-              ),
-              const SizedBox(height: 16),
-              SpSecondaryButton(label: 'Back to home', onPressed: onBack),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

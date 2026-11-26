@@ -45,6 +45,8 @@ class UserModel {
   bool get isAdmin => role == AppRole.admin;
   bool get isHomeowner => role == AppRole.homeowner;
   bool get isCompany => role == AppRole.company;
+  bool get canViewBookingInbox => !isSuspended &&
+      (isIndependentTechnician || (isCompany && (companyId ?? id) == id));
 
   UserModel copyWith({
     String? id,

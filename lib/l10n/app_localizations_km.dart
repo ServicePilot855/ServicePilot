@@ -722,6 +722,10 @@ class AppLocalizationsKm extends AppLocalizations {
       'For example: the bedroom AC blows warm air and drips water';
 
   @override
+  String get bookingProblemPrivacyHelper =>
+      'The provider can read this before accepting. Leave out your address and phone number.';
+
+  @override
   String get bookingAddressLabel => 'Repair address';
 
   @override
@@ -927,6 +931,37 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get bookingSentBackHome => 'Back to home';
+
+  @override
+  String get bookingInboxTitle => 'Incoming requests';
+
+  @override
+  String get bookingInboxDetailTitle => 'Booking request';
+
+  @override
+  String get bookingInboxEmpty => 'You have no pending booking requests.';
+
+  @override
+  String get bookingInboxUnavailable => 'This booking request is unavailable.';
+
+  @override
+  String get bookingInboxPending => 'Pending';
+
+  @override
+  String get bookingInboxJobDetails => 'Job details';
+
+  @override
+  String get bookingInboxDateUnavailable => 'Appointment time unavailable';
+
+  @override
+  String get bookingInboxLoading => 'Loading booking requests';
+
+  @override
+  String get bookingInboxError =>
+      'Could not load booking requests. Check your connection and try again.';
+
+  @override
+  String get bookingInboxRetry => 'Try again';
 
   @override
   String get offeringCreateTitle => 'បន្ថែមសេវាកម្ម';
@@ -1266,10 +1301,10 @@ class AppLocalizationsKm extends AppLocalizations {
       'កាលបរិច្ឆេទ និងពេលវេលាដែលចង់បាន';
 
   @override
-  String get providerBookingsTitle => 'សំណើកក់សេវាកម្មថ្មី';
+  String get providerBookingsTitle => 'ការកក់ដែលបានទទួលយក';
 
   @override
-  String get providerBookingsEmpty => 'មិនទាន់មានសំណើកក់សេវាកម្មនៅឡើយទេ។';
+  String get providerBookingsEmpty => 'អ្នកមិនទាន់មានការកក់ដែលបានទទួលយកទេ។';
 
   @override
   String get providerBookingsLoadError =>

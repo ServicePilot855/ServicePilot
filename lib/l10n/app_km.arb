@@ -154,8 +154,8 @@
 
   "bookingConfirmedAppointmentLabel": "ពេលវេលាណាត់ជួបដែលបានបញ្ជាក់",
   "bookingPreferredAppointmentLabel": "កាលបរិច្ឆេទ និងពេលវេលាដែលចង់បាន",
-  "providerBookingsTitle": "សំណើកក់សេវាកម្មថ្មី",
-  "providerBookingsEmpty": "មិនទាន់មានសំណើកក់សេវាកម្មនៅឡើយទេ។",
+  "providerBookingsTitle": "ការកក់ដែលបានទទួលយក",
+  "providerBookingsEmpty": "អ្នកមិនទាន់មានការកក់ដែលបានទទួលយកទេ។",
   "providerBookingsLoadError": "មិនអាចផ្ទុកសំណើកក់បានទេ។ សូមព្យាយាមម្តងទៀត។",
   "providerBookingDetailTitle": "ព័ត៌មានសំណើកក់",
   "providerBookingConfirmButton": "បញ្ជាក់ការណាត់ជួប",
