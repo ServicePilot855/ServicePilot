@@ -437,6 +437,10 @@ class _BookingFormState extends ConsumerState<_BookingForm> {
                 validator: (value) =>
                     _check(BookingRequestValidator.description(value)),
               ),
+              Text(
+                l10n.bookingProblemPrivacyHelper,
+                style: AppTheme.text(size: 13, color: AppTheme.textSecondary),
+              ),
               const SizedBox(height: 16),
               _PhotoStrip(
                 photos: _photos,

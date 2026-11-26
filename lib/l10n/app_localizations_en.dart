@@ -731,6 +731,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'For example: the bedroom AC blows warm air and drips water';
 
   @override
+  String get bookingProblemPrivacyHelper =>
+      'The provider can read this before accepting. Leave out your address and phone number.';
+
+  @override
   String get bookingAddressLabel => 'Repair address';
 
   @override
@@ -936,6 +940,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bookingSentBackHome => 'Back to home';
+
+  @override
+  String get bookingInboxTitle => 'Incoming requests';
+
+  @override
+  String get bookingInboxDetailTitle => 'Booking request';
+
+  @override
+  String get bookingInboxEmpty => 'You have no pending booking requests.';
+
+  @override
+  String get bookingInboxUnavailable => 'This booking request is unavailable.';
+
+  @override
+  String get bookingInboxPending => 'Pending';
+
+  @override
+  String get bookingInboxJobDetails => 'Job details';
+
+  @override
+  String get bookingInboxDateUnavailable => 'Appointment time unavailable';
+
+  @override
+  String get bookingInboxLoading => 'Loading booking requests';
+
+  @override
+  String get bookingInboxError =>
+      'Could not load booking requests. Check your connection and try again.';
+
+  @override
+  String get bookingInboxRetry => 'Try again';
 
   @override
   String get offeringCreateTitle => 'Add Service Offering';
@@ -1276,10 +1311,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bookingPreferredAppointmentLabel => 'Preferred Date & Time';
 
   @override
-  String get providerBookingsTitle => 'Incoming Booking Requests';
+  String get providerBookingsTitle => 'Accepted bookings';
 
   @override
-  String get providerBookingsEmpty => 'No incoming booking requests yet.';
+  String get providerBookingsEmpty => 'You have no accepted bookings.';
 
   @override
   String get providerBookingsLoadError =>

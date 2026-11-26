@@ -21,6 +21,7 @@ import 'package:service_pilot/features/bookings/screens/booking_confirmation_scr
 import 'package:service_pilot/features/bookings/screens/booking_history_screen.dart';
 import 'package:service_pilot/features/bookings/screens/booking_tracking_screen.dart';
 import 'package:service_pilot/features/bookings/screens/create_booking_screen.dart';
+import 'package:service_pilot/features/bookings/screens/incoming_booking_screen.dart';
 import 'package:service_pilot/features/bookings/screens/location_picker_screen.dart';
 import 'package:service_pilot/features/bookings/screens/provider_booking_detail_screen.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
@@ -58,12 +59,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isAuthenticated = authState is AuthStateAuthenticated;
       final isGoingToAdmin = state.matchedLocation.startsWith('/home/admin') ||
           state.matchedLocation.startsWith('/admin');
+      final isGoingToBookingInbox =
+          state.matchedLocation.startsWith(IncomingBookingScreen.path) ||
+          state.matchedLocation.startsWith('/provider/bookings');
       final isGoingToHome = state.matchedLocation.startsWith('/home') ||
           state.matchedLocation.startsWith('/categories') ||
           state.matchedLocation.startsWith('/providers') ||
           state.matchedLocation.startsWith('/bookings') ||
           state.matchedLocation.startsWith('/offerings') ||
-          state.matchedLocation.startsWith('/provider/') ||
+          isGoingToBookingInbox ||
           isGoingToAdmin;
       final isGoingToLogin = state.matchedLocation == '/login';
       final isGoingToSplash = state.matchedLocation == '/splash';
@@ -73,6 +77,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       // Unauthenticated users cannot access home, category, booking, or admin screens.
       if (!isAuthenticated && isGoingToHome) return '/login';
+
+      if (isAuthenticated &&
+          isGoingToBookingInbox &&
+          !authState.user.canViewBookingInbox) {
+        return authState.user.role.homeRoute;
+      }
 
       // Non-admin authenticated users cannot access Platform Admin routes (SCRUM-94 / ADM-2).
       if (isAuthenticated && isGoingToAdmin && !authState.user.isAdmin) {
@@ -96,10 +106,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return (authState).user.role.homeRoute;
       }
 
-      // Restrict /offerings and /provider/bookings to providers and companies only
-      if (isAuthenticated &&
-          (state.matchedLocation.startsWith('/offerings') ||
-              state.matchedLocation.startsWith('/provider/bookings'))) {
+      // Restrict /offerings to providers, companies and administrators.
+      if (isAuthenticated && state.matchedLocation.startsWith('/offerings')) {
         final role = (authState).user.role;
         if (role != AppRole.independentProvider &&
             role != AppRole.company &&
@@ -240,20 +248,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // ── Provider Booking Confirmation (BOOK-2 / SCRUM-104) ─────────────
       GoRoute(
         path: '/provider/bookings/:bookingId',
-        builder: (_, state) {
-          final bookingId = state.pathParameters['bookingId'] ?? '';
-          final booking = state.extra as BookingModel?;
-          return ProviderBookingDetailScreen(
-            bookingId: bookingId,
-            initialBooking: booking,
-          );
-        },
+        builder: (_, state) => ProviderBookingDetailScreen(
+          bookingId: state.pathParameters['bookingId']!,
+        ),
       ),
 
       // ── Booking History (US-15 / SCRUM-46) ────────────────────────────
       GoRoute(
         path: '/bookings/history',
         builder: (_, __) => const BookingHistoryScreen(),
+      ),
+
+      GoRoute(
+        path: IncomingBookingScreen.path,
+        builder: (_, __) => const IncomingBookingScreen(),
+        routes: [
+          GoRoute(
+            path: ':bookingId',
+            builder: (_, state) => ProviderBookingDetailScreen(
+              bookingId: state.pathParameters['bookingId']!,
+            ),
+          ),
+        ],
       ),
 
       // ── Bookings & Cancellation (US-13 / US-14) ───────────────────────

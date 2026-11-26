@@ -12,9 +12,9 @@ import 'package:service_pilot/features/auth/models/user_model.dart';
 import 'package:service_pilot/features/bookings/models/booking_model.dart';
 import 'package:service_pilot/features/bookings/providers/booking_provider.dart';
 import 'package:service_pilot/features/bookings/screens/booking_tracking_screen.dart';
+import 'package:service_pilot/features/bookings/screens/incoming_booking_screen.dart';
 import 'package:service_pilot/features/bookings/screens/provider_booking_detail_screen.dart';
 import 'package:service_pilot/features/bookings/services/booking_service.dart';
-import 'package:service_pilot/features/bookings/widgets/provider_booking_list.dart';
 import 'package:service_pilot/l10n/app_localizations.dart';
 
 class _MockAuthNotifier extends AuthNotifier {
@@ -96,22 +96,19 @@ void main() {
         );
 
         final router = GoRouter(
-          initialLocation: '/provider-home',
+          initialLocation: IncomingBookingScreen.path,
           routes: [
             GoRoute(
-              path: '/provider-home',
-              builder: (_, __) => const Scaffold(
-                body: SingleChildScrollView(
-                  child: ProviderBookingList(providerId: 'prov-virak-ac'),
+              path: IncomingBookingScreen.path,
+              builder: (_, __) => const IncomingBookingScreen(),
+              routes: [
+                GoRoute(
+                  path: ':bookingId',
+                  builder: (_, state) => ProviderBookingDetailScreen(
+                    bookingId: state.pathParameters['bookingId']!,
+                  ),
                 ),
-              ),
-            ),
-            GoRoute(
-              path: '/provider/bookings/:bookingId',
-              builder: (_, state) => ProviderBookingDetailScreen(
-                bookingId: state.pathParameters['bookingId'] ?? '',
-                initialBooking: state.extra as BookingModel?,
-              ),
+              ],
             ),
           ],
         );
@@ -133,17 +130,12 @@ void main() {
         await tester.pumpAndSettle();
 
         // Provider sees the incoming Pending booking
-        expect(
-          find.byKey(const Key('provider_booking_card_bk-confirm-test-1')),
-          findsOneWidget,
-        );
-        expect(find.text('Split AC Chemical Wash'), findsOneWidget);
-
-        // Tap Review to open ProviderBookingDetailScreen
-        await tester.tap(
-          find.byKey(const Key('provider_booking_review_bk-confirm-test-1')),
-        );
+        final request = find.text('Split AC Chemical Wash');
+        expect(request, findsOneWidget);
+        expect(await service.getProviderBookings(providerUser.id), isEmpty);
+        await tester.tap(request);
         await tester.pumpAndSettle();
+        expect(find.text(booking.address), findsNothing);
 
         // Confirm button is visible on eligible Pending booking
         final confirmBtn =
@@ -172,6 +164,9 @@ void main() {
         final updated = await service.getBookingById('bk-confirm-test-1');
         expect(updated?.status, equals(BookingStatus.confirmed));
         expect(updated?.confirmedAppointmentAt, equals(preferredTime));
+        expect(await service.getIncomingRequests(providerUser.id), isEmpty);
+        expect((await service.getProviderBookings(providerUser.id)).single.id,
+            booking.id);
 
         // Now render the Customer view (BookingTrackingScreen) for the same booking
         await tester.pumpWidget(
@@ -226,7 +221,6 @@ void main() {
               supportedLocales: AppLocalizations.supportedLocales,
               home: ProviderBookingDetailScreen(
                 bookingId: cancelledBooking.id,
-                initialBooking: cancelledBooking,
               ),
             ),
           ),
@@ -238,7 +232,7 @@ void main() {
           findsNothing,
         );
         expect(
-          find.byKey(const Key('provider_booking_ineligible_notice')),
+          find.text('This booking request is unavailable.'),
           findsOneWidget,
         );
       },
@@ -270,7 +264,6 @@ void main() {
               supportedLocales: AppLocalizations.supportedLocales,
               home: ProviderBookingDetailScreen(
                 bookingId: otherProvidersBooking.id,
-                initialBooking: otherProvidersBooking,
               ),
             ),
           ),
@@ -282,7 +275,7 @@ void main() {
           findsNothing,
         );
         expect(
-          find.byKey(const Key('provider_booking_unauthorized_notice')),
+          find.text('This booking request is unavailable.'),
           findsOneWidget,
         );
       },

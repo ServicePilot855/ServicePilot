@@ -17,6 +17,7 @@ class ComingSoonHome extends ConsumerWidget {
     required this.greeting,
     required this.role,
     this.primaryAction,
+    this.secondaryAction,
     this.displayName,
     this.companyName,
     this.extraContent,
@@ -26,6 +27,7 @@ class ComingSoonHome extends ConsumerWidget {
   final String greeting;
   final AppRole role;
   final Widget? primaryAction;
+  final Widget? secondaryAction;
   final String? displayName;
   final String? companyName;
   final Widget? extraContent;
@@ -133,6 +135,10 @@ class ComingSoonHome extends ConsumerWidget {
                             tone: SpTone.waiting,
                             message: l10n.homeComingSoonNotice,
                           ),
+                      if (secondaryAction != null) ...[
+                        const SizedBox(height: 12),
+                        secondaryAction!,
+                      ],
                     ],
                   ),
                 ),

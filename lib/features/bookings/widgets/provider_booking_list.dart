@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:service_pilot/core/constants/booking_status.dart';
 import 'package:service_pilot/core/theme/app_theme.dart';
 import 'package:service_pilot/features/bookings/models/booking_model.dart';
 import 'package:service_pilot/features/bookings/providers/booking_provider.dart';
@@ -10,8 +9,7 @@ import 'package:service_pilot/l10n/l10n.dart';
 import 'package:service_pilot/shared/widgets/sp_layout.dart';
 import 'package:service_pilot/shared/widgets/status_badge.dart';
 
-/// Dashboard section displaying incoming booking requests addressed to a
-/// provider account so they can review and confirm pending appointments.
+/// Dashboard section displaying bookings the provider has accepted.
 ///
 /// Implements BOOK-2 (SCRUM-104 / SCRUM-189).
 class ProviderBookingList extends ConsumerWidget {
@@ -48,14 +46,8 @@ class ProviderBookingList extends ConsumerWidget {
               );
             }
 
-            // Show Pending requests first, then newest bookings.
             final sorted = List<BookingModel>.from(bookings)
-              ..sort((a, b) {
-                final aPending = a.status == BookingStatus.pending ? 0 : 1;
-                final bPending = b.status == BookingStatus.pending ? 0 : 1;
-                if (aPending != bPending) return aPending.compareTo(bPending);
-                return b.createdAt.compareTo(a.createdAt);
-              });
+              ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
             return ListView.separated(
               shrinkWrap: true,
@@ -107,7 +99,6 @@ class _ProviderBookingCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppTheme.radiusCard),
         onTap: () => context.push(
           '/provider/bookings/${Uri.encodeComponent(booking.id)}',
-          extra: booking,
         ),
         child: Container(
           padding: const EdgeInsets.all(16),
@@ -192,7 +183,6 @@ class _ProviderBookingCard extends StatelessWidget {
                     ),
                     onPressed: () => context.push(
                       '/provider/bookings/${Uri.encodeComponent(booking.id)}',
-                      extra: booking,
                     ),
                     child: Text(l10n.providerBookingReviewAction),
                   ),

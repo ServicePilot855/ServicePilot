@@ -268,6 +268,7 @@ class BookingModel {
     double? totalPrice,
     String? assignedTechnicianId,
     String? assignedTechnicianName,
+    bool clearAssignment = false,
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? cancelledAt,
@@ -292,9 +293,12 @@ class BookingModel {
       preferredDateTime: preferredDateTime ?? this.preferredDateTime,
       status: status ?? this.status,
       totalPrice: totalPrice ?? this.totalPrice,
-      assignedTechnicianId: assignedTechnicianId ?? this.assignedTechnicianId,
-      assignedTechnicianName:
-          assignedTechnicianName ?? this.assignedTechnicianName,
+      assignedTechnicianId: clearAssignment
+          ? null
+          : assignedTechnicianId ?? this.assignedTechnicianId,
+      assignedTechnicianName: clearAssignment
+          ? null
+          : assignedTechnicianName ?? this.assignedTechnicianName,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       cancelledAt: cancelledAt ?? this.cancelledAt,

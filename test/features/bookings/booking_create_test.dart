@@ -178,6 +178,22 @@ void main() {
       expect(data['id'], booking.id);
     });
 
+    test('publishes only scheduling and job details in the provider inbox',
+        () async {
+      final booking = await service.createBooking(
+        _request(photos: [_photo('sink.jpg')], latitude: 11.5, longitude: 104.9),
+      );
+      final preview = await firestore
+          .doc('providers/prov-plumb-01/incomingBookingRequests/${booking.id}')
+          .get();
+
+      expect(preview.data(), {
+        'serviceTitle': 'Leak Repair',
+        'description': booking.description,
+        'appointmentDate': Timestamp.fromDate(booking.preferredDateTime),
+      });
+    });
+
     test('uses the field names firestore.rules accepts', () async {
       final booking = await service.createBooking(_request());
       final data =
@@ -203,6 +219,19 @@ void main() {
       expect(loaded.address, created.address);
       expect(loaded.preferredDateTime, created.preferredDateTime);
       expect(loaded.status, BookingStatus.pending);
+    });
+
+    test('the existing confirmation API removes the request from the inbox', () async {
+      final created = await service.createBooking(_request());
+      final confirmed = await service.acceptBooking(
+        bookingId: created.id,
+        providerId: created.providerId,
+      );
+
+      expect(confirmed.status, BookingStatus.confirmed);
+      expect(confirmed.confirmedAppointmentAt, created.preferredDateTime);
+      expect(confirmed.confirmedBy, created.providerId);
+      expect(await service.getIncomingRequest(created.providerId, created.id), isNull);
     });
 
     test('customers only get their own bookings', () async {
@@ -238,6 +267,10 @@ void main() {
       expect(data['status'], 'cancelled');
       expect(data['cancelledBy'], 'customer-1');
       expect(data['cancellationReason'], 'Fixed it myself');
+      final inbox = await firestore
+          .collection('providers/prov-plumb-01/incomingBookingRequests')
+          .get();
+      expect(inbox.docs, isEmpty);
     });
 
     test('another customer cannot cancel it', () async {

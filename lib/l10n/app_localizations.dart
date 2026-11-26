@@ -1400,6 +1400,12 @@ abstract class AppLocalizations {
   /// **'For example: the bedroom AC blows warm air and drips water'**
   String get bookingProblemHint;
 
+  /// No description provided for @bookingProblemPrivacyHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'The provider can read this before accepting. Leave out your address and phone number.'**
+  String get bookingProblemPrivacyHelper;
+
   /// No description provided for @bookingAddressLabel.
   ///
   /// In en, this message translates to:
@@ -1729,6 +1735,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Back to home'**
   String get bookingSentBackHome;
+
+  /// No description provided for @bookingInboxTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming requests'**
+  String get bookingInboxTitle;
+
+  /// No description provided for @bookingInboxDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking request'**
+  String get bookingInboxDetailTitle;
+
+  /// No description provided for @bookingInboxEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no pending booking requests.'**
+  String get bookingInboxEmpty;
+
+  /// No description provided for @bookingInboxUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This booking request is unavailable.'**
+  String get bookingInboxUnavailable;
+
+  /// No description provided for @bookingInboxPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get bookingInboxPending;
+
+  /// No description provided for @bookingInboxJobDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Job details'**
+  String get bookingInboxJobDetails;
+
+  /// No description provided for @bookingInboxDateUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Appointment time unavailable'**
+  String get bookingInboxDateUnavailable;
+
+  /// No description provided for @bookingInboxLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading booking requests'**
+  String get bookingInboxLoading;
+
+  /// No description provided for @bookingInboxError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load booking requests. Check your connection and try again.'**
+  String get bookingInboxError;
+
+  /// No description provided for @bookingInboxRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get bookingInboxRetry;
 
   /// No description provided for @offeringCreateTitle.
   ///
@@ -2339,13 +2405,13 @@ abstract class AppLocalizations {
   /// No description provided for @providerBookingsTitle.
   ///
   /// In en, this message translates to:
-  /// **'Incoming Booking Requests'**
+  /// **'Accepted bookings'**
   String get providerBookingsTitle;
 
   /// No description provided for @providerBookingsEmpty.
   ///
   /// In en, this message translates to:
-  /// **'No incoming booking requests yet.'**
+  /// **'You have no accepted bookings.'**
   String get providerBookingsEmpty;
 
   /// No description provided for @providerBookingsLoadError.
