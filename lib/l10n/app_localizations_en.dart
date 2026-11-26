@@ -1500,4 +1500,35 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return 'Open cart, $_temp0';
   }
+
+  @override
+  String get cartCheckoutButton => 'Continue to checkout';
+
+  @override
+  String get cartCheckoutTitle => 'Checkout';
+
+  @override
+  String get cartCheckoutServicesSection => 'Your services';
+
+  @override
+  String get bookingErrorCartInvalid =>
+      'A service in your cart can no longer be booked. Go back to your cart, check it and try again.';
+
+  @override
+  String get bookingErrorCartMixedProviders =>
+      'Your cart has services from more than one provider. Keep services from one provider and try again.';
+
+  @override
+  String get bookingSummaryReference => 'Booking reference';
+
+  @override
+  String get bookingSummaryServices => 'Services';
+
+  @override
+  String get bookingSummaryTotal => 'Total';
+
+  @override
+  String bookingSummaryItemLine(String serviceTitle, String price) {
+    return '$serviceTitle: $price';
+  }
 }

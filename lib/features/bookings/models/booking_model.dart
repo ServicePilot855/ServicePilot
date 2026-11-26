@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:service_pilot/core/constants/booking_status.dart';
+import 'package:service_pilot/features/bookings/models/booking_item.dart';
 
 /// Represents a customer's repair service booking in ServicePilot.
 ///
@@ -39,6 +40,10 @@ class BookingModel {
   /// Download links of the problem photos the customer attached.
   final List<String> photoUrls;
 
+  /// Fixed-price services sent from the cart (CART-3 / SCRUM-82). Empty for
+  /// a single-service request.
+  final List<BookingItem> items;
+
   const BookingModel({
     required this.id,
     required this.customerId,
@@ -65,6 +70,7 @@ class BookingModel {
     this.latitude,
     this.longitude,
     this.photoUrls = const [],
+    this.items = const [],
   });
 
   /// Whether the customer pinned the address on the map.
@@ -147,6 +153,10 @@ class BookingModel {
               ?.whereType<String>()
               .toList() ??
           const [],
+      items: BookingItem.listFrom(
+        json['items'],
+        providerId: json['providerId'] as String,
+      ),
     );
   }
 
@@ -180,6 +190,8 @@ class BookingModel {
       if (latitude != null) 'latitude': latitude,
       if (longitude != null) 'longitude': longitude,
       if (photoUrls.isNotEmpty) 'photoUrls': photoUrls,
+      if (items.isNotEmpty)
+        'items': [for (final item in items) item.toMap()],
     };
   }
 
@@ -218,6 +230,8 @@ class BookingModel {
       if (declinedReason != null) 'declinedReason': declinedReason,
       if (hasLocation) 'location': GeoPoint(latitude!, longitude!),
       if (photoUrls.isNotEmpty) 'photos': photoUrls,
+      if (items.isNotEmpty)
+        'services': [for (final item in items) item.toMap()],
     };
   }
 
@@ -259,6 +273,10 @@ class BookingModel {
               ?.whereType<String>()
               .toList() ??
           const [],
+      items: BookingItem.listFrom(
+        data['services'],
+        providerId: data['providerId'] as String? ?? '',
+      ),
     );
   }
 
@@ -296,6 +314,7 @@ class BookingModel {
     double? latitude,
     double? longitude,
     List<String>? photoUrls,
+    List<BookingItem>? items,
   }) {
     return BookingModel(
       id: id ?? this.id,
@@ -330,6 +349,7 @@ class BookingModel {
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       photoUrls: photoUrls ?? this.photoUrls,
+      items: items ?? this.items,
     );
   }
 

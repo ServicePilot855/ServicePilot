@@ -530,7 +530,7 @@ class BookingService implements IBookingService {
       address: request.address.trim(),
       preferredDateTime: request.preferredDateTime,
       status: BookingStatus.pending,
-      totalPrice: request.estimatedPrice,
+      totalPrice: request.totalPrice,
       createdAt: now,
       latitude: request.latitude,
       longitude: request.longitude,
@@ -539,6 +539,7 @@ class BookingService implements IBookingService {
         for (final photo in request.photos)
           'memory://bk-${now.microsecondsSinceEpoch}/${photo.name}',
       ],
+      items: request.items,
     );
     _bookings.add(booking);
     _notifyListeners();
