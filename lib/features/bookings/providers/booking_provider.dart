@@ -53,6 +53,23 @@ final incomingBookingRequestProvider =
       .getIncomingRequest(user.id, bookingId);
 });
 
+final declinedBookingRequestsProvider =
+    FutureProvider.autoDispose<List<IncomingBookingRequest>>((ref) {
+  final user = ref.watch(currentUserProvider);
+  if (user == null || !user.canViewBookingInbox) return const [];
+  return ref.watch(bookingServiceProvider).getDeclinedRequests(user.id);
+});
+
+final declinedBookingRequestProvider =
+    FutureProvider.autoDispose.family<IncomingBookingRequest?, String>((
+  ref,
+  bookingId,
+) {
+  final user = ref.watch(currentUserProvider);
+  if (user == null || !user.canViewBookingInbox) return null;
+  return ref.watch(bookingServiceProvider).getDeclinedRequest(user.id, bookingId);
+});
+
 /// Fetches a single booking by its unique ID.
 final bookingDetailProvider =
     FutureProvider.autoDispose.family<BookingModel?, String>((

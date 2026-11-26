@@ -601,11 +601,24 @@ service cloud.firestore {
       return /databases/$(database)/documents/providers/$(providerId)/incomingBookingRequests/$(bookingId);
     }
 
-    function inboxMatchesBooking(bookingId, booking) {
+    function declinedRequestDocument(providerId, bookingId) {
+      return /databases/$(database)/documents/providers/$(providerId)/declinedBookingRequests/$(bookingId);
+    }
+
+    function previewsMatchBooking(bookingId, booking) {
       let preview = inboxDocument(booking.providerId, bookingId);
-      return booking.status == 'pending'
+      let archived = declinedRequestDocument(booking.providerId, bookingId);
+      return (booking.status == 'pending'
         ? getAfter(preview).data == bookingPreview(booking)
-        : !existsAfter(preview);
+        : !existsAfter(preview)) &&
+        (booking.status == 'declined'
+          ? getAfter(archived).data == bookingPreview(booking)
+          : !existsAfter(archived));
+    }
+
+    function noProviderPreviews(providerId, bookingId) {
+      return !existsAfter(inboxDocument(providerId, bookingId)) &&
+        !existsAfter(declinedRequestDocument(providerId, bookingId));
     }
 
     // Firestore reads whole documents. Pending requests use a separate view
@@ -634,6 +647,30 @@ service cloud.firestore {
       allow read: if ownsBookingInbox(providerId);
       allow create, update: if isAuthenticated() && canPublish();
       allow delete: if isAuthenticated() && canRemove();
+    }
+
+    match /providers/{providerId}/declinedBookingRequests/{bookingId} {
+      function bookingPath() {
+        return /databases/$(database)/documents/bookings/$(bookingId);
+      }
+
+      function canArchive() {
+        let before = get(bookingPath()).data;
+        let after = getAfter(bookingPath()).data;
+        return after != null && after.providerId == providerId &&
+          after.status == 'declined' && request.resource.data == bookingPreview(after) &&
+          (isAdmin() || (ownsBookingInbox(providerId) && before != null &&
+            before.providerId == providerId && before.status == 'pending'));
+      }
+
+      function noLongerDeclinedHere() {
+        let after = getAfter(bookingPath()).data;
+        return after == null || after.status != 'declined' || after.providerId != providerId;
+      }
+
+      allow read: if ownsBookingInbox(providerId);
+      allow create, update: if isAuthenticated() && canArchive();
+      allow delete: if isAdmin() && noLongerDeclinedHere();
     }
 
     match /bookings/{bookingId} {
@@ -674,7 +711,7 @@ service cloud.firestore {
         return isOwner(before.customerId) &&
           ((before.status == 'pending' && after.status == 'pending' &&
             !changed.hasAny(['technicianId', 'technicianName',
-              'confirmedAppointmentAt', 'confirmedAt', 'confirmedBy'])) ||
+              'confirmedAppointmentAt', 'confirmedAt', 'confirmedBy', 'declinedReason'])) ||
            (before.status in ['pending', 'confirmed', 'assigned'] && after.status == 'cancelled' &&
             changed.hasOnly(['status', 'updatedAt', 'cancelledAt', 'cancelledBy', 'cancellationReason'])));
       }
@@ -688,13 +725,11 @@ service cloud.firestore {
       }
 
       // Providers and technicians can read private details after acceptance.
-      // BOOK-3 (SCRUM-105): the addressed provider can also see their own declined request.
       allow read: if isAuthenticated() &&
                      (
                        resource.data.customerId == request.auth.uid ||
                        (resource.data.status in ['confirmed', 'assigned', 'in_progress', 'completed'] &&
                          (ownsBookingInbox(resource.data.providerId) || isAssignedBookingTechnician(resource.data))) ||
-                       (resource.data.status == 'declined' && ownsBookingInbox(resource.data.providerId)) ||
                        isAdmin()
                      );
 
@@ -703,13 +738,13 @@ service cloud.firestore {
       allow create: if isAuthenticated() &&
                        isValidBooking(request.resource.data) &&
                        (!('id' in request.resource.data) || request.resource.data.id == bookingId) &&
-                       inboxMatchesBooking(bookingId, request.resource.data) &&
+                       previewsMatchBooking(bookingId, request.resource.data) &&
                        (
                          (
                            request.resource.data.customerId == request.auth.uid &&
                            request.resource.data.status == 'pending' &&
                            !request.resource.data.keys().hasAny(['technicianId', 'technicianName',
-                             'confirmedAppointmentAt', 'confirmedAt', 'confirmedBy'])
+                             'confirmedAppointmentAt', 'confirmedAt', 'confirmedBy', 'declinedReason'])
                          ) ||
                          isAdmin()
                        );
@@ -718,9 +753,9 @@ service cloud.firestore {
       // Enforces booking state machine integrity, customer cancellation rules, and immutability.
       allow update: if isAuthenticated() &&
                        isValidBooking(request.resource.data) &&
-                       inboxMatchesBooking(bookingId, request.resource.data) &&
+                       previewsMatchBooking(bookingId, request.resource.data) &&
                        (request.resource.data.providerId == resource.data.providerId ||
-                         !existsAfter(inboxDocument(resource.data.providerId, bookingId))) &&
+                         noProviderPreviews(resource.data.providerId, bookingId)) &&
                        (
                          isAdmin() ||
                          (areImmutableFieldsUnchanged(['customerId', 'providerId', 'createdAt']) &&
@@ -728,7 +763,7 @@ service cloud.firestore {
                        );
 
       // Delete: Platform admin only
-      allow delete: if isAdmin() && !existsAfter(inboxDocument(resource.data.providerId, bookingId));
+      allow delete: if isAdmin() && noProviderPreviews(resource.data.providerId, bookingId);
     }
 
     // ===============================================================

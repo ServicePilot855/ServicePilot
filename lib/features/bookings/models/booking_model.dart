@@ -292,6 +292,7 @@ class BookingModel {
     DateTime? confirmedAt,
     String? confirmedBy,
     String? declinedReason,
+    bool clearDeclinedReason = false,
     double? latitude,
     double? longitude,
     List<String>? photoUrls,
@@ -323,7 +324,9 @@ class BookingModel {
           confirmedAppointmentAt ?? this.confirmedAppointmentAt,
       confirmedAt: confirmedAt ?? this.confirmedAt,
       confirmedBy: confirmedBy ?? this.confirmedBy,
-      declinedReason: declinedReason ?? this.declinedReason,
+      declinedReason: clearDeclinedReason
+          ? null
+          : declinedReason ?? this.declinedReason,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       photoUrls: photoUrls ?? this.photoUrls,

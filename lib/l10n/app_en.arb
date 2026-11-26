@@ -520,7 +520,9 @@
   "providerBookingDeclineKeep": "Keep Request",
   "providerBookingDeclineConfirm": "Confirm Decline",
   "providerBookingDeclineSuccess": "Request declined. The homeowner can see this booking as Declined in their history.",
-  "providerBookingDeclinedNotice": "You declined this request. The homeowner has been told it is Declined.",
+  "providerBookingDeclinedNotice": "You declined this request. The homeowner can see it as Declined in their booking history.",
+  "providerDeclinedRequestsTitle": "Declined requests",
+  "providerDeclinedRequestsEmpty": "You have no declined requests.",
   "providerBookingDeclineIneligible": "This request can no longer be declined.",
   "providerBookingDeclineNotAuthorized": "You are not authorized to decline this request.",
 

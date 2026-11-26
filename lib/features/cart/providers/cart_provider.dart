@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/features/cart/models/cart_item.dart';
 import 'package:service_pilot/features/cart/models/cart_state.dart';
 import 'package:service_pilot/features/services/models/offering_model.dart';
@@ -11,7 +12,11 @@ import 'package:service_pilot/features/services/models/offering_model.dart';
 /// - Quote-required, inactive, invalid-price, or other-provider items are
 ///   rejected without modifying existing cart contents.
 class CartNotifier extends StateNotifier<CartState> {
-  CartNotifier() : super(const CartState.empty());
+  CartNotifier({bool canAddOfferings = true})
+      : _canAddOfferings = canAddOfferings,
+        super(const CartState.empty());
+
+  final bool _canAddOfferings;
 
   /// Attempts to add [offering] to the cart.
   ///
@@ -21,6 +26,10 @@ class CartNotifier extends StateNotifier<CartState> {
     OfferingModel offering, {
     String? providerName,
   }) {
+    if (!_canAddOfferings) {
+      return const CartAddResult.rejected(CartAddRejectionReason.notHomeowner);
+    }
+
     if (offering.isQuoteRequired || !offering.canAddToCart) {
       return const CartAddResult.rejected(CartAddRejectionReason.quoteRequired);
     }
@@ -87,7 +96,17 @@ class CartNotifier extends StateNotifier<CartState> {
   }
 }
 
-/// Global Riverpod provider for the homeowner's service cart.
+final cartOwnerIdProvider = Provider<String?>((ref) {
+  return ref.watch(currentUserProvider.select((user) {
+    if (user == null || !user.isHomeowner || user.isSuspended || user.id.isEmpty) {
+      return null;
+    }
+    return user.id;
+  }));
+});
+
+/// Keeps the cart across screens for the current homeowner's session.
 final cartProvider = StateNotifierProvider<CartNotifier, CartState>((ref) {
-  return CartNotifier();
+  final ownerId = ref.watch(cartOwnerIdProvider);
+  return CartNotifier(canAddOfferings: ownerId != null);
 });

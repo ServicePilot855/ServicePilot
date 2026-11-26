@@ -1378,7 +1378,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get providerBookingDeclinedNotice =>
-      'You declined this request. The homeowner has been told it is Declined.';
+      'You declined this request. The homeowner can see it as Declined in their booking history.';
+
+  @override
+  String get providerDeclinedRequestsTitle => 'Declined requests';
+
+  @override
+  String get providerDeclinedRequestsEmpty => 'You have no declined requests.';
 
   @override
   String get providerBookingDeclineIneligible =>

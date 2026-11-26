@@ -12,22 +12,29 @@ import 'package:service_pilot/shared/widgets/sp_button.dart';
 import 'package:service_pilot/shared/widgets/sp_layout.dart';
 
 class IncomingBookingScreen extends ConsumerWidget {
-  const IncomingBookingScreen({super.key});
+  const IncomingBookingScreen({super.key, this.showDeclined = false});
 
   static const path = '/booking-requests';
+  static const historySegment = 'history';
+  final bool showDeclined;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final requestsProvider = showDeclined
+        ? declinedBookingRequestsProvider
+        : incomingBookingRequestsProvider;
     final content = _content(
       context,
-      ref.watch(incomingBookingRequestsProvider),
-      onRetry: () => ref.invalidate(incomingBookingRequestsProvider),
+      ref.watch(requestsProvider),
+      onRetry: () => ref.invalidate(requestsProvider),
       data: (requests) => requests.isEmpty
           ? SpNotice(
               icon: Icons.inbox_outlined,
               tone: SpTone.neutral,
-              message: l10n.bookingInboxEmpty,
+              message: showDeclined
+                  ? l10n.providerDeclinedRequestsEmpty
+                  : l10n.bookingInboxEmpty,
             )
           : Column(
               children: [
@@ -53,7 +60,7 @@ class IncomingBookingScreen extends ConsumerWidget {
                           final encodedId = Uri.encodeComponent(request.id);
                           await context.push('$path/$encodedId');
                           if (context.mounted) {
-                            ref.invalidate(incomingBookingRequestsProvider);
+                            ref.invalidate(requestsProvider);
                           }
                         },
                       ),
@@ -69,12 +76,25 @@ class IncomingBookingScreen extends ConsumerWidget {
           context.pop();
         } else {
           final user = ref.read(currentUserProvider);
-          context.go(user?.role.homeRoute ?? '/login');
+          context.go(showDeclined ? path : user?.role.homeRoute ?? '/login');
         }
       },
       children: [
-        SpPageHeader(title: l10n.bookingInboxTitle),
+        SpPageHeader(
+          title: showDeclined
+              ? l10n.providerDeclinedRequestsTitle
+              : l10n.bookingInboxTitle,
+        ),
         const SizedBox(height: 24),
+        if (!showDeclined) ...[
+          SpSecondaryButton(
+            label: l10n.providerDeclinedRequestsTitle,
+            icon: Icons.history_rounded,
+            wrapLabel: true,
+            onPressed: () => context.push('$path/$historySegment'),
+          ),
+          const SizedBox(height: 16),
+        ],
         content,
       ],
     );

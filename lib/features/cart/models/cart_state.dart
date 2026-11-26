@@ -2,6 +2,7 @@ import 'package:service_pilot/features/cart/models/cart_item.dart';
 
 /// Reason an offering was rejected when attempting to add it to the cart.
 enum CartAddRejectionReason {
+  notHomeowner,
   quoteRequired,
   inactiveOffering,
   invalidPrice,

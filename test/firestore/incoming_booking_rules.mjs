@@ -224,14 +224,22 @@ if (storage) await readPhoto(company.token, false);
 
 // BOOK-3 (SCRUM-105): only the addressed provider can decline a Pending request,
 // and the decline may change only status, updatedAt and declinedReason.
-{
+await commit('owner', [update(`users/${company.id}`, fields({ role: 'company', status: 'active', companyId: company.id }))]);
+for (const provider of [independent, company]) {
   const declineId = crypto.randomUUID();
   const declineBooking = `bookings/${declineId}`;
-  const declinePreview = `${collection(independent.id)}/${declineId}`;
-  const pending = bookingFor(independent.id, declineId);
+  const declinePreview = `${collection(provider.id)}/${declineId}`;
+  const archive = `providers/${provider.id}/declinedBookingRequests`;
+  const archivedRequest = `${archive}/${declineId}`;
+  const pending = bookingFor(provider.id, declineId);
+  const pendingWithReason = { ...pending, declinedReason: { stringValue: 'Pre-existing reason' } };
+  await commit(customer.token, [
+    update(declineBooking, pendingWithReason), update(declinePreview, job),
+  ], 403);
   await commit(customer.token, [update(declineBooking, pending), update(declinePreview, job)]);
+  await commit(customer.token, [update(declineBooking, pendingWithReason)], 403);
 
-  const declineWrite = (token, extra = {}, status = 200) => commit(token, [
+  const declineWrite = (token, extra = {}, status = 200, archiveData = job) => commit(token, [
     {
       ...update(declineBooking, {
         ...pending,
@@ -241,21 +249,42 @@ if (storage) await readPhoto(company.token, false);
       }),
     },
     { delete: `${prefix}/${declinePreview}` },
+    ...(archiveData ? [update(archivedRequest, archiveData)] : []),
   ], status);
 
+  await request(`${documents}/${declineBooking}`, { token: provider.token, status: 403 });
+  await commit(provider.token, [update(archivedRequest, job)], 403);
   await declineWrite(customer.token, {}, 403);
   await declineWrite(outsider.token, {}, 403);
-  await declineWrite(independent.token, { declinedAt: { timestampValue: '2026-11-27T03:00:00Z' } }, 403);
-  await declineWrite(independent.token, { technicianId: { stringValue: outsider.id } }, 403);
-  await declineWrite(independent.token, { declinedReason: { stringValue: 'Outside our service area that day' } });
+  await declineWrite(provider.token, { technicianId: { stringValue: outsider.id } }, 403);
+  await declineWrite(provider.token, {}, 403, null);
+  await declineWrite(provider.token, {}, 403, { ...job, address: pending.address });
+  await declineWrite(provider.token, { declinedReason: { stringValue: 'Outside our service area that day' } });
 
-  const declinedFields = (await request(`${documents}/${declineBooking}`, { token: independent.token })).fields;
+  await request(`${documents}/${declineBooking}`, { token: provider.token, status: 403 });
+  const declinedFields = (await request(`${documents}/${declineBooking}`, { token: customer.token })).fields;
   assert.equal(declinedFields.status.stringValue, 'declined');
   assert.equal(declinedFields.declinedReason.stringValue, 'Outside our service area that day');
-  assert.equal((await request(`${documents}/${declineBooking}`, { token: customer.token })).fields.status.stringValue, 'declined');
+  const providerHistory = await request(`${documents}/${archive}`, { token: provider.token });
+  assert.deepEqual(providerHistory.documents.map(doc => doc.fields), [job]);
+  assert.deepEqual((await request(`${documents}/${archivedRequest}`, { token: provider.token })).fields, job);
   await request(`${documents}/${declineBooking}`, { token: outsider.token, status: 403 });
-  await request(`${documents}/${declinePreview}`, { token: independent.token, status: 404 });
-  await declineWrite(independent.token, { declinedReason: { stringValue: 'Again' } }, 403);
+  await request(`${documents}/${archivedRequest}`, { token: outsider.token, status: 403 });
+  await request(`${documents}/${archive}`, { token: outsider.token, status: 403 });
+  await request(`${documents}/${declinePreview}`, { token: provider.token, status: 404 });
+  await declineWrite(provider.token, { declinedReason: { stringValue: 'Again' } }, 403);
 }
+
+const legacyDeclinedId = crypto.randomUUID();
+const legacyDeclined = `bookings/${legacyDeclinedId}`;
+const legacyArchive = `providers/${independent.id}/declinedBookingRequests/${legacyDeclinedId}`;
+await commit('owner', [update(legacyDeclined, {
+  ...bookingFor(independent.id, legacyDeclinedId), status: { stringValue: 'declined' },
+})]);
+await request(`${documents}/${legacyArchive}`, { token: independent.token, status: 404 });
+assert.match(backfill('--declined'), /3 declined booking\(s\) found \(dry run\)/);
+assert.match(backfill('--declined', '--apply'), /3 declined booking\(s\) processed/);
+assert.deepEqual((await request(`${documents}/${legacyArchive}`, { token: independent.token })).fields, job);
+await request(`${documents}/${legacyDeclined}`, { token: independent.token, status: 403 });
 
 console.log('Incoming booking rules passed for independent, company and unrelated accounts.');

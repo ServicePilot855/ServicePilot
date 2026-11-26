@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:service_pilot/features/bookings/models/booking_model.dart';
 
-/// Job and scheduling details a provider can see before accepting a request.
+/// Job and scheduling details a provider can see without accepting a request.
 class IncomingBookingRequest {
   const IncomingBookingRequest({
     required this.id,

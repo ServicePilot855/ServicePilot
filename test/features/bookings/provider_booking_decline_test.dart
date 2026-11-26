@@ -5,11 +5,13 @@ import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/core/auth/auth_state.dart';
 import 'package:service_pilot/core/constants/app_roles.dart';
 import 'package:service_pilot/core/constants/booking_status.dart';
+import 'package:service_pilot/core/router/app_router.dart';
 import 'package:service_pilot/core/theme/app_theme.dart';
 import 'package:service_pilot/features/auth/models/user_model.dart';
 import 'package:service_pilot/features/bookings/models/booking_model.dart';
 import 'package:service_pilot/features/bookings/providers/booking_provider.dart';
 import 'package:service_pilot/features/bookings/screens/booking_tracking_screen.dart';
+import 'package:service_pilot/features/bookings/screens/incoming_booking_screen.dart';
 import 'package:service_pilot/features/bookings/screens/provider_booking_detail_screen.dart';
 import 'package:service_pilot/features/bookings/services/booking_service.dart';
 import 'package:service_pilot/l10n/app_localizations.dart';
@@ -89,13 +91,32 @@ void main() {
       'provider declines a Pending request with a reason; both views show Declined and the request leaves the inbox',
       (tester) async {
         setupViewport(tester);
+        final booking = pendingBooking('bk-decline-1');
         final service = BookingService(
-          initialBookings: [pendingBooking('bk-decline-1')],
+          initialBookings: [booking],
           customerId: customerUser.id,
         );
         addTearDown(service.dispose);
 
-        await tester.pumpWidget(providerApp(service, bookingId: 'bk-decline-1'));
+        final container = ProviderContainer(overrides: [
+          bookingServiceProvider.overrideWithValue(service),
+          authProvider.overrideWith(() => _MockAuthNotifier(providerUser)),
+        ]);
+        final router = container.read(appRouterProvider);
+        addTearDown(container.dispose);
+        addTearDown(router.dispose);
+        router.go(IncomingBookingScreen.path);
+        await tester.pumpWidget(UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp.router(
+            routerConfig: router,
+            theme: AppTheme.lightTheme,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+          ),
+        ));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(booking.serviceTitle));
         await tester.pumpAndSettle();
 
         final declineBtn =
@@ -121,7 +142,7 @@ void main() {
           find.byKey(const Key('provider_booking_declined_notice')),
           findsOneWidget,
         );
-        expect(find.text('Declined'), findsWidgets);
+        expect(find.text(booking.address), findsNothing);
         expect(
           find.byKey(const Key('provider_confirm_booking_button')),
           findsNothing,
@@ -136,6 +157,17 @@ void main() {
         expect(stored?.status, BookingStatus.declined);
         expect(stored?.declinedReason, 'Outside our service area that day');
         expect(await service.getIncomingRequests(providerUser.id), isEmpty);
+
+        router.pop();
+        await tester.pumpAndSettle();
+        expect(find.text(booking.serviceTitle), findsNothing);
+        await tester.tap(find.text('Declined requests'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(booking.serviceTitle));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('provider_booking_declined_notice')),
+            findsOneWidget);
+        expect(find.text(booking.address), findsNothing);
 
         // Customer view: the same booking shows Declined.
         await tester.pumpWidget(
@@ -168,16 +200,19 @@ void main() {
         );
         addTearDown(service.dispose);
 
-        await tester.pumpWidget(providerApp(service, bookingId: 'bk-decline-2'));
+        await tester
+            .pumpWidget(providerApp(service, bookingId: 'bk-decline-2'));
         await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const Key('provider_decline_booking_button')));
+        await tester
+            .tap(find.byKey(const Key('provider_decline_booking_button')));
         await tester.pumpAndSettle();
 
         expect(
           find.byKey(const Key('decline_reason_required_hint')),
           findsOneWidget,
         );
-        await tester.tap(find.byKey(const Key('decline_dialog_confirm_button')));
+        await tester
+            .tap(find.byKey(const Key('decline_dialog_confirm_button')));
         await tester.pumpAndSettle();
 
         // Still open: nothing was declined.
@@ -199,9 +234,11 @@ void main() {
         );
         addTearDown(service.dispose);
 
-        await tester.pumpWidget(providerApp(service, bookingId: 'bk-decline-3'));
+        await tester
+            .pumpWidget(providerApp(service, bookingId: 'bk-decline-3'));
         await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const Key('provider_decline_booking_button')));
+        await tester
+            .tap(find.byKey(const Key('provider_decline_booking_button')));
         await tester.pumpAndSettle();
 
         await tester.tap(find.byKey(const Key('decline_dialog_keep_button')));
