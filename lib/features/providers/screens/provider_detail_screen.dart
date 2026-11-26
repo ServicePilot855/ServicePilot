@@ -215,9 +215,7 @@ class _ProviderProfile extends ConsumerWidget {
                         ],
                       ),
                     ),
-                  if (provider.isCompany &&
-                      provider.isApprovedAndActive &&
-                      contactLinks.isNotEmpty)
+                  if (provider.isApprovedAndActive && contactLinks.isNotEmpty)
                     _ProfileSection(
                       title: l10n.companyProfileContacts,
                       child: SelectionArea(
@@ -366,7 +364,7 @@ class _OfferingsSection extends ConsumerWidget {
         if (offerings.isEmpty) return const SizedBox.shrink();
 
         return _ProfileSection(
-          title: 'Available Services & Offerings',
+          title: l10n.providerOfferingsSection,
           child: Column(
             children: offerings.map((offering) {
               final isQuote = offering.isQuoteRequired;

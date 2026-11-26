@@ -448,5 +448,37 @@
   "companyProfileLoadError": "Could not load your company profile.",
   "companyProfileSaveError": "Could not save your changes. Try again.",
   "companyProfileSave": "Save changes",
-  "companyProfileSaved": "Company profile saved."
+  "companyProfileSaved": "Company profile saved.",
+
+  "technicianProfileEdit": "Edit technician profile",
+  "technicianProfileName": "Full name",
+  "technicianProfileNameHint": "Virak Chan",
+  "technicianProfileNameRequired": "Enter your full name.",
+  "technicianProfileDescription": "Bio / description (optional)",
+  "technicianProfileDescriptionHint": "Certified AC technician with 7+ years of experience",
+  "technicianProfileAreaHint": "Sen Sok, Tuol Kork",
+  "technicianProfileAreaRequired": "Enter a service area.",
+  "technicianProfileContacts": "Contact links",
+  "technicianProfileOptionalContacts": "Contact links (optional)",
+  "technicianProfileTelegram": "Telegram",
+  "technicianProfileTelegramExample": "https://t.me/virakchan",
+  "technicianProfileMessenger": "Messenger",
+  "technicianProfileMessengerExample": "https://m.me/virakchan",
+  "technicianProfileInvalidLink": "Enter a link like {example}.",
+  "@technicianProfileInvalidLink": {
+    "placeholders": {"example": {"type": "String"}}
+  },
+  "technicianProfileLengthError": "Use {limit} characters or fewer.",
+  "@technicianProfileLengthError": {
+    "placeholders": {"limit": {"type": "int"}}
+  },
+  "technicianProfileUnavailable": "No editable technician profile is linked to this account.",
+  "technicianProfileLoading": "Loading technician profile",
+  "technicianProfileLoadError": "Could not load your technician profile.",
+  "technicianProfileSaveError": "Could not save your changes. Try again.",
+  "technicianProfileSave": "Save changes",
+  "technicianProfileSaved": "Technician profile saved.",
+
+  "@_DISC": {},
+  "providerOfferingsSection": "Available Services & Offerings"
 }

@@ -17,6 +17,7 @@ class ComingSoonHome extends ConsumerWidget {
     required this.greeting,
     required this.role,
     this.primaryAction,
+    this.displayName,
     this.companyName,
     this.extraContent,
   });
@@ -25,6 +26,7 @@ class ComingSoonHome extends ConsumerWidget {
   final String greeting;
   final AppRole role;
   final Widget? primaryAction;
+  final String? displayName;
   final String? companyName;
   final Widget? extraContent;
 
@@ -33,7 +35,10 @@ class ComingSoonHome extends ConsumerWidget {
     final l10n = context.l10n;
     final authNotifier = ref.read(authProvider.notifier);
     final user = ref.watch(authProvider.notifier).currentUser;
-    final name = user?.fullName ?? l10n.homeFallbackName;
+    final customName = displayName?.trim();
+    final name = (customName != null && customName.isNotEmpty)
+        ? customName
+        : (user?.fullName ?? l10n.homeFallbackName);
     final firstName = name.trim().split(RegExp(r'\s+')).first;
     final displayCompany =
         role == AppRole.company ? companyName : user?.companyName;

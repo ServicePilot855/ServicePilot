@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:service_pilot/features/auth/models/user_model.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
 import 'package:service_pilot/features/providers/services/firestore_provider_service.dart';
+import 'package:service_pilot/features/providers/services/provider_contact_links.dart';
 
 final companyProfileServiceProvider = Provider<CompanyProfileService>(
   (_) => CompanyProfileService(firestore: FirebaseFirestore.instance),
@@ -19,16 +20,8 @@ class CompanyProfileService {
 
   final FirebaseFirestore _firestore;
 
-  static bool isValidContactLink(String value, String host) {
-    final link = value.trim();
-    final prefix = 'https://$host/';
-    return link.isEmpty ||
-        (link.length <= 500 &&
-            link.startsWith(prefix) &&
-            RegExp(r'^[A-Za-z0-9_.+-]+/?$').hasMatch(
-              link.substring(prefix.length),
-            ));
-  }
+  static bool isValidContactLink(String value, String host) =>
+      isValidProviderContactLink(value, host);
 
   DocumentReference<Map<String, dynamic>> _ownedProfile(
     UserModel actor,

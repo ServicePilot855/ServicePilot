@@ -26,6 +26,7 @@ import 'package:service_pilot/features/providers/models/provider_model.dart';
 import 'package:service_pilot/features/providers/screens/company_profile_edit_screen.dart';
 import 'package:service_pilot/features/providers/screens/provider_detail_screen.dart';
 import 'package:service_pilot/features/providers/screens/provider_list_screen.dart';
+import 'package:service_pilot/features/providers/screens/technician_profile_edit_screen.dart';
 import 'package:service_pilot/features/services/models/category_model.dart';
 import 'package:service_pilot/features/services/screens/categories_screen.dart';
 import 'package:service_pilot/features/services/screens/create_offering_screen.dart';
@@ -79,6 +80,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (isAuthenticated &&
           state.matchedLocation == '/home/company/profile' &&
           (!authState.user.isCompany || authState.user.isSuspended)) {
+        return authState.user.role.homeRoute;
+      }
+
+      if (isAuthenticated &&
+          state.matchedLocation == '/home/technician/profile' &&
+          (!authState.user.isIndependentTechnician || authState.user.isSuspended)) {
         return authState.user.role.homeRoute;
       }
 
@@ -260,6 +267,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/home/technician',
         builder: (_, __) => const TechnicianHome(),
+        routes: [
+          GoRoute(
+            path: 'profile',
+            builder: (_, __) => const TechnicianProfileEditScreen(),
+          ),
+        ],
       ),
       GoRoute(
         path: '/home/company',

@@ -1178,4 +1178,81 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get companyProfileSaved => 'Company profile saved.';
+
+  @override
+  String get technicianProfileEdit => 'Edit technician profile';
+
+  @override
+  String get technicianProfileName => 'Full name';
+
+  @override
+  String get technicianProfileNameHint => 'Virak Chan';
+
+  @override
+  String get technicianProfileNameRequired => 'Enter your full name.';
+
+  @override
+  String get technicianProfileDescription => 'Bio / description (optional)';
+
+  @override
+  String get technicianProfileDescriptionHint =>
+      'Certified AC technician with 7+ years of experience';
+
+  @override
+  String get technicianProfileAreaHint => 'Sen Sok, Tuol Kork';
+
+  @override
+  String get technicianProfileAreaRequired => 'Enter a service area.';
+
+  @override
+  String get technicianProfileContacts => 'Contact links';
+
+  @override
+  String get technicianProfileOptionalContacts => 'Contact links (optional)';
+
+  @override
+  String get technicianProfileTelegram => 'Telegram';
+
+  @override
+  String get technicianProfileTelegramExample => 'https://t.me/virakchan';
+
+  @override
+  String get technicianProfileMessenger => 'Messenger';
+
+  @override
+  String get technicianProfileMessengerExample => 'https://m.me/virakchan';
+
+  @override
+  String technicianProfileInvalidLink(String example) {
+    return 'Enter a link like $example.';
+  }
+
+  @override
+  String technicianProfileLengthError(int limit) {
+    return 'Use $limit characters or fewer.';
+  }
+
+  @override
+  String get technicianProfileUnavailable =>
+      'No editable technician profile is linked to this account.';
+
+  @override
+  String get technicianProfileLoading => 'Loading technician profile';
+
+  @override
+  String get technicianProfileLoadError =>
+      'Could not load your technician profile.';
+
+  @override
+  String get technicianProfileSaveError =>
+      'Could not save your changes. Try again.';
+
+  @override
+  String get technicianProfileSave => 'Save changes';
+
+  @override
+  String get technicianProfileSaved => 'Technician profile saved.';
+
+  @override
+  String get providerOfferingsSection => 'Available Services & Offerings';
 }
