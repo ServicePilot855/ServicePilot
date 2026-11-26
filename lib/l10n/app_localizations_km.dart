@@ -724,6 +724,7 @@ class AppLocalizationsKm extends AppLocalizations {
   @override
   String get bookingProblemPrivacyHelper =>
       'The provider can read this before accepting. Leave out your address and phone number.';
+      'អ្នកផ្តល់សេវាអាចអានព័ត៌មាននេះមុនពេលទទួលយកសំណើ។ សូមកុំបញ្ចូលអាសយដ្ឋាន និងលេខទូរសព្ទរបស់អ្នក។';
 
   @override
   String get bookingAddressLabel => 'Repair address';
@@ -921,7 +922,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get bookingSummaryService => 'Service';
 
   @override
-  String get bookingSummaryWhen => 'Date and time';
+  String get bookingSummaryWhen => 'កាលបរិច្ឆេទ និងម៉ោង';
 
   @override
   String get bookingSummaryAddress => 'Address';
@@ -962,6 +963,35 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get bookingInboxRetry => 'Try again';
+  String get bookingInboxTitle => 'សំណើកក់ចូល';
+
+  @override
+  String get bookingInboxDetailTitle => 'សំណើកក់សេវា';
+
+  @override
+  String get bookingInboxEmpty => 'អ្នកមិនមានសំណើកក់ដែលកំពុងរង់ចាំទេ។';
+
+  @override
+  String get bookingInboxUnavailable => 'សំណើកក់នេះមិនអាចបើកបានទេ។';
+
+  @override
+  String get bookingInboxPending => 'កំពុងរង់ចាំ';
+
+  @override
+  String get bookingInboxJobDetails => 'ព័ត៌មានលម្អិតអំពីការងារ';
+
+  @override
+  String get bookingInboxDateUnavailable => 'មិនមានព័ត៌មានអំពីម៉ោងណាត់ជួប';
+
+  @override
+  String get bookingInboxLoading => 'កំពុងផ្ទុកសំណើកក់';
+
+  @override
+  String get bookingInboxError =>
+      'មិនអាចផ្ទុកសំណើកក់បានទេ។ សូមពិនិត្យការភ្ជាប់អ៊ីនធឺណិត ហើយព្យាយាមម្តងទៀត។';
+
+  @override
+  String get bookingInboxRetry => 'ព្យាយាមម្តងទៀត';
 
   @override
   String get offeringCreateTitle => 'បន្ថែមសេវាកម្ម';
