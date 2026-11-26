@@ -1,3 +1,4 @@
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:service_pilot/core/auth/auth_service.dart';
 import 'package:service_pilot/core/auth/firebase_auth_service.dart';
@@ -412,6 +413,37 @@ void main() {
       await authService.logout();
 
       expect(fakeAuth.currentUser, isNull);
+    });
+
+    test('login links an unlinked independent technician provider profile',
+        () async {
+      final firestore = FakeFirebaseFirestore();
+      final prefs = await SharedPreferences.getInstance();
+      final serviceWithFirestore = FirebaseAuthService(
+        firebaseAuth: fakeAuth,
+        prefs: prefs,
+        firestore: firestore,
+      );
+
+      fakeAuth.seedUser(
+        uid: 'tech-legacy-1',
+        email: 'technician@test.com',
+        password: 'password123',
+        displayName: 'Virak Chan',
+      );
+
+      final user = await serviceWithFirestore.login(
+        'technician@test.com',
+        'password123',
+      );
+
+      expect(user.role, equals(AppRole.independentProvider));
+      final providerDoc =
+          await firestore.collection('providers').doc('tech-legacy-1').get();
+      expect(providerDoc.exists, isTrue);
+      expect(providerDoc.data()?['providerType'], equals('independent'));
+      expect(providerDoc.data()?['name'], equals('Virak Chan'));
+      expect(providerDoc.data()?['status'], equals('pending_verification'));
     });
   });
 }

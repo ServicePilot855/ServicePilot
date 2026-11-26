@@ -1937,7 +1937,7 @@ abstract class AppLocalizations {
   /// No description provided for @offeringAddButton.
   ///
   /// In en, this message translates to:
-  /// **'+ Add Offering'**
+  /// **'Add Offering'**
   String get offeringAddButton;
 
   /// No description provided for @offeringEmptyNotice.

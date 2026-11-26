@@ -518,13 +518,15 @@ class FirebaseAuthService implements IAuthService {
         'id': technician.id,
         'name': technician.fullName,
         'fullName': technician.fullName,
-        'email': technician.email,
+        if (technician.email.trim().isNotEmpty) 'email': technician.email.trim(),
         'phoneNumber': technician.phoneNumber,
         'providerType': 'independent',
         'status': 'pending_verification',
         'isVerified': false,
-        'serviceArea': technician.serviceArea,
-        'createdAt': FieldValue.serverTimestamp(),
+        if (technician.serviceArea != null &&
+            technician.serviceArea!.trim().isNotEmpty)
+          'serviceArea': technician.serviceArea!.trim(),
+        'createdAt': Timestamp.fromDate(technician.createdAt ?? DateTime.now()),
       };
 
   Future<UserModel> _linkLegacyCompany(UserModel owner) async {
@@ -546,8 +548,7 @@ class FirebaseAuthService implements IAuthService {
   }
 
   Future<UserModel> _linkLegacyTechnician(UserModel technician) async {
-    if (technician.fullName.trim().isEmpty ||
-        technician.serviceArea?.trim().isNotEmpty != true) {
+    if (technician.fullName.trim().isEmpty) {
       return technician;
     }
     return _linkLegacyProviderAccount(
@@ -681,8 +682,12 @@ class FirebaseAuthService implements IAuthService {
             if (updatedAt is Timestamp)
               'updatedAt': updatedAt.toDate().toIso8601String(),
           });
-          await _saveUserProfile(providerUser);
-          return providerUser;
+          final linkedUser = providerUser.isIndependentTechnician &&
+                  !providerUser.isSuspended
+              ? await _linkLegacyTechnician(providerUser)
+              : providerUser;
+          await _saveUserProfile(linkedUser);
+          return linkedUser;
         }
       } on FirebaseException catch (error) {
         debugPrint('[FirebaseAuth] Provider account lookup failed: ${error.code}');
@@ -710,8 +715,11 @@ class FirebaseAuthService implements IAuthService {
       createdAt: fbUser.metadata.creationTime ?? DateTime.now(),
     );
 
-    await _saveUserProfile(user);
-    return user;
+    final linkedUser = user.isIndependentTechnician
+        ? await _linkLegacyTechnician(user)
+        : user;
+    await _saveUserProfile(linkedUser);
+    return linkedUser;
   }
 
   Future<void> _recordActiveSession(String userId) async {

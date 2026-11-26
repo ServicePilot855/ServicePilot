@@ -125,4 +125,37 @@ void main() {
       throwsArgumentError,
     );
   });
+
+  test('standalone technician without existing provider doc can load and save',
+      () async {
+    const standalone = UserModel(
+      id: 'tech-standalone',
+      fullName: 'Standalone Tech',
+      email: 'standalone@example.com',
+      phoneNumber: '+85512345678',
+      role: AppRole.independentProvider,
+      status: 'active',
+    );
+
+    final loaded = await service.load(standalone);
+    expect(loaded, isNotNull);
+    expect(loaded!.name, 'Standalone Tech');
+
+    await service.save(
+      actor: standalone,
+      providerId: standalone.id,
+      fullName: 'Standalone Tech Updated',
+      description: 'Independent AC repair specialist',
+      serviceArea: 'Daun Penh',
+      telegramUrl: 'https://t.me/standalonetech',
+      messengerUrl: '',
+    );
+
+    final publicService = FirestoreProviderService(firestore: firestore);
+    final saved = await publicService.getProviderById(standalone.id);
+    expect(saved, isNotNull);
+    expect(saved!.name, 'Standalone Tech Updated');
+    expect(saved.serviceArea, 'Daun Penh');
+    expect(saved.telegramUrl, 'https://t.me/standalonetech');
+  });
 }
