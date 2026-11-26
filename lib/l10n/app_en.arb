@@ -549,5 +549,37 @@
       "count": {"type": "int"},
       "providerName": {"type": "String"}
     }
+  },
+  "cartTitle": "Cart",
+  "cartHeading": "Review your cart",
+  "cartItemCount": "{count, plural, =1{1 service} other{{count} services}}",
+  "@cartItemCount": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "cartProviderLabel": "Provider",
+  "cartProviderUnknown": "Provider name unavailable",
+  "cartItemQuantityPrice": "{quantity} × {price}",
+  "@cartItemQuantityPrice": {
+    "placeholders": {
+      "quantity": {"type": "int"},
+      "price": {"type": "String"}
+    }
+  },
+  "cartRemoveItem": "Remove {serviceTitle}",
+  "@cartRemoveItem": {
+    "placeholders": {"serviceTitle": {"type": "String"}}
+  },
+  "cartTotalLabel": "Total",
+  "cartTotalSemantics": "Total {price}",
+  "@cartTotalSemantics": {
+    "placeholders": {"price": {"type": "String"}}
+  },
+  "cartPaymentNote": "These are the provider's fixed prices. No payment is taken in the app; you pay the provider directly after the job.",
+  "cartEmptyTitle": "Your cart is empty",
+  "cartEmptyBody": "Add fixed-price services from a provider's page and they will appear here.",
+  "cartBrowseServices": "Browse services",
+  "cartOpenSemantics": "Open cart, {count, plural, =1{1 service} other{{count} services}}",
+  "@cartOpenSemantics": {
+    "placeholders": {"count": {"type": "int"}}
   }
 }
