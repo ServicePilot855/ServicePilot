@@ -127,8 +127,16 @@
 
 #### Definition of Done
 - [ ] Service listing form with input validation (title length, price > 0).
-- [ ] Firestore security rules enforce provider identity on `services` writes.
+- [ ] Firestore security rules enforce provider identity on `offerings` writes.
 - [ ] Automated form validation and creation tests pass.
+
+#### Implementation and verification
+
+The fixed-price implementation reached `main` in [`ebd4ae0`](https://github.com/ServicePilot855/ServicePilot/commit/ebd4ae011b414b4e702a07b27861beb0afd6c444).
+
+As an approved independent provider or registered company administrator, open **My Service Offerings → Add Offering**, choose an active category and **Fixed upfront price**, and publish a service at `25.49`. As a homeowner, open that provider's public profile and check that the listing shows `$25.49`. With the price blank, publishing should show a validation message.
+
+The [form tests](../test/features/services/create_offering_screen_test.dart) cover both provider roles and public price display. The [Firestore service tests](../test/features/services/firestore_offering_service_test.dart) cover persistence and write failures. The [emulator rules check](../test/firestore/fixed_offering_rules.mjs) verifies that invalid and cross-company writes create no listing.
 
 ---
 
