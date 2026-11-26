@@ -44,17 +44,28 @@ class IndependentProfileService {
   ProviderModel? _editableProfile(DocumentSnapshot<Map<String, dynamic>> doc) {
     if (!doc.exists) return null;
     final profile = ProviderModel.fromFirestore(doc);
-    return profile.isIndependent &&
-            const ['active', 'pending_verification', 'inactive']
-                .contains(profile.status)
+    return profile.isIndependent && profile.status.toLowerCase() != 'suspended'
         ? profile
         : null;
   }
 
+  ProviderModel _standaloneProfile(UserModel actor) => ProviderModel(
+        id: actor.id,
+        name: actor.fullName,
+        type: ProviderType.independent,
+        serviceArea: actor.serviceArea ?? '',
+        email: actor.email,
+        phone: actor.phoneNumber,
+        status: actor.status,
+        isVerified: actor.status == 'active',
+      );
+
   Future<ProviderModel?> load(UserModel actor) async {
     final docRef = _ownedProfile(actor, actor.id);
     if (docRef == null) return null;
-    return _editableProfile(await docRef.get());
+    final doc = await docRef.get();
+    if (!doc.exists) return _standaloneProfile(actor);
+    return _editableProfile(doc);
   }
 
   Future<void> save({
@@ -93,25 +104,45 @@ class IndependentProfileService {
       final userDoc = firestore.collection('users').doc(actor.id);
       final userSnapshot = await transaction.get(userDoc);
 
-      final existing = _editableProfile(docSnapshot);
-      if (existing == null) {
-        throw StateError('Technician profile unavailable.');
-      }
+      if (!docSnapshot.exists) {
+        transaction.set(doc, {
+          'id': actor.id,
+          'name': name,
+          'fullName': name,
+          if (actor.email.trim().isNotEmpty) 'email': actor.email.trim(),
+          'phoneNumber': actor.phoneNumber,
+          'providerType': 'independent',
+          'status': 'pending_verification',
+          'isVerified': false,
+          'description': about,
+          'bio': about,
+          'serviceArea': area,
+          if (telegram.isNotEmpty) 'telegramUrl': telegram,
+          if (messenger.isNotEmpty) 'messengerUrl': messenger,
+          'createdAt': Timestamp.fromDate(actor.createdAt ?? DateTime.now()),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      } else {
+        final existing = _editableProfile(docSnapshot);
+        if (existing == null) {
+          throw StateError('Technician profile unavailable.');
+        }
 
-      transaction.update(doc, {
-        'name': name,
-        'fullName': name,
-        'description': about,
-        'bio': about,
-        'serviceArea': area,
-        if (area != existing.formattedCoverageAreas) ...{
-          'coverageAreas': FieldValue.delete(),
-          'serviceAreas': FieldValue.delete(),
-        },
-        'telegramUrl': telegram.isEmpty ? FieldValue.delete() : telegram,
-        'messengerUrl': messenger.isEmpty ? FieldValue.delete() : messenger,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+        transaction.update(doc, {
+          'name': name,
+          'fullName': name,
+          'description': about,
+          'bio': about,
+          'serviceArea': area,
+          if (area != existing.formattedCoverageAreas) ...{
+            'coverageAreas': FieldValue.delete(),
+            'serviceAreas': FieldValue.delete(),
+          },
+          'telegramUrl': telegram.isEmpty ? FieldValue.delete() : telegram,
+          'messengerUrl': messenger.isEmpty ? FieldValue.delete() : messenger,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
 
       if (userSnapshot.exists) {
         transaction.update(userDoc, {

@@ -1049,7 +1049,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get offeringDashboardTitle => 'My Service Offerings';
 
   @override
-  String get offeringAddButton => '+ Add Offering';
+  String get offeringAddButton => 'Add Offering';
 
   @override
   String get offeringEmptyNotice =>
