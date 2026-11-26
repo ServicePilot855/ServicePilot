@@ -948,6 +948,13 @@ class AppLocalizationsKm extends AppLocalizations {
   String get offeringCategoryRequired => 'សូមជ្រើសរើសប្រភេទសេវាកម្ម។';
 
   @override
+  String get offeringCategoriesEmpty => 'មិនមានប្រភេទសេវាកម្មសកម្មទេ។';
+
+  @override
+  String get offeringCategoriesError =>
+      'មិនអាចផ្ទុកប្រភេទសេវាកម្មបានទេ។ សូមត្រឡប់ក្រោយ ហើយបើកទម្រង់ម្ដងទៀត។';
+
+  @override
   String get offeringTitleLabel => 'ឈ្មោះសេវាកម្ម';
 
   @override
@@ -1011,7 +1018,8 @@ class AppLocalizationsKm extends AppLocalizations {
   String get offeringPriceRequired => 'សូមបញ្ចូលតម្លៃគោលត្រឹមត្រូវ។';
 
   @override
-  String get offeringPricePositive => 'តម្លៃត្រូវតែធំជាងសូន្យ។';
+  String get offeringPricePositive =>
+      'សូមបញ្ចូលតម្លៃធំជាងសូន្យ និងមានខ្ទង់ទសភាគយ៉ាងច្រើនពីរខ្ទង់។';
 
   @override
   String get offeringUnitLabel => 'ខ្នាតតម្លៃ (ជម្រើស)';
@@ -1024,6 +1032,10 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get offeringSuccessSnackbar => 'សេវាកម្មត្រូវបានផ្សព្វផ្សាយដោយជោគជ័យ!';
+
+  @override
+  String get offeringPublishError =>
+      'មិនអាចផ្សព្វផ្សាយសេវាកម្មបានទេ។ សូមពិនិត្យការតភ្ជាប់ និងសិទ្ធិគណនីអ្នកផ្តល់សេវា រួចព្យាយាមម្ដងទៀត។';
 
   @override
   String get offeringUnauthorized =>

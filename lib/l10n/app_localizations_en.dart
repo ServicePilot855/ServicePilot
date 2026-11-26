@@ -957,6 +957,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get offeringCategoryRequired => 'Please select a service category.';
 
   @override
+  String get offeringCategoriesEmpty =>
+      'There are no active service categories.';
+
+  @override
+  String get offeringCategoriesError =>
+      'Couldn’t load service categories. Go back and reopen the form to try again.';
+
+  @override
   String get offeringTitleLabel => 'Service Title';
 
   @override
@@ -1022,7 +1030,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get offeringPriceRequired => 'Please enter a valid base price.';
 
   @override
-  String get offeringPricePositive => 'Price must be greater than zero.';
+  String get offeringPricePositive =>
+      'Enter an amount greater than zero with up to two decimal places.';
 
   @override
   String get offeringUnitLabel => 'Pricing Unit (Optional)';
@@ -1036,6 +1045,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get offeringSuccessSnackbar =>
       'Service offering published successfully!';
+
+  @override
+  String get offeringPublishError =>
+      'Couldn’t publish your offering. Check your connection and provider access, then try again.';
 
   @override
   String get offeringUnauthorized =>

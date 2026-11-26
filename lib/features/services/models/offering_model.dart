@@ -70,6 +70,12 @@ class OfferingModel {
   /// True if this offering has a standard fixed price.
   bool get isFixedPrice => pricingMode == OfferingPricingMode.fixed;
 
+  static bool isValidFixedPrice(double? price) {
+    if (price == null || !price.isFinite || price <= 0) return false;
+    final cents = price * 100;
+    return cents.isFinite && cents.roundToDouble() / 100 == price;
+  }
+
   /// Guard to prevent quote-required offerings from entering standard cart checkout.
   bool get canAddToCart => isFixedPrice;
 

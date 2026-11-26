@@ -649,20 +649,58 @@ service cloud.firestore {
         );
       }
 
+      function isFixedOfferingPublisher(data) {
+        let providerId = data.providerId;
+        let profile = get(/databases/$(database)/documents/providers/$(providerId)).data;
+        let account = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+        let storedType = profile.get('type', profile.get('providerType', 'independent'));
+        let profileType = storedType == 'independent_provider' ? 'independent' : storedType;
+        return profile.status == 'active' && profile.get('isVerified', true) == true &&
+          account.status != 'suspended' &&
+          (isOwner(providerId) ||
+            (request.auth.token.get('email_verified', false) == true &&
+              profile.get('email', '') != '' &&
+              profile.email == request.auth.token.get('email', ''))) &&
+          data.get('providerType', profileType) == profileType &&
+          ((profileType == 'independent' && account.role == 'independent_provider') ||
+            (profileType == 'company' && account.role == 'company' &&
+              account.get('companyId', providerId) == providerId));
+      }
+
+      function isValidFixedOffering(data) {
+        let price = data.price;
+        let cents = price * 100.0;
+        let categoryId = data.categoryId;
+        return price > 0 && cents - cents == 0 &&
+          int(cents + 0.5) / 100.0 == price &&
+          data.title.size() >= 3 && data.title.matches('(?s).*\\S.*') &&
+          data.description.size() >= 10 && data.description.matches('(?s).*\\S.*') &&
+          get(/databases/$(database)/documents/categories/$(categoryId)).data.isActive == true;
+      }
+
       // Read: Active offerings are public; owners can read their own regardless of status; admins can read all
       allow read: if resource.data.isActive == true ||
                      isOfferingOwner(resource.data.providerId) ||
                      isAdmin();
 
-      // Create: Provider (owner) or platform admin. Document ID must match id field.
-      allow create: if isOfferingPublisher(request.resource.data.providerId) &&
+      allow create: if isAuthenticated() &&
                        isValidOffering(request.resource.data) &&
-                       request.resource.data.id == offeringId;
+                       request.resource.data.id == offeringId &&
+                       (request.resource.data.pricingMode == 'fixed'
+                         ? isFixedOfferingPublisher(request.resource.data) &&
+                           isValidFixedOffering(request.resource.data)
+                         : isOfferingPublisher(request.resource.data.providerId));
 
       // Update: Provider (owner) or platform admin. Enforces immutable fields.
-      allow update: if isOfferingPublisher(resource.data.providerId) &&
+      allow update: if isAuthenticated() &&
                        isValidOffering(request.resource.data) &&
-                       areImmutableFieldsUnchanged(['id', 'providerId', 'createdAt']);
+                       areImmutableFieldsUnchanged(['id', 'providerId', 'createdAt']) &&
+                       (request.resource.data.pricingMode == 'fixed'
+                         ? isFixedOfferingPublisher(request.resource.data) &&
+                           isValidFixedOffering(request.resource.data)
+                         : resource.data.pricingMode == 'fixed'
+                           ? isFixedOfferingPublisher(resource.data)
+                           : isOfferingPublisher(resource.data.providerId));
 
       // Delete: Provider (owner) or platform admin
       allow delete: if (isOfferingOwner(resource.data.providerId) || isAdmin());

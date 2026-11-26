@@ -44,7 +44,8 @@ class OfferingService implements IOfferingService {
       categoryId: 'cat-ac',
       categoryName: 'Air Conditioner Repair & Care',
       title: 'Split Unit Deep Coil Wash',
-      description: 'Comprehensive high-pressure coil wash and drain unclogging.',
+      description:
+          'Comprehensive high-pressure coil wash and drain unclogging.',
       pricingMode: OfferingPricingMode.fixed,
       price: 20.0,
       unit: 'unit',
@@ -119,10 +120,13 @@ class OfferingService implements IOfferingService {
 
   @override
   Future<OfferingModel> createOffering(OfferingModel offering) async {
+    if (offering.isFixedPrice &&
+        !OfferingModel.isValidFixedPrice(offering.price)) {
+      throw ArgumentError.value(offering.price, 'price', 'Invalid fixed price');
+    }
     // Defensive check: Quote-required offerings must not hold fixed checkout prices
-    final sanitized = offering.isQuoteRequired
-        ? offering.copyWith(price: null)
-        : offering;
+    final sanitized =
+        offering.isQuoteRequired ? offering.copyWith(price: null) : offering;
 
     _offerings.add(sanitized);
     return sanitized;
@@ -134,9 +138,8 @@ class OfferingService implements IOfferingService {
     if (index == -1) {
       throw Exception('Offering with ID ${offering.id} not found');
     }
-    final sanitized = offering.isQuoteRequired
-        ? offering.copyWith(price: null)
-        : offering;
+    final sanitized =
+        offering.isQuoteRequired ? offering.copyWith(price: null) : offering;
 
     _offerings[index] = sanitized;
     return sanitized;

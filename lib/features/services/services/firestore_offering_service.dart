@@ -24,6 +24,9 @@ class FirestoreOfferingService implements IOfferingService {
   FirebaseFirestore get _firestore =>
       _injectedFirestore ?? FirebaseFirestore.instance;
 
+  bool get _hasFirestore =>
+      _injectedFirestore != null || Firebase.apps.isNotEmpty;
+
   static const String collectionName = 'offerings';
 
   @override
@@ -32,7 +35,7 @@ class FirestoreOfferingService implements IOfferingService {
     String? providerId,
     bool activeOnly = true,
   }) async {
-    if (Firebase.apps.isNotEmpty) {
+    if (_hasFirestore) {
       try {
         Query query = _firestore.collection(collectionName);
         if (activeOnly) {
@@ -49,7 +52,8 @@ class FirestoreOfferingService implements IOfferingService {
         // Return live Firestore results. When filtering for a specific provider,
         // if they have 0 offerings, return an empty list rather than leaking
         // another provider's demo seed offerings.
-        if (snapshot.docs.isNotEmpty || (providerId != null && providerId.isNotEmpty)) {
+        if (snapshot.docs.isNotEmpty ||
+            (providerId != null && providerId.isNotEmpty)) {
           return snapshot.docs
               .map((doc) => OfferingModel.fromFirestore(doc))
               .toList();
@@ -70,7 +74,7 @@ class FirestoreOfferingService implements IOfferingService {
 
   @override
   Future<OfferingModel?> getOfferingById(String id) async {
-    if (Firebase.apps.isNotEmpty) {
+    if (_hasFirestore) {
       try {
         final doc = await _firestore.collection(collectionName).doc(id).get();
         if (doc.exists) {
@@ -90,13 +94,20 @@ class FirestoreOfferingService implements IOfferingService {
   @override
   Future<OfferingModel> createOffering(OfferingModel offering) async {
     // Sanitize: quote required offerings must never hold a fixed checkout price
-    final sanitized = offering.isQuoteRequired
-        ? offering.copyWith(price: null)
-        : offering;
+    final sanitized =
+        offering.isQuoteRequired ? offering.copyWith(price: null) : offering;
 
-    if (Firebase.apps.isNotEmpty) {
+    if (offering.isFixedPrice) {
+      if (!OfferingModel.isValidFixedPrice(offering.price)) {
+        throw ArgumentError.value(
+            offering.price, 'price', 'Invalid fixed price');
+      }
+      if (!_hasFirestore) throw StateError('Firestore unavailable');
+    }
+
+    if (_hasFirestore) {
       try {
-        final docRef = sanitized.id.isNotEmpty
+        final docRef = !sanitized.isFixedPrice && sanitized.id.isNotEmpty
             ? _firestore.collection(collectionName).doc(sanitized.id)
             : _firestore.collection(collectionName).doc();
 
@@ -107,14 +118,15 @@ class FirestoreOfferingService implements IOfferingService {
         );
 
         await docRef.set(finalOffering.toMap());
-        // Best-effort in-memory fallback cache update
         try {
           await _fallbackService.createOffering(finalOffering);
-        } catch (e) {
-          debugPrint('[FirestoreOfferingService] Fallback cache create error (ignored): $e');
+        } catch (error) {
+          debugPrint(
+              '[FirestoreOfferingService] Could not cache offering: $error');
         }
         return finalOffering;
       } catch (e) {
+        if (offering.isFixedPrice) rethrow;
         debugPrint(
           '[FirestoreOfferingService] Create offering Firestore error ($e); saving to fallback store.',
         );
@@ -126,9 +138,8 @@ class FirestoreOfferingService implements IOfferingService {
 
   @override
   Future<OfferingModel> updateOffering(OfferingModel offering) async {
-    final sanitized = offering.isQuoteRequired
-        ? offering.copyWith(price: null)
-        : offering;
+    final sanitized =
+        offering.isQuoteRequired ? offering.copyWith(price: null) : offering;
 
     if (Firebase.apps.isNotEmpty) {
       try {
@@ -142,7 +153,8 @@ class FirestoreOfferingService implements IOfferingService {
         try {
           await _fallbackService.updateOffering(finalOffering);
         } catch (e) {
-          debugPrint('[FirestoreOfferingService] Fallback cache update error (ignored): $e');
+          debugPrint(
+              '[FirestoreOfferingService] Fallback cache update error (ignored): $e');
         }
         return finalOffering;
       } catch (e) {
@@ -168,7 +180,8 @@ class FirestoreOfferingService implements IOfferingService {
     try {
       await _fallbackService.deleteOffering(id);
     } catch (e) {
-      debugPrint('[FirestoreOfferingService] Fallback cache delete error (ignored): $e');
+      debugPrint(
+          '[FirestoreOfferingService] Fallback cache delete error (ignored): $e');
     }
   }
 }

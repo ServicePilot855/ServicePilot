@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/core/auth/auth_state.dart';
 import 'package:service_pilot/core/constants/app_roles.dart';
 import 'package:service_pilot/core/theme/app_theme.dart';
 import 'package:service_pilot/features/auth/models/user_model.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
+import 'package:service_pilot/features/providers/providers/provider_provider.dart';
+import 'package:service_pilot/features/providers/screens/provider_detail_screen.dart';
+import 'package:service_pilot/features/providers/services/provider_service.dart';
 import 'package:service_pilot/features/services/models/category_model.dart';
 import 'package:service_pilot/features/services/models/offering_model.dart';
 import 'package:service_pilot/features/services/providers/category_provider.dart';
@@ -56,32 +60,282 @@ void main() {
     IOfferingService? customOfferingService,
     ICategoryService? customCategoryService,
     UserModel? mockUser,
+    List<ProviderModel>? providers,
+    String? categoryId = 'cat-ac',
+    String? providerId,
+    Locale locale = const Locale('en'),
+    double textScale = 1,
   }) {
+    final router = GoRouter(
+      initialLocation: '/offerings/create',
+      routes: [
+        GoRoute(
+          path: '/offerings/create',
+          builder: (_, __) => CreateOfferingScreen(
+            initialCategoryId: categoryId,
+            initialProviderId: providerId,
+          ),
+        ),
+        GoRoute(
+          path: '/home/:role',
+          builder: (_, __) => const Scaffold(body: Text('Provider home')),
+        ),
+        GoRoute(
+          path: '/providers/:id',
+          builder: (_, state) =>
+              ProviderDetailScreen(providerId: state.pathParameters['id']!),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
     return ProviderScope(
       overrides: [
+        if (providers != null)
+          providerServiceProvider.overrideWithValue(
+            ProviderService(initialProviders: providers),
+          ),
         if (customOfferingService != null)
           offeringServiceProvider.overrideWithValue(customOfferingService),
         if (customCategoryService != null)
           categoryServiceProvider.overrideWithValue(customCategoryService),
         authProvider.overrideWith(() => _MockAuthNotifier(mockUser)),
       ],
-      child: MaterialApp(
+      child: MaterialApp.router(
+        routerConfig: router,
         theme: AppTheme.lightTheme,
+        locale: locale,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(textScale),
+          ),
+          child: child!,
+        ),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const CreateOfferingScreen(initialCategoryId: 'cat-ac'),
       ),
     );
   }
 
-  void setupViewport(WidgetTester tester) {
-    tester.view.physicalSize = const Size(800, 1600);
+  void setupViewport(WidgetTester tester, {Size size = const Size(800, 1600)}) {
+    tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() {
       tester.view.resetPhysicalSize();
       tester.view.resetDevicePixelRatio();
     });
   }
+
+  Future<void> enterFixedOffering(
+    WidgetTester tester, {
+    String price = '25.49',
+    String title = 'Split Unit Wash',
+    bool selectCategory = false,
+    bool showKeyboard = false,
+  }) async {
+    if (selectCategory) {
+      await tester.tap(find.byKey(const Key('offering_category_dropdown')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(testCategories.first.name).last);
+      await tester.pumpAndSettle();
+    }
+    await tester.enterText(
+      find.byKey(const Key('offering_title_field')),
+      title,
+    );
+    await tester.enterText(
+      find.byKey(const Key('offering_description_field')),
+      'Deep cleaning and drain inspection.',
+    );
+    final fixedMode = find.byKey(const Key('pricing_mode_fixed'));
+    await tester.ensureVisible(fixedMode);
+    await tester.tap(fixedMode);
+    await tester.pumpAndSettle();
+    final priceField = find.byKey(const Key('offering_price_field'));
+    await tester.ensureVisible(priceField);
+    await tester.enterText(priceField, price);
+    if (showKeyboard) {
+      tester.view.viewInsets = const FakeViewPadding(bottom: 260);
+      addTearDown(tester.view.resetViewInsets);
+    } else {
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+    }
+    await tester.pumpAndSettle();
+    final publish = find.byKey(const Key('publish_offering_button'));
+    await tester.ensureVisible(publish);
+    await tester.tap(publish);
+    await tester.pumpAndSettle();
+  }
+
+  const technician = ProviderModel(id: 'prov-tech-1', name: 'Tech Lead');
+  const company = ProviderModel(
+    id: 'prov-company-1',
+    name: 'Company Admin',
+    businessName: 'AirCare',
+    type: ProviderType.company,
+  );
+  const companyAdmin = UserModel(
+    id: 'prov-company-1',
+    fullName: 'Company Admin',
+    email: 'company-admin@example.test',
+    phoneNumber: '+85511223344',
+    role: AppRole.company,
+    status: 'active',
+    companyId: 'prov-company-1',
+  );
+
+  group('SCRUM-76 fixed-price publishing', () {
+    for (final (locale, width) in [
+      (const Locale('en'), 320.0),
+      (const Locale('km'), 360.0)
+    ]) {
+      testWidgets(
+          'shows missing-price feedback at ${width.toInt()}dp in ${locale.languageCode}',
+          (tester) async {
+        setupViewport(tester, size: Size(width, 800));
+        final service = OfferingService(initialOfferings: []);
+        await tester.pumpWidget(buildTestApp(
+          customCategoryService:
+              CategoryService(initialCategories: testCategories),
+          customOfferingService: service,
+          providers: [technician],
+          locale: locale,
+          textScale: 1.3,
+        ));
+        await tester.pumpAndSettle();
+        await enterFixedOffering(tester, price: '', showKeyboard: true);
+
+        final l10n = AppLocalizations.of(
+          tester.element(find.byType(CreateOfferingScreen)),
+        )!;
+        expect(find.text(l10n.offeringPriceRequired), findsOneWidget);
+        expect(await service.getOfferings(), isEmpty);
+        expect(
+          tester
+              .getBottomLeft(find.byKey(const Key('publish_offering_button')))
+              .dy,
+          lessThanOrEqualTo(540),
+        );
+        expect(tester.takeException(), isNull);
+      });
+    }
+
+    for (final provider in [technician, company]) {
+      testWidgets(
+          'publishes the saved price on the ${provider.type.name} profile',
+          (tester) async {
+        setupViewport(tester);
+        final service = OfferingService(initialOfferings: []);
+        await tester.pumpWidget(buildTestApp(
+          customCategoryService:
+              CategoryService(initialCategories: testCategories),
+          customOfferingService: service,
+          providers: [technician, company],
+          mockUser: provider.isCompany ? companyAdmin : null,
+          categoryId: null,
+        ));
+        await tester.pumpAndSettle();
+        await enterFixedOffering(tester, selectCategory: true);
+
+        final saved = (await service.getOfferings()).single;
+        expect(saved.providerId, provider.id);
+        expect(saved.providerName, provider.displayName);
+        expect(saved.providerType, provider.type);
+        expect(saved.categoryId, 'cat-ac');
+        expect(saved.pricingMode, OfferingPricingMode.fixed);
+        expect(saved.price, 25.49);
+        expect(find.text('Provider home'), findsOneWidget);
+
+        final router = GoRouter.of(tester.element(find.text('Provider home')));
+        router.go('/providers/${provider.id}');
+        await tester.pumpAndSettle();
+        expect(find.text('Split Unit Wash'), findsOneWidget);
+        expect(find.text(saved.priceDisplay), findsOneWidget);
+
+        router.go(
+            '/providers/${provider.isCompany ? technician.id : company.id}');
+        await tester.pumpAndSettle();
+        expect(find.text('Split Unit Wash'), findsNothing);
+      });
+    }
+
+    for (final price in ['', '-1', '0', 'Infinity', 'NaN', '0.001']) {
+      testWidgets('rejects invalid fixed price "$price"', (tester) async {
+        setupViewport(tester);
+        final service = OfferingService(initialOfferings: []);
+        await tester.pumpWidget(buildTestApp(
+          customCategoryService:
+              CategoryService(initialCategories: testCategories),
+          customOfferingService: service,
+          providers: [technician],
+        ));
+        await tester.pumpAndSettle();
+        await enterFixedOffering(tester, price: price);
+
+        expect(await service.getOfferings(), isEmpty);
+        final l10n = AppLocalizations.of(
+          tester.element(find.byType(CreateOfferingScreen)),
+        )!;
+        expect(
+          find.text(price.isEmpty
+              ? l10n.offeringPriceRequired
+              : l10n.offeringPricePositive),
+          findsOneWidget,
+        );
+      });
+    }
+
+    for (final categoryId in [null, 'inactive-category']) {
+      testWidgets('rejects missing or inactive category "$categoryId"',
+          (tester) async {
+        setupViewport(tester);
+        final service = OfferingService(initialOfferings: []);
+        await tester.pumpWidget(buildTestApp(
+          customCategoryService: CategoryService(initialCategories: [
+            ...testCategories,
+            const CategoryModel(
+              id: 'inactive-category',
+              name: 'Inactive category',
+              description: '',
+              iconName: 'build',
+              providerCount: 0,
+              isActive: false,
+            ),
+          ]),
+          customOfferingService: service,
+          providers: [technician],
+          categoryId: categoryId,
+        ));
+        await tester.pumpAndSettle();
+        await enterFixedOffering(tester);
+
+        expect(await service.getOfferings(), isEmpty);
+        expect(find.text('Please select a service category.'), findsOneWidget);
+      });
+    }
+
+    testWidgets('rejects a route targeting another company', (tester) async {
+      setupViewport(tester);
+      final service = OfferingService(initialOfferings: []);
+      const otherCompany = ProviderModel(
+        id: 'other-company',
+        name: 'Other Company',
+        type: ProviderType.company,
+      );
+      await tester.pumpWidget(buildTestApp(
+        customCategoryService:
+            CategoryService(initialCategories: testCategories),
+        customOfferingService: service,
+        providers: [company, otherCompany],
+        mockUser: companyAdmin,
+        providerId: otherCompany.id,
+      ));
+      await tester.pumpAndSettle();
+      await enterFixedOffering(tester);
+
+      expect(await service.getOfferings(), isEmpty);
+      expect(find.byType(CreateOfferingScreen), findsOneWidget);
+    });
+  });
 
   group('SCRUM-77 / SCRUM-119: CreateOfferingScreen Listing Form Tests', () {
     testWidgets(
@@ -226,7 +480,10 @@ void main() {
       expect(offerings, isEmpty);
 
       // Verify error notice is displayed
-      expect(find.text('Only registered service providers and companies can publish offerings.'), findsOneWidget);
+      expect(
+          find.text(
+              'Only registered service providers and companies can publish offerings.'),
+          findsOneWidget);
     });
 
     testWidgets(
@@ -269,11 +526,13 @@ void main() {
       final offerings = await offeringService.getOfferings();
       expect(offerings, isEmpty);
 
-      expect(find.text('Provider account must be active to publish service offerings.'), findsOneWidget);
+      expect(
+          find.text(
+              'Provider account must be active to publish service offerings.'),
+          findsOneWidget);
     });
 
-    testWidgets(
-        'Issue 7: Use the company name for company offering listings',
+    testWidgets('Issue 7: Use the company name for company offering listings',
         (tester) async {
       setupViewport(tester);
       final categoryService =

@@ -13,6 +13,7 @@ final providerServiceProvider = Provider<IProviderService>((ref) {
 final currentProviderIdProvider = Provider<String>((ref) {
   final user = ref.watch(currentUserProvider);
   if (user == null) return '';
+  if (user.isCompany && user.companyId == user.id) return user.id;
   final email = user.email.toLowerCase().trim();
   if (email == 'technician@test.com') return 'prov-virak-ac';
   if (email == 'company@test.com') return 'prov-fixco-company';

@@ -1766,6 +1766,18 @@ abstract class AppLocalizations {
   /// **'Please select a service category.'**
   String get offeringCategoryRequired;
 
+  /// No description provided for @offeringCategoriesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'There are no active service categories.'**
+  String get offeringCategoriesEmpty;
+
+  /// No description provided for @offeringCategoriesError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t load service categories. Go back and reopen the form to try again.'**
+  String get offeringCategoriesError;
+
   /// No description provided for @offeringTitleLabel.
   ///
   /// In en, this message translates to:
@@ -1889,7 +1901,7 @@ abstract class AppLocalizations {
   /// No description provided for @offeringPricePositive.
   ///
   /// In en, this message translates to:
-  /// **'Price must be greater than zero.'**
+  /// **'Enter an amount greater than zero with up to two decimal places.'**
   String get offeringPricePositive;
 
   /// No description provided for @offeringUnitLabel.
@@ -1915,6 +1927,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Service offering published successfully!'**
   String get offeringSuccessSnackbar;
+
+  /// No description provided for @offeringPublishError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t publish your offering. Check your connection and provider access, then try again.'**
+  String get offeringPublishError;
 
   /// No description provided for @offeringUnauthorized.
   ///
