@@ -570,13 +570,129 @@ service cloud.firestore {
     // Collection 4: /bookings/{bookingId}
     // ===============================================================
 
+    function ownsBookingInbox(providerId) {
+      let account = get(/databases/$(database)/documents/users/$(providerId)).data;
+      return isOwner(providerId) && account != null &&
+        account.get('status', '') != 'suspended' &&
+        (account.role == 'independent_provider' ||
+          (account.role == 'company' && account.get('companyId', providerId) == providerId));
+    }
+
+    function isCompanyBookingTechnician(technicianId, providerId) {
+      let account = get(/databases/$(database)/documents/users/$(technicianId)).data;
+      return account != null && account.role in ['company_technician', 'companyTechnician'] &&
+        account.get('companyId', '') == providerId && account.get('status', '') != 'suspended';
+    }
+
+    function isAssignedBookingTechnician(booking) {
+      return booking.get('technicianId', '') == request.auth.uid &&
+        isCompanyBookingTechnician(request.auth.uid, booking.providerId);
+    }
+
+    function bookingPreview(data) {
+      return {
+        'serviceTitle': data.get('serviceType', data.get('categoryName', '')),
+        'description': data.get('description', data.get('notes', '')),
+        'appointmentDate': data.get('appointmentDate', null)
+      };
+    }
+
+    function inboxDocument(providerId, bookingId) {
+      return /databases/$(database)/documents/providers/$(providerId)/incomingBookingRequests/$(bookingId);
+    }
+
+    function inboxMatchesBooking(bookingId, booking) {
+      let preview = inboxDocument(booking.providerId, bookingId);
+      return booking.status == 'pending'
+        ? getAfter(preview).data == bookingPreview(booking)
+        : !existsAfter(preview);
+    }
+
+    // Firestore reads whole documents. Pending requests use a separate view
+    // whose fields must match an allowlisted projection of the private record.
+    match /providers/{providerId}/incomingBookingRequests/{bookingId} {
+      function bookingPath() {
+        return /databases/$(database)/documents/bookings/$(bookingId);
+      }
+
+      function canPublish() {
+        let booking = getAfter(bookingPath()).data;
+        return booking != null && booking.providerId == providerId &&
+          booking.status == 'pending' &&
+          (isOwner(booking.customerId) || isAdmin()) &&
+          request.resource.data == bookingPreview(booking);
+      }
+
+      function canRemove() {
+        let before = get(bookingPath()).data;
+        let after = getAfter(bookingPath()).data;
+        return before != null && before.providerId == providerId &&
+          (isOwner(before.customerId) || ownsBookingInbox(providerId) || isAdmin()) &&
+          (after == null || after.status != 'pending' || after.providerId != providerId);
+      }
+
+      allow read: if ownsBookingInbox(providerId);
+      allow create, update: if isAuthenticated() && canPublish();
+      allow delete: if isAuthenticated() && canRemove();
+    }
+
     match /bookings/{bookingId} {
-      // Read: Customer, target provider, assigned technician, or platform admin
+      function validConfirmation(before, after, changed) {
+        return !after.keys().hasAny(['technicianId', 'technicianName']) &&
+          changed.hasOnly(['status', 'updatedAt', 'technicianId', 'technicianName',
+            'confirmedAppointmentAt', 'confirmedAt', 'confirmedBy']) &&
+          (!changed.hasAny(['confirmedAppointmentAt', 'confirmedAt', 'confirmedBy']) ||
+           (after.confirmedAppointmentAt != null &&
+            after.confirmedAppointmentAt == before.get('appointmentDate', null) &&
+            after.confirmedAt == request.time && after.confirmedBy == request.auth.uid));
+      }
+
+      function canDecideRequest(before, after, changed) {
+        return before.status == 'pending' && ownsBookingInbox(before.providerId) &&
+          ((after.status == 'confirmed' && validConfirmation(before, after, changed)) ||
+           (after.status == 'declined' && changed.hasOnly(['status', 'updatedAt', 'declinedReason'])));
+      }
+
+      function canAssignTechnician(before, after, changed) {
+        let provider = get(/databases/$(database)/documents/users/$(before.providerId)).data;
+        return before.status == 'confirmed' && after.status == 'assigned' &&
+          ownsBookingInbox(before.providerId) && provider.role == 'company' &&
+          changed.hasOnly(['status', 'updatedAt', 'technicianId', 'technicianName']) &&
+          ('technicianId' in after) && isCompanyBookingTechnician(after.technicianId, before.providerId);
+      }
+
+      function canProgressAcceptedBooking(before, after, changed) {
+        return (before.status == 'assigned' && after.status == 'confirmed' &&
+                ownsBookingInbox(before.providerId) && validConfirmation(before, after, changed)) ||
+           (changed.hasOnly(['status', 'updatedAt']) &&
+            (ownsBookingInbox(before.providerId) || isAssignedBookingTechnician(before)) &&
+             ((before.status in ['confirmed', 'assigned'] && after.status == 'in_progress') ||
+               (before.status == 'in_progress' && after.status == 'completed')));
+      }
+
+      function canCustomerUpdateBooking(before, after, changed) {
+        return isOwner(before.customerId) &&
+          ((before.status == 'pending' && after.status == 'pending' &&
+            !changed.hasAny(['technicianId', 'technicianName',
+              'confirmedAppointmentAt', 'confirmedAt', 'confirmedBy'])) ||
+           (before.status in ['pending', 'confirmed', 'assigned'] && after.status == 'cancelled' &&
+            changed.hasOnly(['status', 'updatedAt', 'cancelledAt', 'cancelledBy', 'cancellationReason'])));
+      }
+
+      function canUpdateBooking(before, after) {
+        let changed = after.diff(before).affectedKeys();
+        return canCustomerUpdateBooking(before, after, changed) ||
+          canDecideRequest(before, after, changed) ||
+          canAssignTechnician(before, after, changed) ||
+          canProgressAcceptedBooking(before, after, changed);
+      }
+
+      // Providers and technicians can read private details after acceptance.
       allow read: if isAuthenticated() &&
                      (
                        resource.data.customerId == request.auth.uid ||
-                       resource.data.providerId == request.auth.uid ||
-                       ('technicianId' in resource.data && resource.data.technicianId == request.auth.uid) ||
+                       (resource.data.status in ['confirmed', 'assigned', 'in_progress', 'completed'] &&
+                         (ownsBookingInbox(resource.data.providerId) || isAssignedBookingTechnician(resource.data))) ||
                        isAdmin()
                      );
 
@@ -585,10 +701,13 @@ service cloud.firestore {
       allow create: if isAuthenticated() &&
                        isValidBooking(request.resource.data) &&
                        (!('id' in request.resource.data) || request.resource.data.id == bookingId) &&
+                       inboxMatchesBooking(bookingId, request.resource.data) &&
                        (
                          (
                            request.resource.data.customerId == request.auth.uid &&
-                           request.resource.data.status == 'pending'
+                           request.resource.data.status == 'pending' &&
+                           !request.resource.data.keys().hasAny(['technicianId', 'technicianName',
+                             'confirmedAppointmentAt', 'confirmedAt', 'confirmedBy'])
                          ) ||
                          isAdmin()
                        );
@@ -597,48 +716,17 @@ service cloud.firestore {
       // Enforces booking state machine integrity, customer cancellation rules, and immutability.
       allow update: if isAuthenticated() &&
                        isValidBooking(request.resource.data) &&
+                       inboxMatchesBooking(bookingId, request.resource.data) &&
+                       (request.resource.data.providerId == resource.data.providerId ||
+                         !existsAfter(inboxDocument(resource.data.providerId, bookingId))) &&
                        (
                          isAdmin() ||
-                         (
-                           areImmutableFieldsUnchanged(['customerId', 'providerId', 'createdAt']) &&
-                           (
-                             // Customer: allowed to cancel pending/confirmed/assigned bookings, or edit while pending
-                             (
-                               resource.data.customerId == request.auth.uid &&
-                               (
-                                 (
-                                   request.resource.data.status == 'cancelled' &&
-                                   resource.data.status in ['pending', 'confirmed', 'assigned']
-                                 ) ||
-                                 (
-                                   resource.data.status == 'pending' &&
-                                   request.resource.data.status == 'pending'
-                                 )
-                               )
-                             ) ||
-                             // Provider or assigned technician: progress status transitions
-                             // US-14 (SCRUM-45) AC: Cancelled bookings cannot be accepted, assigned, or started afterward.
-                             // BOOK-2 (SCRUM-104) AC: Only pending or assigned bookings can transition to 'confirmed'.
-                             (
-                               (
-                                 resource.data.providerId == request.auth.uid ||
-                                 ('technicianId' in resource.data && resource.data.technicianId == request.auth.uid)
-                               ) &&
-                               !(resource.data.status in ['cancelled', 'completed', 'declined']) &&
-                               (
-                                 request.resource.data.status != 'confirmed' ||
-                                 resource.data.status in ['pending', 'assigned']
-                               ) &&
-                               request.resource.data.status in [
-                                 'pending', 'confirmed', 'assigned', 'in_progress', 'completed', 'declined'
-                               ]
-                             )
-                           )
-                         )
+                         (areImmutableFieldsUnchanged(['customerId', 'providerId', 'createdAt']) &&
+                           canUpdateBooking(resource.data, request.resource.data))
                        );
 
       // Delete: Platform admin only
-      allow delete: if isAdmin();
+      allow delete: if isAdmin() && !existsAfter(inboxDocument(resource.data.providerId, bookingId));
     }
 
     // ===============================================================

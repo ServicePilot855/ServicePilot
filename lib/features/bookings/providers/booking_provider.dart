@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/features/bookings/models/booking_model.dart';
+import 'package:service_pilot/features/bookings/models/incoming_booking_request.dart';
 import 'package:service_pilot/features/bookings/services/booking_service.dart';
 import 'package:service_pilot/features/bookings/services/firestore_booking_service.dart';
 
@@ -32,6 +33,25 @@ final customerBookingsProvider =
       final customerId = ref.watch(activeCustomerIdProvider);
       return service.getCustomerBookings(customerId);
     });
+
+final incomingBookingRequestsProvider =
+    FutureProvider.autoDispose<List<IncomingBookingRequest>>((ref) async {
+  final user = ref.watch(currentUserProvider);
+  if (user == null || !user.canViewBookingInbox) return const [];
+  return ref.watch(bookingServiceProvider).getIncomingRequests(user.id);
+});
+
+final incomingBookingRequestProvider =
+    FutureProvider.autoDispose.family<IncomingBookingRequest?, String>((
+  ref,
+  bookingId,
+) async {
+  final user = ref.watch(currentUserProvider);
+  if (user == null || !user.canViewBookingInbox) return null;
+  return ref
+      .watch(bookingServiceProvider)
+      .getIncomingRequest(user.id, bookingId);
+});
 
 /// Fetches a single booking by its unique ID.
 final bookingDetailProvider =

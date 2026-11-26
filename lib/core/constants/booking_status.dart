@@ -15,6 +15,15 @@ enum BookingStatus {
 }
 
 extension BookingStatusExtension on BookingStatus {
+  static const acceptedStatuses = {
+    BookingStatus.confirmed,
+    BookingStatus.assigned,
+    BookingStatus.inProgress,
+    BookingStatus.completed,
+  };
+
+  bool get exposesAcceptedDetails => acceptedStatuses.contains(this);
+
   /// Serialized database string value.
   String get value {
     switch (this) {

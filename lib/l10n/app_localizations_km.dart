@@ -722,6 +722,10 @@ class AppLocalizationsKm extends AppLocalizations {
       'For example: the bedroom AC blows warm air and drips water';
 
   @override
+  String get bookingProblemPrivacyHelper =>
+      'អ្នកផ្តល់សេវាអាចអានព័ត៌មាននេះមុនពេលទទួលយកសំណើ។ សូមកុំបញ្ចូលអាសយដ្ឋាន និងលេខទូរសព្ទរបស់អ្នក។';
+
+  @override
   String get bookingAddressLabel => 'Repair address';
 
   @override
@@ -917,7 +921,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get bookingSummaryService => 'Service';
 
   @override
-  String get bookingSummaryWhen => 'Date and time';
+  String get bookingSummaryWhen => 'កាលបរិច្ឆេទ និងម៉ោង';
 
   @override
   String get bookingSummaryAddress => 'Address';
@@ -927,6 +931,37 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get bookingSentBackHome => 'Back to home';
+
+  @override
+  String get bookingInboxTitle => 'សំណើកក់ចូល';
+
+  @override
+  String get bookingInboxDetailTitle => 'សំណើកក់សេវា';
+
+  @override
+  String get bookingInboxEmpty => 'អ្នកមិនមានសំណើកក់ដែលកំពុងរង់ចាំទេ។';
+
+  @override
+  String get bookingInboxUnavailable => 'សំណើកក់នេះមិនអាចបើកបានទេ។';
+
+  @override
+  String get bookingInboxPending => 'កំពុងរង់ចាំ';
+
+  @override
+  String get bookingInboxJobDetails => 'ព័ត៌មានលម្អិតអំពីការងារ';
+
+  @override
+  String get bookingInboxDateUnavailable => 'មិនមានព័ត៌មានអំពីម៉ោងណាត់ជួប';
+
+  @override
+  String get bookingInboxLoading => 'កំពុងផ្ទុកសំណើកក់';
+
+  @override
+  String get bookingInboxError =>
+      'មិនអាចផ្ទុកសំណើកក់បានទេ។ សូមពិនិត្យការភ្ជាប់អ៊ីនធឺណិត ហើយព្យាយាមម្តងទៀត។';
+
+  @override
+  String get bookingInboxRetry => 'ព្យាយាមម្តងទៀត';
 
   @override
   String get offeringCreateTitle => 'បន្ថែមសេវាកម្ម';
@@ -1266,10 +1301,10 @@ class AppLocalizationsKm extends AppLocalizations {
       'កាលបរិច្ឆេទ និងពេលវេលាដែលចង់បាន';
 
   @override
-  String get providerBookingsTitle => 'សំណើកក់សេវាកម្មថ្មី';
+  String get providerBookingsTitle => 'ការកក់ដែលបានទទួលយក';
 
   @override
-  String get providerBookingsEmpty => 'មិនទាន់មានសំណើកក់សេវាកម្មនៅឡើយទេ។';
+  String get providerBookingsEmpty => 'អ្នកមិនទាន់មានការកក់ដែលបានទទួលយកទេ។';
 
   @override
   String get providerBookingsLoadError =>
