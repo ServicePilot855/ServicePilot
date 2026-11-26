@@ -274,6 +274,36 @@ class FirestoreBookingService implements IBookingService {
       };
 
   @override
+  Future<BookingModel> declineBooking({
+    required String bookingId,
+    required String providerId,
+    String? reason,
+  }) {
+    return _update(bookingId, (booking) {
+      if (!booking.isOwnedByProvider(providerId)) {
+        throw UnauthorizedBookingDeclineException(
+          bookingId: bookingId,
+          providerId: providerId,
+        );
+      }
+      if (booking.status != BookingStatus.pending) {
+        throw InvalidBookingDeclineStateException(
+          bookingId: bookingId,
+          currentStatus: booking.status,
+        );
+      }
+      final trimmedReason = reason?.trim();
+      return booking.copyWith(
+        status: BookingStatus.declined,
+        updatedAt: DateTime.now(),
+        declinedReason: (trimmedReason != null && trimmedReason.isNotEmpty)
+            ? trimmedReason
+            : null,
+      );
+    });
+  }
+
+  @override
   Future<BookingModel> assignBooking({
     required String bookingId,
     required String technicianId,
@@ -351,6 +381,10 @@ class FirestoreBookingService implements IBookingService {
             if (updated.assignedTechnicianName != null)
               'technicianName': updated.assignedTechnicianName,
           },
+          // BOOK-3 (SCRUM-105): the rules allow only status, updatedAt and this field.
+          if (updated.status == BookingStatus.declined &&
+              updated.declinedReason != null)
+            'declinedReason': updated.declinedReason,
           if (updated.status == BookingStatus.cancelled &&
               updated.cancelledAt != null) ...{
             'cancelledAt': Timestamp.fromDate(updated.cancelledAt!),

@@ -1330,4 +1330,51 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get providerBookingReviewAction => 'ពិនិត្យ';
+
+  @override
+  String get providerBookingDeclineButton => 'បដិសេធសំណើ';
+
+  @override
+  String get providerBookingDeclineDialogTitle =>
+      'តើអ្នកចង់បដិសេធសំណើនេះមែនទេ?';
+
+  @override
+  String get providerBookingDeclineDialogBody =>
+      'អតិថិជននឹងឃើញសំណើនេះជា «បានបដិសេធ»។ បន្ទាប់ពីនេះ អ្នកនឹងមិនអាចបញ្ជាក់វាទៀតទេ។';
+
+  @override
+  String get providerBookingDeclineReasonLabel => 'មូលហេតុនៃការបដិសេធ';
+
+  @override
+  String get providerBookingDeclineReasonHint =>
+      'ឧទាហរណ៍ ៖ នៅក្រៅតំបន់សេវាកម្មរបស់យើងនៅថ្ងៃនោះ';
+
+  @override
+  String get providerBookingDeclineReasonRequired =>
+      'សូមបញ្ចូលមូលហេតុខ្លីៗ ដើម្បីឱ្យអតិថិជនអាចរៀបចំការងារផ្សេង។';
+
+  @override
+  String get providerBookingDeclineReasonTooLong =>
+      'សូមរក្សាមូលហេតុឱ្យក្រោម ៣០០ តួអក្សរ។';
+
+  @override
+  String get providerBookingDeclineKeep => 'រក្សាសំណើ';
+
+  @override
+  String get providerBookingDeclineConfirm => 'បញ្ជាក់ការបដិសេធ';
+
+  @override
+  String get providerBookingDeclineSuccess =>
+      'បានបដិសេធសំណើ។ អតិថិជនអាចឃើញការកក់នេះជា «បានបដិសេធ» នៅក្នុងប្រវត្តិរបស់ពួកគេ។';
+
+  @override
+  String get providerBookingDeclinedNotice =>
+      'អ្នកបានបដិសេធសំណើនេះ។ អតិថិជនត្រូវបានជូនដំណឹងថាសំណើនេះ «បានបដិសេធ»។';
+
+  @override
+  String get providerBookingDeclineIneligible => 'សំណើនេះមិនអាចបដិសេធបានទៀតទេ។';
+
+  @override
+  String get providerBookingDeclineNotAuthorized =>
+      'អ្នកមិនមានសិទ្ធិបដិសេធសំណើនេះទេ។';
 }

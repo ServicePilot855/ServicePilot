@@ -85,6 +85,50 @@ class UnauthorizedBookingConfirmationException implements Exception {
       'UnauthorizedBookingConfirmationException(bookingId: $bookingId, providerId: $providerId): $message';
 }
 
+/// Thrown when a provider attempts to decline a request addressed to another
+/// provider.
+///
+/// Enforces BOOK-3 (SCRUM-105) AC:
+/// "An unrelated provider cannot decline the request."
+class UnauthorizedBookingDeclineException implements Exception {
+  final String bookingId;
+  final String providerId;
+  final String message;
+
+  const UnauthorizedBookingDeclineException({
+    required this.bookingId,
+    required this.providerId,
+    this.message = 'Only the provider this request was sent to can decline it.',
+  });
+
+  @override
+  String toString() =>
+      'UnauthorizedBookingDeclineException(bookingId: $bookingId, providerId: $providerId): $message';
+}
+
+/// Thrown when a decline is attempted on a booking that is no longer `Pending`
+/// (already confirmed, assigned, in progress, cancelled, completed or declined).
+///
+/// Enforces BOOK-3 (SCRUM-105) AC:
+/// "An authorized provider can decline an eligible request."
+class InvalidBookingDeclineStateException implements Exception {
+  final String bookingId;
+  final BookingStatus currentStatus;
+  final String message;
+
+  InvalidBookingDeclineStateException({
+    required this.bookingId,
+    required this.currentStatus,
+    String? message,
+  }) : message =
+           message ??
+           'This request cannot be declined because it is already ${currentStatus.label}.';
+
+  @override
+  String toString() =>
+      'InvalidBookingDeclineStateException(bookingId: $bookingId, status: ${currentStatus.value}): $message';
+}
+
 /// Thrown when an invalid status transition is attempted on a booking
 /// (e.g., accepting, assigning, or starting a `Cancelled` booking).
 ///
@@ -188,6 +232,19 @@ abstract class IBookingService {
     required String bookingId,
     required String providerId,
     DateTime? confirmedAppointmentAt,
+  });
+
+  /// Provider declines (`Declined`) a `Pending` request addressed to them.
+  /// The record stays in the customer's history.
+  ///
+  /// Throws:
+  /// - [BookingNotFoundException] if [bookingId] does not exist.
+  /// - [UnauthorizedBookingDeclineException] if [providerId] does not own the request.
+  /// - [InvalidBookingDeclineStateException] if the booking is not `Pending`.
+  Future<BookingModel> declineBooking({
+    required String bookingId,
+    required String providerId,
+    String? reason,
   });
 
   /// Company/provider assigns a technician (`Assigned`) to a booking.
@@ -595,6 +652,44 @@ class BookingService implements IBookingService {
     );
     _bookings[index] = updated;
     _notifyListeners();
+  }
+
+  @override
+  Future<BookingModel> declineBooking({
+    required String bookingId,
+    required String providerId,
+    String? reason,
+  }) async {
+    final index = _bookings.indexWhere((b) => b.id == bookingId);
+    if (index == -1) {
+      throw BookingNotFoundException(bookingId);
+    }
+
+    final booking = _bookings[index];
+    if (!booking.isOwnedByProvider(providerId)) {
+      throw UnauthorizedBookingDeclineException(
+        bookingId: bookingId,
+        providerId: providerId,
+      );
+    }
+    if (booking.status != BookingStatus.pending) {
+      throw InvalidBookingDeclineStateException(
+        bookingId: bookingId,
+        currentStatus: booking.status,
+      );
+    }
+
+    final trimmedReason = reason?.trim();
+    final updated = booking.copyWith(
+      status: BookingStatus.declined,
+      updatedAt: DateTime.now(),
+      declinedReason: (trimmedReason != null && trimmedReason.isNotEmpty)
+          ? trimmedReason
+          : null,
+    );
+    _bookings[index] = updated;
+    _notifyListeners();
+    return updated;
   }
 
   @override

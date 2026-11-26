@@ -222,4 +222,40 @@ await commit('owner', [update(`users/${company.id}`, fields({ role: 'company', s
 await request(`${documents}/${booking}`, { token: company.token, status: 403 });
 if (storage) await readPhoto(company.token, false);
 
+// BOOK-3 (SCRUM-105): only the addressed provider can decline a Pending request,
+// and the decline may change only status, updatedAt and declinedReason.
+{
+  const declineId = crypto.randomUUID();
+  const declineBooking = `bookings/${declineId}`;
+  const declinePreview = `${collection(independent.id)}/${declineId}`;
+  const pending = bookingFor(independent.id, declineId);
+  await commit(customer.token, [update(declineBooking, pending), update(declinePreview, job)]);
+
+  const declineWrite = (token, extra = {}, status = 200) => commit(token, [
+    {
+      ...update(declineBooking, {
+        ...pending,
+        status: { stringValue: 'declined' },
+        updatedAt: { timestampValue: '2026-11-27T03:00:00Z' },
+        ...extra,
+      }),
+    },
+    { delete: `${prefix}/${declinePreview}` },
+  ], status);
+
+  await declineWrite(customer.token, {}, 403);
+  await declineWrite(outsider.token, {}, 403);
+  await declineWrite(independent.token, { declinedAt: { timestampValue: '2026-11-27T03:00:00Z' } }, 403);
+  await declineWrite(independent.token, { technicianId: { stringValue: outsider.id } }, 403);
+  await declineWrite(independent.token, { declinedReason: { stringValue: 'Outside our service area that day' } });
+
+  const declinedFields = (await request(`${documents}/${declineBooking}`, { token: independent.token })).fields;
+  assert.equal(declinedFields.status.stringValue, 'declined');
+  assert.equal(declinedFields.declinedReason.stringValue, 'Outside our service area that day');
+  assert.equal((await request(`${documents}/${declineBooking}`, { token: customer.token })).fields.status.stringValue, 'declined');
+  await request(`${documents}/${declineBooking}`, { token: outsider.token, status: 403 });
+  await request(`${documents}/${declinePreview}`, { token: independent.token, status: 404 });
+  await declineWrite(independent.token, { declinedReason: { stringValue: 'Again' } }, 403);
+}
+
 console.log('Incoming booking rules passed for independent, company and unrelated accounts.');
