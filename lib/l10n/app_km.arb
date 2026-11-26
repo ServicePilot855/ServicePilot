@@ -171,7 +171,7 @@
   "cartErrorQuoteRequired": "សេវាកម្មដែលត្រូវការសម្រង់តម្លៃមិនអាចបន្ថែមទៅក្នុងកន្ត្រកបានទេ។ សូមប្រើ ស្នើសុំសម្រង់តម្លៃ ជំនួសវិញ។",
   "cartErrorUnavailable": "សេវាកម្មនេះមិនអាចប្រើបាននាពេលបច្ចុប្បន្នទេ ហើយមិនអាចបន្ថែមទៅក្នុងកន្ត្រកបានទេ។",
   "cartBadgeLabel": "កន្ត្រក ({count})",
-  "cartActiveProviderNotice": "កន្ត្រកមានសេវាកម្មចំនួន {count} ពី {providerName}។"
+  "cartActiveProviderNotice": "កន្ត្រកមានសេវាកម្មចំនួន {count} ពី {providerName}។",
   "bookingProblemPrivacyHelper": "អ្នកផ្តល់សេវាអាចអានព័ត៌មាននេះមុនពេលទទួលយកសំណើ។ សូមកុំបញ្ចូលអាសយដ្ឋាន និងលេខទូរសព្ទរបស់អ្នក។",
   "bookingSummaryWhen": "កាលបរិច្ឆេទ និងម៉ោង",
   "bookingInboxTitle": "សំណើកក់ចូល",
