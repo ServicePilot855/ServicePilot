@@ -581,5 +581,20 @@
   "cartOpenSemantics": "Open cart, {count, plural, =1{1 service} other{{count} services}}",
   "@cartOpenSemantics": {
     "placeholders": {"count": {"type": "int"}}
+  },
+  "cartCheckoutButton": "Continue to checkout",
+  "cartCheckoutTitle": "Checkout",
+  "cartCheckoutServicesSection": "Your services",
+  "bookingErrorCartInvalid": "A service in your cart can no longer be booked. Go back to your cart, check it and try again.",
+  "bookingErrorCartMixedProviders": "Your cart has services from more than one provider. Keep services from one provider and try again.",
+  "bookingSummaryReference": "Booking reference",
+  "bookingSummaryServices": "Services",
+  "bookingSummaryTotal": "Total",
+  "bookingSummaryItemLine": "{serviceTitle}: {price}",
+  "@bookingSummaryItemLine": {
+    "placeholders": {
+      "serviceTitle": {"type": "String"},
+      "price": {"type": "String"}
+    }
   }
 }

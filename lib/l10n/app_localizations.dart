@@ -2677,6 +2677,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open cart, {count, plural, =1{1 service} other{{count} services}}'**
   String cartOpenSemantics(int count);
+
+  /// No description provided for @cartCheckoutButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to checkout'**
+  String get cartCheckoutButton;
+
+  /// No description provided for @cartCheckoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkout'**
+  String get cartCheckoutTitle;
+
+  /// No description provided for @cartCheckoutServicesSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Your services'**
+  String get cartCheckoutServicesSection;
+
+  /// No description provided for @bookingErrorCartInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'A service in your cart can no longer be booked. Go back to your cart, check it and try again.'**
+  String get bookingErrorCartInvalid;
+
+  /// No description provided for @bookingErrorCartMixedProviders.
+  ///
+  /// In en, this message translates to:
+  /// **'Your cart has services from more than one provider. Keep services from one provider and try again.'**
+  String get bookingErrorCartMixedProviders;
+
+  /// No description provided for @bookingSummaryReference.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking reference'**
+  String get bookingSummaryReference;
+
+  /// No description provided for @bookingSummaryServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Services'**
+  String get bookingSummaryServices;
+
+  /// No description provided for @bookingSummaryTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get bookingSummaryTotal;
+
+  /// No description provided for @bookingSummaryItemLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{serviceTitle}: {price}'**
+  String bookingSummaryItemLine(String serviceTitle, String price);
 }
 
 class _AppLocalizationsDelegate
