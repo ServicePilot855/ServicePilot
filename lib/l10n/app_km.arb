@@ -163,6 +163,15 @@
   "providerBookingNotAuthorized": "អ្នកមិនមានសិទ្ធិបញ្ជាក់ការកក់នេះទេ។",
   "providerBookingIneligible": "ការកក់នេះមិនអាចបញ្ជាក់បានក្នុងស្ថានភាពបច្ចុប្បន្នទេ។",
   "providerBookingReviewAction": "ពិនិត្យ",
+
+  "cartAddButton": "បន្ថែមទៅកន្ត្រក",
+  "cartAddedSnackbar": "បានបន្ថែម {serviceTitle} ទៅក្នុងកន្ត្រក។",
+  "cartErrorDifferentProvider": "កន្ត្រករបស់អ្នកមានសេវាកម្មពី {providerName} រួចហើយ។ សូមសម្អាតកន្ត្រកមុនពេលបន្ថែមពីអ្នកផ្តល់សេវាផ្សេង។",
+  "cartErrorDifferentProviderGeneric": "កន្ត្រករបស់អ្នកមានសេវាកម្មពីអ្នកផ្តល់សេវាផ្សេងរួចហើយ។ សូមសម្អាតកន្ត្រកមុនពេលបន្ថែមសេវាកម្មនេះ។",
+  "cartErrorQuoteRequired": "សេវាកម្មដែលត្រូវការសម្រង់តម្លៃមិនអាចបន្ថែមទៅក្នុងកន្ត្រកបានទេ។ សូមប្រើ ស្នើសុំសម្រង់តម្លៃ ជំនួសវិញ។",
+  "cartErrorUnavailable": "សេវាកម្មនេះមិនអាចប្រើបាននាពេលបច្ចុប្បន្នទេ ហើយមិនអាចបន្ថែមទៅក្នុងកន្ត្រកបានទេ។",
+  "cartBadgeLabel": "កន្ត្រក ({count})",
+  "cartActiveProviderNotice": "កន្ត្រកមានសេវាកម្មចំនួន {count} ពី {providerName}។"
   "bookingProblemPrivacyHelper": "អ្នកផ្តល់សេវាអាចអានព័ត៌មាននេះមុនពេលទទួលយកសំណើ។ សូមកុំបញ្ចូលអាសយដ្ឋាន និងលេខទូរសព្ទរបស់អ្នក។",
   "bookingSummaryWhen": "កាលបរិច្ឆេទ និងម៉ោង",
   "bookingInboxTitle": "សំណើកក់ចូល",

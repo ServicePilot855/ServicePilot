@@ -723,6 +723,7 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get bookingProblemPrivacyHelper =>
+      'The provider can read this before accepting. Leave out your address and phone number.';
       'អ្នកផ្តល់សេវាអាចអានព័ត៌មាននេះមុនពេលទទួលយកសំណើ។ សូមកុំបញ្ចូលអាសយដ្ឋាន និងលេខទូរសព្ទរបស់អ្នក។';
 
   @override
@@ -933,6 +934,35 @@ class AppLocalizationsKm extends AppLocalizations {
   String get bookingSentBackHome => 'Back to home';
 
   @override
+  String get bookingInboxTitle => 'Incoming requests';
+
+  @override
+  String get bookingInboxDetailTitle => 'Booking request';
+
+  @override
+  String get bookingInboxEmpty => 'You have no pending booking requests.';
+
+  @override
+  String get bookingInboxUnavailable => 'This booking request is unavailable.';
+
+  @override
+  String get bookingInboxPending => 'Pending';
+
+  @override
+  String get bookingInboxJobDetails => 'Job details';
+
+  @override
+  String get bookingInboxDateUnavailable => 'Appointment time unavailable';
+
+  @override
+  String get bookingInboxLoading => 'Loading booking requests';
+
+  @override
+  String get bookingInboxError =>
+      'Could not load booking requests. Check your connection and try again.';
+
+  @override
+  String get bookingInboxRetry => 'Try again';
   String get bookingInboxTitle => 'សំណើកក់ចូល';
 
   @override
@@ -1330,4 +1360,39 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get providerBookingReviewAction => 'ពិនិត្យ';
+
+  @override
+  String get cartAddButton => 'បន្ថែមទៅកន្ត្រក';
+
+  @override
+  String cartAddedSnackbar(String serviceTitle) {
+    return 'បានបន្ថែម $serviceTitle ទៅក្នុងកន្ត្រក។';
+  }
+
+  @override
+  String cartErrorDifferentProvider(String providerName) {
+    return 'កន្ត្រករបស់អ្នកមានសេវាកម្មពី $providerName រួចហើយ។ សូមសម្អាតកន្ត្រកមុនពេលបន្ថែមពីអ្នកផ្តល់សេវាផ្សេង។';
+  }
+
+  @override
+  String get cartErrorDifferentProviderGeneric =>
+      'កន្ត្រករបស់អ្នកមានសេវាកម្មពីអ្នកផ្តល់សេវាផ្សេងរួចហើយ។ សូមសម្អាតកន្ត្រកមុនពេលបន្ថែមសេវាកម្មនេះ។';
+
+  @override
+  String get cartErrorQuoteRequired =>
+      'សេវាកម្មដែលត្រូវការសម្រង់តម្លៃមិនអាចបន្ថែមទៅក្នុងកន្ត្រកបានទេ។ សូមប្រើ ស្នើសុំសម្រង់តម្លៃ ជំនួសវិញ។';
+
+  @override
+  String get cartErrorUnavailable =>
+      'សេវាកម្មនេះមិនអាចប្រើបាននាពេលបច្ចុប្បន្នទេ ហើយមិនអាចបន្ថែមទៅក្នុងកន្ត្រកបានទេ។';
+
+  @override
+  String cartBadgeLabel(int count) {
+    return 'កន្ត្រក ($count)';
+  }
+
+  @override
+  String cartActiveProviderNotice(int count, String providerName) {
+    return 'កន្ត្រកមានសេវាកម្មចំនួន $count ពី $providerName។';
+  }
 }

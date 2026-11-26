@@ -2455,6 +2455,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Review'**
   String get providerBookingReviewAction;
+
+  /// No description provided for @cartAddButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to cart'**
+  String get cartAddButton;
+
+  /// No description provided for @cartAddedSnackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {serviceTitle} to cart.'**
+  String cartAddedSnackbar(String serviceTitle);
+
+  /// No description provided for @cartErrorDifferentProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Your cart already has services from {providerName}. Clear your cart before adding from another provider.'**
+  String cartErrorDifferentProvider(String providerName);
+
+  /// No description provided for @cartErrorDifferentProviderGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Your cart already has services from another provider. Clear your cart before adding this service.'**
+  String get cartErrorDifferentProviderGeneric;
+
+  /// No description provided for @cartErrorQuoteRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote-required services cannot be added to the cart. Use Request a Quote instead.'**
+  String get cartErrorQuoteRequired;
+
+  /// No description provided for @cartErrorUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This service is currently unavailable and cannot be added to the cart.'**
+  String get cartErrorUnavailable;
+
+  /// No description provided for @cartBadgeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cart ({count})'**
+  String cartBadgeLabel(int count);
+
+  /// No description provided for @cartActiveProviderNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Cart has {count, plural, =1{1 service} other{{count} services}} from {providerName}.'**
+  String cartActiveProviderNotice(int count, String providerName);
 }
 
 class _AppLocalizationsDelegate
