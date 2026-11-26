@@ -26,7 +26,7 @@ class FirestoreBookingService implements IBookingService {
   final IBookingPhotoUploader? _injectedUploader;
 
   IBookingPhotoUploader get _photoUploader =>
-      _injectedUploader ?? FirebaseBookingPhotoUploader();
+      _injectedUploader ?? CloudinaryBookingPhotoUploader();
 
   FirebaseFirestore get _firestore =>
       _injectedFirestore ?? FirebaseFirestore.instance;
