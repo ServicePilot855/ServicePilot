@@ -401,7 +401,7 @@
   "offeringUnauthorized": "Only registered service providers and companies can publish offerings.",
   "offeringActiveRequired": "Provider account must be active to publish service offerings.",
   "offeringDashboardTitle": "My Service Offerings",
-  "offeringAddButton": "+ Add Offering",
+  "offeringAddButton": "Add Offering",
   "offeringEmptyNotice": "You have not published any service offerings yet. Tap \"+ Add Offering\" to add fixed-price or quote-required services.",
   "offeringLoadError": "Unable to load service offerings right now. Please check your connection and try again.",
 

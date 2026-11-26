@@ -1049,7 +1049,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get offeringDashboardTitle => 'សេវាកម្មរបស់ខ្ញុំ';
 
   @override
-  String get offeringAddButton => '+ បន្ថែមសេវាកម្ម';
+  String get offeringAddButton => 'បន្ថែមសេវាកម្ម';
 
   @override
   String get offeringEmptyNotice =>
