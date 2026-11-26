@@ -292,6 +292,16 @@ Reuse [`ProviderTypeBadge`](lib/features/providers/widgets/provider_type_badge.d
 
 Pair availability with text and an icon. Disable the profile action when `canAcceptBookings` is false. During the preview, place the booking limitation immediately above **Continue to booking** and repeat it on the handoff page. The action opens the selected provider's `/providers/:providerId/book` route.
 
+## Cart
+
+The cart holds fixed-price services from one provider. [Cart review](lib/features/cart/screens/cart_screen.dart) at `/cart` is a white `SpFlowPage` opened from the "Cart (n)" chip on the provider page. The chip has a 48dp target.
+
+- Show the page header and a count of services, then the provider's name labelled **Provider**.
+- List the items flat, separated by Hairline dividers with no cards. Each row shows the title, which can wrap, and the fixed price. When the quantity is above 1, show `2 × $25.00`. The line total sits at the trailing edge in tabular figures. Each row has a 48dp remove button with a tooltip.
+- Put **Total** in Headline type, aligned with the line totals, then a neutral notice saying that no payment is taken in the app.
+- An empty cart shows an `SpStatusHero` and an outlined **Browse services** button.
+- Only homeowners can open `/cart`.
+
 ## Reviewing UI changes
 
 1. Start from the closest implemented screen. Reuse its `AppTheme` tokens and shared widgets. If a new pattern is needed, document it here with the same change and check any other screens that use the affected theme or component.
