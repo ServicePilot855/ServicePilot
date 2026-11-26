@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/core/auth/auth_state.dart';
 import 'package:service_pilot/core/constants/app_roles.dart';
+import 'package:service_pilot/features/admin/screens/provider_review_screen.dart';
+import 'package:service_pilot/features/admin/screens/admin_pending_providers_screen.dart';
 import 'package:service_pilot/features/auth/screens/splash_screen.dart';
 import 'package:service_pilot/features/auth/screens/role_select_screen.dart';
 import 'package:service_pilot/features/auth/screens/login_screen.dart';
@@ -16,10 +18,12 @@ import 'package:service_pilot/features/auth/screens/forgot_password_screen.dart'
 import 'package:service_pilot/features/auth/screens/reset_password_screen.dart';
 import 'package:service_pilot/features/bookings/models/booking_model.dart';
 import 'package:service_pilot/features/bookings/screens/booking_confirmation_screen.dart';
+import 'package:service_pilot/features/bookings/screens/booking_history_screen.dart';
+import 'package:service_pilot/features/bookings/screens/booking_tracking_screen.dart';
 import 'package:service_pilot/features/bookings/screens/create_booking_screen.dart';
 import 'package:service_pilot/features/bookings/screens/location_picker_screen.dart';
-import 'package:service_pilot/features/bookings/screens/booking_tracking_screen.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
+import 'package:service_pilot/features/providers/screens/company_profile_edit_screen.dart';
 import 'package:service_pilot/features/providers/screens/provider_detail_screen.dart';
 import 'package:service_pilot/features/providers/screens/provider_list_screen.dart';
 import 'package:service_pilot/features/services/models/category_model.dart';
@@ -50,19 +54,33 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (BuildContext context, GoRouterState state) {
       final authState = authNotifier.value;
       final isAuthenticated = authState is AuthStateAuthenticated;
+      final isGoingToAdmin = state.matchedLocation.startsWith('/home/admin') ||
+          state.matchedLocation.startsWith('/admin');
       final isGoingToHome = state.matchedLocation.startsWith('/home') ||
           state.matchedLocation.startsWith('/categories') ||
           state.matchedLocation.startsWith('/providers') ||
           state.matchedLocation.startsWith('/bookings') ||
-          state.matchedLocation.startsWith('/offerings');
+          state.matchedLocation.startsWith('/offerings') ||
+          isGoingToAdmin;
       final isGoingToLogin = state.matchedLocation == '/login';
       final isGoingToSplash = state.matchedLocation == '/splash';
 
       // Let the splash screen handle its own routing.
       if (isGoingToSplash) return null;
 
-      // Unauthenticated users cannot access home or category screens.
+      // Unauthenticated users cannot access home, category, booking, or admin screens.
       if (!isAuthenticated && isGoingToHome) return '/login';
+
+      // Non-admin authenticated users cannot access Platform Admin routes (SCRUM-94 / ADM-2).
+      if (isAuthenticated && isGoingToAdmin && !authState.user.isAdmin) {
+        return authState.user.role.homeRoute;
+      }
+
+      if (isAuthenticated &&
+          state.matchedLocation == '/home/company/profile' &&
+          (!authState.user.isCompany || authState.user.isSuspended)) {
+        return authState.user.role.homeRoute;
+      }
 
       // Authenticated users are redirected away from /login to their home.
       if (isAuthenticated && isGoingToLogin) {
@@ -209,6 +227,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
 
+      // ── Booking History (US-15 / SCRUM-46) ────────────────────────────
+      GoRoute(
+        path: '/bookings/history',
+        builder: (_, __) => const BookingHistoryScreen(),
+      ),
+
       // ── Bookings & Cancellation (US-13 / US-14) ───────────────────────
       GoRoute(
         path: '/bookings/:bookingId',
@@ -220,6 +244,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             initialBooking: booking,
           );
         },
+      ),
+
+      // ── Admin: Pending Provider Applications (ADM-1 / SCRUM-93) ───────
+      GoRoute(
+        path: '/admin/providers/pending',
+        builder: (_, __) => const AdminPendingProvidersScreen(),
       ),
 
       // ── Protected home routes ─────────────────────────────────────────
@@ -234,6 +264,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/home/company',
         builder: (_, __) => const CompanyHome(),
+        routes: [
+          GoRoute(
+            path: 'profile',
+            builder: (_, __) => const CompanyProfileEditScreen(),
+          ),
+        ],
       ),
       GoRoute(
         path: '/home/company-technician',
@@ -242,6 +278,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/home/admin',
         builder: (_, __) => const AdminHome(),
+      ),
+      GoRoute(
+        path: '/admin/providers/:providerId',
+        builder: (_, state) {
+          final providerId = state.pathParameters['providerId'] ?? '';
+          final provider = state.extra as ProviderModel?;
+          return ProviderReviewScreen(
+            providerId: providerId,
+            initialProvider: provider,
+          );
+        },
       ),
     ],
   );

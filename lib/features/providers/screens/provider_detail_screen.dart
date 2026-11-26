@@ -112,6 +112,10 @@ class _ProviderProfile extends ConsumerWidget {
     final unavailableReason = provider.unavailableReason?.trim();
     final about = provider.bio.trim();
     final description = provider.description.trim();
+    final contactLinks = {
+      l10n.companyProfileTelegram: provider.telegramUrl?.trim() ?? '',
+      l10n.companyProfileMessenger: provider.messengerUrl?.trim() ?? '',
+    }.entries.where((link) => link.value.isNotEmpty);
     final areas = provider.coverageAreas.isEmpty
         ? [provider.serviceArea]
         : provider.coverageAreas;
@@ -209,6 +213,27 @@ class _ProviderProfile extends ConsumerWidget {
                             Text(about, style: bodyStyle),
                           ],
                         ],
+                      ),
+                    ),
+                  if (provider.isCompany &&
+                      provider.isApprovedAndActive &&
+                      contactLinks.isNotEmpty)
+                    _ProfileSection(
+                      title: l10n.companyProfileContacts,
+                      child: SelectionArea(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            for (final link in contactLinks) ...[
+                              Text(
+                                link.key,
+                                style: AppTheme.text(weight: FontWeight.w600),
+                              ),
+                              Text(link.value, style: bodyStyle),
+                              const SizedBox(height: 8),
+                            ],
+                          ],
+                        ),
                       ),
                     ),
                   _OfferingsSection(provider: provider),

@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
+import 'package:service_pilot/core/constants/app_roles.dart';
+import 'package:service_pilot/features/auth/models/user_model.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
 import 'package:service_pilot/features/providers/services/provider_service.dart';
 
@@ -8,23 +10,33 @@ import 'package:service_pilot/features/providers/services/provider_service.dart'
 ///
 /// Features:
 /// - Connects to the cloud `providers` collection with role and category filters.
-/// - Enforces US-10 (SCRUM-55) AC: only retrieves `status == 'active'` providers.
+/// - Enforces US-10 (SCRUM-55) & ADM-2 (SCRUM-94) AC: only retrieves `status == 'active'`
+///   and verified providers for customer discovery.
+/// - Supports Platform Admin review and approval of `pending_verification` providers
+///   (`getPendingProviders` and `approveProvider`).
 /// - Seamless resilient development fallback: if the Firestore database has not yet been
 ///   created in the Firebase Console or the device is offline, it serves realistic Phnom Penh
 ///   demo providers to ensure uninterrupted development and testing.
 class FirestoreProviderService implements IProviderService {
   final FirebaseFirestore? _injectedFirestore;
+  final List<ProviderModel> _localProviders;
 
-  FirestoreProviderService({FirebaseFirestore? firestore})
-      : _injectedFirestore = firestore;
+  FirestoreProviderService({
+    FirebaseFirestore? firestore,
+    List<ProviderModel>? initialProviders,
+  }) : _injectedFirestore = firestore,
+       _localProviders = List<ProviderModel>.from(
+         initialProviders ?? seedProviders,
+       );
 
   FirebaseFirestore get _firestore =>
       _injectedFirestore ?? FirebaseFirestore.instance;
 
   static const String collectionName = 'providers';
 
-  /// Pre-seeded verified providers covering Phnom Penh service areas and all categories.
-  static final List<ProviderModel> seedProviders = ProviderService.defaultProviders;
+  /// Pre-seeded verified and pending providers covering Phnom Penh service areas.
+  static final List<ProviderModel> seedProviders =
+      ProviderService.defaultProviders;
 
   @override
   Future<List<ProviderModel>> getProviders({
@@ -57,7 +69,7 @@ class FirestoreProviderService implements IProviderService {
       }
     }
 
-    return seedProviders.where((p) {
+    return _localProviders.where((p) {
       if (activeOnly && !p.isApprovedAndActive) return false;
       return true;
     }).toList();
@@ -114,14 +126,15 @@ class FirestoreProviderService implements IProviderService {
 
     // 2. Resilient Fallback: Filter seed providers by status == 'active' and categoryId
     return List.unmodifiable(
-      seedProviders.where((p) =>
-          p.isApprovedAndActive && p.categoryIds.contains(categoryId)),
+      _localProviders.where(
+        (p) => p.isApprovedAndActive && p.categoryIds.contains(categoryId),
+      ),
     );
   }
 
   @override
   Future<ProviderModel?> getProviderById(String providerId) async {
-    if (Firebase.apps.isNotEmpty) {
+    if (_injectedFirestore != null || Firebase.apps.isNotEmpty) {
       try {
         final doc =
             await _firestore.collection(collectionName).doc(providerId).get();
@@ -130,15 +143,116 @@ class FirestoreProviderService implements IProviderService {
         }
       } catch (e) {
         debugPrint(
-            '[FirestoreProviderService] Get provider by ID exception ($e); checking seed providers.');
+          '[FirestoreProviderService] Get provider by ID exception ($e); checking seed providers.',
+        );
       }
     }
 
     try {
-      return seedProviders.firstWhere((p) => p.id == providerId);
+      return _localProviders.firstWhere((p) => p.id == providerId);
     } catch (_) {
       return null;
     }
+  }
+
+  @override
+  Future<List<ProviderModel>> getPendingProviders({
+    required UserModel? actor,
+  }) async {
+    if (actor == null || !actor.isAdmin) {
+      throw UnauthorizedProviderApprovalException(
+        userId: actor?.id,
+        role: actor?.role.value,
+      );
+    }
+
+    if (Firebase.apps.isNotEmpty) {
+      try {
+        final snapshot = await _firestore
+            .collection(collectionName)
+            .where('status', isEqualTo: 'pending_verification')
+            .get();
+        if (snapshot.docs.isNotEmpty) {
+          return snapshot.docs
+              .map((doc) => ProviderModel.fromFirestore(doc))
+              .toList();
+        }
+      } catch (e) {
+        debugPrint(
+          '[FirestoreProviderService] getPendingProviders error ($e); falling back to local providers.',
+        );
+      }
+    }
+
+    return List.unmodifiable(
+      _localProviders.where((p) => p.isPendingVerification),
+    );
+  }
+
+  @override
+  Future<ProviderModel> approveProvider({
+    required String providerId,
+    required UserModel? actor,
+  }) async {
+    if (actor == null || !actor.isAdmin) {
+      throw UnauthorizedProviderApprovalException(
+        providerId: providerId,
+        userId: actor?.id,
+        role: actor?.role.value,
+      );
+    }
+
+    final existing = await getProviderById(providerId);
+    if (existing == null) {
+      throw ProviderNotFoundException(providerId);
+    }
+
+    if (!existing.isPendingVerification) {
+      throw InvalidProviderApprovalStateException(
+        providerId: providerId,
+        currentStatus: existing.status,
+      );
+    }
+
+    final now = DateTime.now();
+    final approved = existing.copyWith(
+      status: 'active',
+      isVerified: true,
+      updatedAt: now,
+    );
+
+    if (Firebase.apps.isNotEmpty) {
+      try {
+        await _firestore.collection(collectionName).doc(providerId).set(
+          {
+            'status': 'active',
+            'isVerified': true,
+            'updatedAt': Timestamp.fromDate(now),
+          },
+          SetOptions(merge: true),
+        );
+        await _firestore.collection('users').doc(providerId).set(
+          {
+            'status': 'active',
+            'updatedAt': Timestamp.fromDate(now),
+          },
+          SetOptions(merge: true),
+        );
+      } catch (e) {
+        debugPrint(
+          '[FirestoreProviderService] Firestore approveProvider write warning ($e); updating local state.',
+        );
+      }
+    }
+
+    final localIndex = _localProviders.indexWhere((p) => p.id == providerId);
+    if (localIndex != -1) {
+      _localProviders[localIndex] = approved;
+    } else {
+      _localProviders.add(approved);
+    }
+
+    return approved;
   }
 
   @override

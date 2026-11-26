@@ -1951,6 +1951,222 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unable to load service offerings right now. Please check your connection and try again.'**
   String get offeringLoadError;
+
+  /// No description provided for @adminDashboardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Platform Administration'**
+  String get adminDashboardTitle;
+
+  /// No description provided for @adminPendingProvidersSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending provider applications'**
+  String get adminPendingProvidersSection;
+
+  /// No description provided for @adminApprovedProvidersSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved active providers'**
+  String get adminApprovedProvidersSection;
+
+  /// No description provided for @adminPendingProvidersEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending provider applications require review right now.'**
+  String get adminPendingProvidersEmpty;
+
+  /// No description provided for @adminPendingBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending verification'**
+  String get adminPendingBadge;
+
+  /// No description provided for @adminApprovedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved & active'**
+  String get adminApprovedBadge;
+
+  /// No description provided for @adminProviderReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review provider'**
+  String get adminProviderReviewTitle;
+
+  /// No description provided for @adminReviewAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Review application'**
+  String get adminReviewAction;
+
+  /// No description provided for @adminApproveProviderButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve provider'**
+  String get adminApproveProviderButton;
+
+  /// No description provided for @adminProviderApprovedNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'{provider} is now approved, active, and eligible for customer bookings.'**
+  String adminProviderApprovedNotice(String provider);
+
+  /// No description provided for @adminPendingVerificationNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'This provider is awaiting verification and is hidden from customer search and bookings.'**
+  String get adminPendingVerificationNotice;
+
+  /// No description provided for @adminVerificationChecklistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification details'**
+  String get adminVerificationChecklistTitle;
+
+  /// No description provided for @adminContactEmailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Email address'**
+  String get adminContactEmailLabel;
+
+  /// No description provided for @adminContactPhoneLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact phone'**
+  String get adminContactPhoneLabel;
+
+  /// No description provided for @adminAccessDeniedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin access required'**
+  String get adminAccessDeniedTitle;
+
+  /// No description provided for @adminAccessDeniedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Only Platform Admins can review or approve provider accounts.'**
+  String get adminAccessDeniedMessage;
+
+  /// No description provided for @adminViewCustomerProfileButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview customer profile'**
+  String get adminViewCustomerProfileButton;
+
+  /// No description provided for @companyProfileEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit company profile'**
+  String get companyProfileEdit;
+
+  /// No description provided for @companyProfileDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description (optional)'**
+  String get companyProfileDescription;
+
+  /// No description provided for @companyProfileDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Home plumbing and electrical repairs'**
+  String get companyProfileDescriptionHint;
+
+  /// No description provided for @companyProfileAreaHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sen Sok, Tuol Kork'**
+  String get companyProfileAreaHint;
+
+  /// No description provided for @companyProfileAreaRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a service area.'**
+  String get companyProfileAreaRequired;
+
+  /// No description provided for @companyProfileContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact links'**
+  String get companyProfileContacts;
+
+  /// No description provided for @companyProfileOptionalContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact links (optional)'**
+  String get companyProfileOptionalContacts;
+
+  /// No description provided for @companyProfileTelegram.
+  ///
+  /// In en, this message translates to:
+  /// **'Telegram'**
+  String get companyProfileTelegram;
+
+  /// No description provided for @companyProfileTelegramExample.
+  ///
+  /// In en, this message translates to:
+  /// **'https://t.me/coolair'**
+  String get companyProfileTelegramExample;
+
+  /// No description provided for @companyProfileMessenger.
+  ///
+  /// In en, this message translates to:
+  /// **'Messenger'**
+  String get companyProfileMessenger;
+
+  /// No description provided for @companyProfileMessengerExample.
+  ///
+  /// In en, this message translates to:
+  /// **'https://m.me/coolair'**
+  String get companyProfileMessengerExample;
+
+  /// No description provided for @companyProfileInvalidLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a link like {example}.'**
+  String companyProfileInvalidLink(String example);
+
+  /// No description provided for @companyProfileLengthError.
+  ///
+  /// In en, this message translates to:
+  /// **'Use {limit} characters or fewer.'**
+  String companyProfileLengthError(int limit);
+
+  /// No description provided for @companyProfileUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No editable company profile is linked to this account.'**
+  String get companyProfileUnavailable;
+
+  /// No description provided for @companyProfileLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading company profile'**
+  String get companyProfileLoading;
+
+  /// No description provided for @companyProfileLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load your company profile.'**
+  String get companyProfileLoadError;
+
+  /// No description provided for @companyProfileSaveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save your changes. Try again.'**
+  String get companyProfileSaveError;
+
+  /// No description provided for @companyProfileSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get companyProfileSave;
+
+  /// No description provided for @companyProfileSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Company profile saved.'**
+  String get companyProfileSaved;
 }
 
 class _AppLocalizationsDelegate

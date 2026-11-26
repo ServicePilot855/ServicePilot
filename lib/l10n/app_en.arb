@@ -400,5 +400,53 @@
   "offeringDashboardTitle": "My Service Offerings",
   "offeringAddButton": "+ Add Offering",
   "offeringEmptyNotice": "You have not published any service offerings yet. Tap \"+ Add Offering\" to add fixed-price or quote-required services.",
-  "offeringLoadError": "Unable to load service offerings right now. Please check your connection and try again."
+  "offeringLoadError": "Unable to load service offerings right now. Please check your connection and try again.",
+
+  "@_ADMIN": {},
+  "adminDashboardTitle": "Platform Administration",
+  "adminPendingProvidersSection": "Pending provider applications",
+  "adminApprovedProvidersSection": "Approved active providers",
+  "adminPendingProvidersEmpty": "No pending provider applications require review right now.",
+  "adminPendingBadge": "Pending verification",
+  "adminApprovedBadge": "Approved & active",
+  "adminProviderReviewTitle": "Review provider",
+  "adminReviewAction": "Review application",
+  "adminApproveProviderButton": "Approve provider",
+  "adminProviderApprovedNotice": "{provider} is now approved, active, and eligible for customer bookings.",
+  "@adminProviderApprovedNotice": {
+    "placeholders": {"provider": {"type": "String"}}
+  },
+  "adminPendingVerificationNotice": "This provider is awaiting verification and is hidden from customer search and bookings.",
+  "adminVerificationChecklistTitle": "Verification details",
+  "adminContactEmailLabel": "Email address",
+  "adminContactPhoneLabel": "Contact phone",
+  "adminAccessDeniedTitle": "Admin access required",
+  "adminAccessDeniedMessage": "Only Platform Admins can review or approve provider accounts.",
+  "adminViewCustomerProfileButton": "Preview customer profile",
+
+  "companyProfileEdit": "Edit company profile",
+  "companyProfileDescription": "Description (optional)",
+  "companyProfileDescriptionHint": "Home plumbing and electrical repairs",
+  "companyProfileAreaHint": "Sen Sok, Tuol Kork",
+  "companyProfileAreaRequired": "Enter a service area.",
+  "companyProfileContacts": "Contact links",
+  "companyProfileOptionalContacts": "Contact links (optional)",
+  "companyProfileTelegram": "Telegram",
+  "companyProfileTelegramExample": "https://t.me/coolair",
+  "companyProfileMessenger": "Messenger",
+  "companyProfileMessengerExample": "https://m.me/coolair",
+  "companyProfileInvalidLink": "Enter a link like {example}.",
+  "@companyProfileInvalidLink": {
+    "placeholders": {"example": {"type": "String"}}
+  },
+  "companyProfileLengthError": "Use {limit} characters or fewer.",
+  "@companyProfileLengthError": {
+    "placeholders": {"limit": {"type": "int"}}
+  },
+  "companyProfileUnavailable": "No editable company profile is linked to this account.",
+  "companyProfileLoading": "Loading company profile",
+  "companyProfileLoadError": "Could not load your company profile.",
+  "companyProfileSaveError": "Could not save your changes. Try again.",
+  "companyProfileSave": "Save changes",
+  "companyProfileSaved": "Company profile saved."
 }

@@ -76,6 +76,14 @@ class AppTheme {
   static const double radiusCard = 16.0;
   static const double radiusSheet = 24.0;
 
+  /// Spacing scale per DESIGN.md
+  static const double spacingXs = 4.0;
+  static const double spacingSm = 8.0;
+  static const double spacingMd = 12.0;
+  static const double spacingLg = 16.0;
+  static const double spacingXl = 24.0;
+  static const double spacingXxl = 32.0;
+
   /// Horizontal page gutter on form and flow screens.
   static const double gutter = 20.0;
 
@@ -118,6 +126,21 @@ class AppTheme {
       height: height,
       letterSpacing: size >= 24 ? size * -0.015 : 0,
     ).copyWith(fontFamilyFallback: _khmerFallback);
+  }
+
+  /// Headings / headlines: Figtree bold per DESIGN.md.
+  static TextStyle headline({
+    double size = 20,
+    FontWeight weight = FontWeight.w700,
+    Color color = textPrimary,
+    double height = 1.2,
+  }) {
+    return display(
+      size: size,
+      weight: weight,
+      color: color,
+      height: height,
+    );
   }
 
   /// Body and UI text: Figtree at normal tracking.

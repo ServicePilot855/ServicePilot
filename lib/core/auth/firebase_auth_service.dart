@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -11,7 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 ///
 /// Features:
 /// - Real [FirebaseAuth] integration for user identity, sessions, and security.
-/// - Extended user profile persistence via [SharedPreferences] keyed by Firebase UID.
+/// - Local profile caching and Firestore persistence for company accounts.
 /// - Full role-based user management across Customers, Technicians, Companies, and Admins.
 /// - Comprehensive [FirebaseAuthException] mapping to user-friendly messages.
 class FirebaseAuthService implements IAuthService {
@@ -19,12 +20,20 @@ class FirebaseAuthService implements IAuthService {
 
   final FirebaseAuth? _injectedAuth;
   final SharedPreferences? _injectedPrefs;
+  final FirebaseFirestore? _injectedFirestore;
 
   FirebaseAuthService({
     FirebaseAuth? firebaseAuth,
     SharedPreferences? prefs,
+    FirebaseFirestore? firestore,
   })  : _injectedAuth = firebaseAuth,
-        _injectedPrefs = prefs;
+        _injectedPrefs = prefs,
+        _injectedFirestore = firestore;
+
+  FirebaseFirestore? get _companyFirestore => _injectedFirestore ??
+      (_injectedAuth == null && Firebase.apps.isNotEmpty
+          ? FirebaseFirestore.instance
+          : null);
 
   FirebaseAuth get _auth {
     final injected = _injectedAuth;
@@ -320,11 +329,29 @@ class FirebaseAuthService implements IAuthService {
         phoneNumber: cleanPhone,
         role: AppRole.company,
         status: 'pending_verification',
+        companyId: fbUser.uid,
         companyName: cleanCompany,
         serviceArea: cleanArea,
         createdAt: fbUser.metadata.creationTime ?? DateTime.now(),
       );
 
+      final firestore = _companyFirestore;
+      if (firestore != null) {
+        final batch = firestore.batch();
+        batch.set(firestore.collection('users').doc(user.id), user.toJson());
+        batch.set(firestore.collection('providers').doc(user.id),
+            _pendingCompanyProfile(user));
+        try {
+          await batch.commit();
+        } catch (_) {
+          try {
+            await fbUser.delete();
+          } on FirebaseAuthException catch (error) {
+            debugPrint('[FirebaseAuth] Could not roll back company sign-up: ${error.code}');
+          }
+          rethrow;
+        }
+      }
       await _saveUserProfile(user);
       return user;
     } on FirebaseAuthException catch (e) {
@@ -460,6 +487,60 @@ class FirebaseAuthService implements IAuthService {
 
   // ── Profile Persistence Helpers ───────────────────────────────────────────
 
+  Map<String, dynamic> _pendingCompanyProfile(UserModel owner) => {
+        'id': owner.id,
+        'businessName': owner.companyName,
+        'providerType': 'company',
+        'status': 'pending_verification',
+        'isVerified': false,
+        'serviceArea': owner.serviceArea,
+        'createdAt': FieldValue.serverTimestamp(),
+      };
+
+  Future<UserModel> _linkLegacyCompany(UserModel owner) async {
+    final firestore = _companyFirestore;
+    if (firestore == null || owner.companyName?.trim().isNotEmpty != true ||
+        owner.serviceArea?.trim().isNotEmpty != true) {
+      return owner;
+    }
+
+    final account = firestore.collection('users').doc(owner.id);
+    final profile = firestore.collection('providers').doc(owner.id);
+    final linked = owner.copyWith(companyId: owner.id);
+    try {
+      final didLink = await firestore.runTransaction((transaction) async {
+        final accountData = (await transaction.get(account)).data();
+        final profileData = (await transaction.get(profile)).data();
+        if (accountData != null &&
+            (accountData['role'] != 'company' ||
+                accountData['status'] == 'suspended' ||
+                (accountData['companyId'] ?? owner.id) != owner.id)) {
+          return false;
+        }
+        if (profileData != null &&
+            (profileData['type'] ?? profileData['providerType']) != 'company') {
+          return false;
+        }
+        // A device-only registration can create a pending record, never approve one.
+        if (accountData == null) {
+          transaction.set(account,
+              linked.copyWith(status: 'pending_verification').toJson());
+        }
+        if (profileData == null) {
+          transaction.set(profile, _pendingCompanyProfile(linked));
+        }
+        return true;
+      });
+      if (didLink) {
+        await _saveUserProfile(linked);
+        return linked;
+      }
+    } on FirebaseException catch (error) {
+      debugPrint('[FirebaseAuth] Could not link legacy company: ${error.code}');
+    }
+    return owner;
+  }
+
   Future<void> _saveUserProfile(UserModel user) async {
     final prefs = await _getPrefs();
     final jsonStr = jsonEncode(user.toJson());
@@ -496,10 +577,45 @@ class FirebaseAuthService implements IAuthService {
     AppRole? defaultRole,
     String? defaultName,
   }) async {
-    final cached = await _loadCachedProfile(fbUser.uid, email: email ?? fbUser.email);
+    final cached = await _loadCachedProfile(fbUser.uid);
     if (cached != null) {
+      if (cached.isCompany && !cached.isSuspended && cached.companyId == null &&
+          cached.id == fbUser.uid &&
+          cached.email.toLowerCase() == fbUser.email?.toLowerCase()) {
+        final company = await _linkLegacyCompany(cached);
+        await _recordActiveSession(company.id);
+        return company;
+      }
       await _recordActiveSession(cached.id);
       return cached;
+    }
+
+    final firestore = _companyFirestore;
+    if (firestore != null) {
+      try {
+        final data = (await firestore.collection('users').doc(fbUser.uid).get())
+            .data();
+        if (data != null && data['role'] == AppRole.company.value) {
+          final createdAt = data['createdAt'];
+          final companyUser = UserModel.fromJson({
+            ...data,
+            'id': fbUser.uid,
+            if (createdAt is Timestamp)
+              'createdAt': createdAt.toDate().toIso8601String(),
+          });
+          await _saveUserProfile(companyUser);
+          return companyUser;
+        }
+      } on FirebaseException catch (error) {
+        debugPrint('[FirebaseAuth] Company account lookup failed: ${error.code}');
+      }
+    }
+
+    final cachedByEmail =
+        await _loadCachedProfile(fbUser.uid, email: email ?? fbUser.email);
+    if (cachedByEmail != null) {
+      await _recordActiveSession(cachedByEmail.id);
+      return cachedByEmail;
     }
 
     final userEmail = (email ?? fbUser.email ?? '').trim().toLowerCase();

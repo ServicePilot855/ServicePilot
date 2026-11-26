@@ -42,3 +42,15 @@ final bookingDetailProvider =
       final service = ref.watch(bookingServiceProvider);
       return service.getBookingById(bookingId);
     });
+
+/// Emits live updates whenever the booking status changes in Firestore or in-memory.
+///
+/// Implements US-13 (SCRUM-44) AC #3 and DoD #2.
+final liveBookingDetailProvider =
+    StreamProvider.autoDispose.family<BookingModel?, String>((
+      ref,
+      bookingId,
+    ) {
+      final service = ref.watch(bookingServiceProvider);
+      return service.watchBookingById(bookingId);
+    });
