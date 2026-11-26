@@ -263,7 +263,11 @@ class FirebaseAuthService implements IAuthService {
         createdAt: fbUser.metadata.creationTime ?? DateTime.now(),
       );
 
-      await _saveUserProfile(user);
+      await _persistNewProviderRegistration(
+        fbUser,
+        user,
+        _pendingIndependentProfile(user),
+      );
       return user;
     } on FirebaseAuthException catch (e) {
       throw AuthException(_mapFirebaseError(e));
@@ -335,24 +339,11 @@ class FirebaseAuthService implements IAuthService {
         createdAt: fbUser.metadata.creationTime ?? DateTime.now(),
       );
 
-      final firestore = _companyFirestore;
-      if (firestore != null) {
-        final batch = firestore.batch();
-        batch.set(firestore.collection('users').doc(user.id), user.toJson());
-        batch.set(firestore.collection('providers').doc(user.id),
-            _pendingCompanyProfile(user));
-        try {
-          await batch.commit();
-        } catch (_) {
-          try {
-            await fbUser.delete();
-          } on FirebaseAuthException catch (error) {
-            debugPrint('[FirebaseAuth] Could not roll back company sign-up: ${error.code}');
-          }
-          rethrow;
-        }
-      }
-      await _saveUserProfile(user);
+      await _persistNewProviderRegistration(
+        fbUser,
+        user,
+        _pendingCompanyProfile(user),
+      );
       return user;
     } on FirebaseAuthException catch (e) {
       throw AuthException(_mapFirebaseError(e));
@@ -487,6 +478,32 @@ class FirebaseAuthService implements IAuthService {
 
   // ── Profile Persistence Helpers ───────────────────────────────────────────
 
+  Future<void> _persistNewProviderRegistration(
+    User fbUser,
+    UserModel user,
+    Map<String, dynamic> profileData,
+  ) async {
+    final firestore = _companyFirestore;
+    if (firestore != null) {
+      final batch = firestore.batch();
+      batch.set(firestore.collection('users').doc(user.id), user.toJson());
+      batch.set(firestore.collection('providers').doc(user.id), profileData);
+      try {
+        await batch.commit();
+      } catch (_) {
+        try {
+          await fbUser.delete();
+        } on FirebaseAuthException catch (error) {
+          debugPrint(
+            '[FirebaseAuth] Could not roll back provider sign-up: ${error.code}',
+          );
+        }
+        rethrow;
+      }
+    }
+    await _saveUserProfile(user);
+  }
+
   Map<String, dynamic> _pendingCompanyProfile(UserModel owner) => {
         'id': owner.id,
         'businessName': owner.companyName,
@@ -497,28 +514,77 @@ class FirebaseAuthService implements IAuthService {
         'createdAt': FieldValue.serverTimestamp(),
       };
 
+  Map<String, dynamic> _pendingIndependentProfile(UserModel technician) => {
+        'id': technician.id,
+        'name': technician.fullName,
+        'fullName': technician.fullName,
+        'email': technician.email,
+        'phoneNumber': technician.phoneNumber,
+        'providerType': 'independent',
+        'status': 'pending_verification',
+        'isVerified': false,
+        'serviceArea': technician.serviceArea,
+        'createdAt': FieldValue.serverTimestamp(),
+      };
+
   Future<UserModel> _linkLegacyCompany(UserModel owner) async {
-    final firestore = _companyFirestore;
-    if (firestore == null || owner.companyName?.trim().isNotEmpty != true ||
+    if (owner.companyName?.trim().isNotEmpty != true ||
         owner.serviceArea?.trim().isNotEmpty != true) {
       return owner;
     }
-
-    final account = firestore.collection('users').doc(owner.id);
-    final profile = firestore.collection('providers').doc(owner.id);
     final linked = owner.copyWith(companyId: owner.id);
+    return _linkLegacyProviderAccount(
+      actor: owner,
+      linked: linked,
+      expectedRole: 'company',
+      isMatchingProfile: (profileData) =>
+          (profileData['type'] ?? profileData['providerType']) == 'company',
+      isMatchingAccount: (accountData) =>
+          (accountData['companyId'] ?? owner.id) == owner.id,
+      buildProfile: _pendingCompanyProfile,
+    );
+  }
+
+  Future<UserModel> _linkLegacyTechnician(UserModel technician) async {
+    if (technician.fullName.trim().isEmpty ||
+        technician.serviceArea?.trim().isNotEmpty != true) {
+      return technician;
+    }
+    return _linkLegacyProviderAccount(
+      actor: technician,
+      linked: technician,
+      expectedRole: AppRole.independentProvider.value,
+      isMatchingProfile: (profileData) =>
+          (profileData['type'] ?? profileData['providerType']) != 'company',
+      isMatchingAccount: (_) => true,
+      buildProfile: _pendingIndependentProfile,
+    );
+  }
+
+  Future<UserModel> _linkLegacyProviderAccount({
+    required UserModel actor,
+    required UserModel linked,
+    required String expectedRole,
+    required bool Function(Map<String, dynamic>) isMatchingProfile,
+    required bool Function(Map<String, dynamic>) isMatchingAccount,
+    required Map<String, dynamic> Function(UserModel) buildProfile,
+  }) async {
+    final firestore = _companyFirestore;
+    if (firestore == null) return actor;
+
+    final account = firestore.collection('users').doc(actor.id);
+    final profile = firestore.collection('providers').doc(actor.id);
     try {
       final didLink = await firestore.runTransaction((transaction) async {
         final accountData = (await transaction.get(account)).data();
         final profileData = (await transaction.get(profile)).data();
         if (accountData != null &&
-            (accountData['role'] != 'company' ||
+            (accountData['role'] != expectedRole ||
                 accountData['status'] == 'suspended' ||
-                (accountData['companyId'] ?? owner.id) != owner.id)) {
+                !isMatchingAccount(accountData))) {
           return false;
         }
-        if (profileData != null &&
-            (profileData['type'] ?? profileData['providerType']) != 'company') {
+        if (profileData != null && !isMatchingProfile(profileData)) {
           return false;
         }
         // A device-only registration can create a pending record, never approve one.
@@ -527,18 +593,18 @@ class FirebaseAuthService implements IAuthService {
               linked.copyWith(status: 'pending_verification').toJson());
         }
         if (profileData == null) {
-          transaction.set(profile, _pendingCompanyProfile(linked));
+          transaction.set(profile, buildProfile(linked));
         }
-        return true;
+        return accountData == null || profileData == null;
       });
       if (didLink) {
         await _saveUserProfile(linked);
         return linked;
       }
     } on FirebaseException catch (error) {
-      debugPrint('[FirebaseAuth] Could not link legacy company: ${error.code}');
+      debugPrint('[FirebaseAuth] Could not link legacy provider: ${error.code}');
     }
-    return owner;
+    return actor;
   }
 
   Future<void> _saveUserProfile(UserModel user) async {
@@ -586,6 +652,13 @@ class FirebaseAuthService implements IAuthService {
         await _recordActiveSession(company.id);
         return company;
       }
+      if (cached.isIndependentTechnician && !cached.isSuspended &&
+          cached.id == fbUser.uid &&
+          cached.email.toLowerCase() == fbUser.email?.toLowerCase()) {
+        final technician = await _linkLegacyTechnician(cached);
+        await _recordActiveSession(technician.id);
+        return technician;
+      }
       await _recordActiveSession(cached.id);
       return cached;
     }
@@ -595,19 +668,24 @@ class FirebaseAuthService implements IAuthService {
       try {
         final data = (await firestore.collection('users').doc(fbUser.uid).get())
             .data();
-        if (data != null && data['role'] == AppRole.company.value) {
+        if (data != null &&
+            (data['role'] == AppRole.company.value ||
+                data['role'] == AppRole.independentProvider.value)) {
           final createdAt = data['createdAt'];
-          final companyUser = UserModel.fromJson({
+          final updatedAt = data['updatedAt'];
+          final providerUser = UserModel.fromJson({
             ...data,
             'id': fbUser.uid,
             if (createdAt is Timestamp)
               'createdAt': createdAt.toDate().toIso8601String(),
+            if (updatedAt is Timestamp)
+              'updatedAt': updatedAt.toDate().toIso8601String(),
           });
-          await _saveUserProfile(companyUser);
-          return companyUser;
+          await _saveUserProfile(providerUser);
+          return providerUser;
         }
       } on FirebaseException catch (error) {
-        debugPrint('[FirebaseAuth] Company account lookup failed: ${error.code}');
+        debugPrint('[FirebaseAuth] Provider account lookup failed: ${error.code}');
       }
     }
 

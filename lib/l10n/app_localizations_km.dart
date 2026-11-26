@@ -1168,4 +1168,78 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get companyProfileSaved => 'បានរក្សាទុកព័ត៌មានក្រុមហ៊ុនហើយ។';
+
+  @override
+  String get technicianProfileEdit => 'កែព័ត៌មានជាងជួសជុល';
+
+  @override
+  String get technicianProfileName => 'ឈ្មោះពេញ';
+
+  @override
+  String get technicianProfileNameHint => 'វីរៈ ចាន់';
+
+  @override
+  String get technicianProfileNameRequired => 'សូមបញ្ចូលឈ្មោះពេញរបស់អ្នក។';
+
+  @override
+  String get technicianProfileDescription => 'ប្រវត្តិរូបសង្ខេប (ស្រេចចិត្ត)';
+
+  @override
+  String get technicianProfileDescriptionHint =>
+      'ជាងម៉ាស៊ីនត្រជាក់ជំនាញដែលមានបទពិសោធន៍ជាង ៧ ឆ្នាំ';
+
+  @override
+  String get technicianProfileAreaHint => 'សែនសុខ ទួលគោក';
+
+  @override
+  String get technicianProfileAreaRequired => 'សូមបញ្ចូលតំបន់ផ្តល់សេវា។';
+
+  @override
+  String get technicianProfileContacts => 'តំណទំនាក់ទំនង';
+
+  @override
+  String get technicianProfileOptionalContacts => 'តំណទំនាក់ទំនង (ស្រេចចិត្ត)';
+
+  @override
+  String get technicianProfileTelegram => 'Telegram';
+
+  @override
+  String get technicianProfileTelegramExample => 'https://t.me/virakchan';
+
+  @override
+  String get technicianProfileMessenger => 'Messenger';
+
+  @override
+  String get technicianProfileMessengerExample => 'https://m.me/virakchan';
+
+  @override
+  String technicianProfileInvalidLink(String example) {
+    return 'សូមបញ្ចូលតំណដូចជា $example។';
+  }
+
+  @override
+  String technicianProfileLengthError(int limit) {
+    return 'សូមប្រើអក្សរមិនលើសពី $limit តួ។';
+  }
+
+  @override
+  String get technicianProfileUnavailable =>
+      'គណនីនេះមិនមានព័ត៌មានជាងដែលអាចកែបានទេ។';
+
+  @override
+  String get technicianProfileLoading => 'កំពុងផ្ទុកព័ត៌មានជាងជួសជុល';
+
+  @override
+  String get technicianProfileLoadError =>
+      'មិនអាចផ្ទុកព័ត៌មានជាងជួសជុលរបស់អ្នកបានទេ។';
+
+  @override
+  String get technicianProfileSaveError =>
+      'មិនអាចរក្សាទុកការកែប្រែបានទេ។ សូមព្យាយាមម្តងទៀត។';
+
+  @override
+  String get technicianProfileSave => 'រក្សាទុកការកែប្រែ';
+
+  @override
+  String get technicianProfileSaved => 'បានរក្សាទុកព័ត៌មានជាងជួសជុលហើយ។';
 }

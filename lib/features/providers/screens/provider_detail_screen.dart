@@ -215,9 +215,7 @@ class _ProviderProfile extends ConsumerWidget {
                         ],
                       ),
                     ),
-                  if (provider.isCompany &&
-                      provider.isApprovedAndActive &&
-                      contactLinks.isNotEmpty)
+                  if (provider.isApprovedAndActive && contactLinks.isNotEmpty)
                     _ProfileSection(
                       title: l10n.companyProfileContacts,
                       child: SelectionArea(

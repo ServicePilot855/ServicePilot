@@ -208,7 +208,11 @@ class ProviderModel {
 
     return ProviderModel(
       id: id,
-      name: data['name'] as String? ?? 'Service Provider',
+      name: (data['name'] as String?)?.trim().isNotEmpty == true
+          ? data['name'] as String
+          : ((data['fullName'] as String?)?.trim().isNotEmpty == true
+              ? data['fullName'] as String
+              : 'Service Provider'),
       businessName: data['businessName'] as String?,
       type: providerType,
       description: data['description'] as String? ?? '',

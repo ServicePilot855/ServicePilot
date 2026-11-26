@@ -2167,6 +2167,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Company profile saved.'**
   String get companyProfileSaved;
+
+  /// No description provided for @technicianProfileEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit technician profile'**
+  String get technicianProfileEdit;
+
+  /// No description provided for @technicianProfileName.
+  ///
+  /// In en, this message translates to:
+  /// **'Full name'**
+  String get technicianProfileName;
+
+  /// No description provided for @technicianProfileNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Virak Chan'**
+  String get technicianProfileNameHint;
+
+  /// No description provided for @technicianProfileNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your full name.'**
+  String get technicianProfileNameRequired;
+
+  /// No description provided for @technicianProfileDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Bio / description (optional)'**
+  String get technicianProfileDescription;
+
+  /// No description provided for @technicianProfileDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Certified AC technician with 7+ years of experience'**
+  String get technicianProfileDescriptionHint;
+
+  /// No description provided for @technicianProfileAreaHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sen Sok, Tuol Kork'**
+  String get technicianProfileAreaHint;
+
+  /// No description provided for @technicianProfileAreaRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a service area.'**
+  String get technicianProfileAreaRequired;
+
+  /// No description provided for @technicianProfileContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact links'**
+  String get technicianProfileContacts;
+
+  /// No description provided for @technicianProfileOptionalContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact links (optional)'**
+  String get technicianProfileOptionalContacts;
+
+  /// No description provided for @technicianProfileTelegram.
+  ///
+  /// In en, this message translates to:
+  /// **'Telegram'**
+  String get technicianProfileTelegram;
+
+  /// No description provided for @technicianProfileTelegramExample.
+  ///
+  /// In en, this message translates to:
+  /// **'https://t.me/virakchan'**
+  String get technicianProfileTelegramExample;
+
+  /// No description provided for @technicianProfileMessenger.
+  ///
+  /// In en, this message translates to:
+  /// **'Messenger'**
+  String get technicianProfileMessenger;
+
+  /// No description provided for @technicianProfileMessengerExample.
+  ///
+  /// In en, this message translates to:
+  /// **'https://m.me/virakchan'**
+  String get technicianProfileMessengerExample;
+
+  /// No description provided for @technicianProfileInvalidLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a link like {example}.'**
+  String technicianProfileInvalidLink(String example);
+
+  /// No description provided for @technicianProfileLengthError.
+  ///
+  /// In en, this message translates to:
+  /// **'Use {limit} characters or fewer.'**
+  String technicianProfileLengthError(int limit);
+
+  /// No description provided for @technicianProfileUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No editable technician profile is linked to this account.'**
+  String get technicianProfileUnavailable;
+
+  /// No description provided for @technicianProfileLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading technician profile'**
+  String get technicianProfileLoading;
+
+  /// No description provided for @technicianProfileLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load your technician profile.'**
+  String get technicianProfileLoadError;
+
+  /// No description provided for @technicianProfileSaveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save your changes. Try again.'**
+  String get technicianProfileSaveError;
+
+  /// No description provided for @technicianProfileSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get technicianProfileSave;
+
+  /// No description provided for @technicianProfileSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Technician profile saved.'**
+  String get technicianProfileSaved;
 }
 
 class _AppLocalizationsDelegate
