@@ -18,6 +18,7 @@ class ComingSoonHome extends ConsumerWidget {
     required this.role,
     this.primaryAction,
     this.companyName,
+    this.extraContent,
   });
 
   final IconData roleIcon;
@@ -25,6 +26,7 @@ class ComingSoonHome extends ConsumerWidget {
   final AppRole role;
   final Widget? primaryAction;
   final String? companyName;
+  final Widget? extraContent;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -129,6 +131,10 @@ class ComingSoonHome extends ConsumerWidget {
                     ],
                   ),
                 ),
+                if (extraContent != null) ...[
+                  const SizedBox(height: 24),
+                  extraContent!,
+                ],
                 const SizedBox(height: 24),
                 SpSecondaryButton(
                   label: l10n.homeLogOut,

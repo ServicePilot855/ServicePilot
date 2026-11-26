@@ -86,6 +86,24 @@ rules_version = '2';
 //   - createdAt: timestamp | string (optional, immutable)
 //   - updatedAt: timestamp | string (optional)
 //
+// Collection: offerings
+// Document ID: {offeringId}
+// Fields:
+//   - id: string (required, 1-128 chars, immutable) - Unique offering identifier
+//   - providerId: string (required, 1-128 chars, immutable) - Provider UID
+//   - providerName: string (optional, max 150 chars) - Denormalized provider name
+//   - providerType: string (optional) - One of ['independent', 'company']
+//   - categoryId: string (required, 1-50 chars) - Associated category ID
+//   - categoryName: string (optional, max 100 chars) - Associated category name
+//   - title: string (required, 1-150 chars) - Service offering title
+//   - description: string (required, 1-2000 chars) - Service offering description
+//   - pricingMode: string (required) - One of ['quote_required', 'quoteRequired', 'fixed']
+//   - price: number (optional, >= 0 for fixed pricing; null/absent for quote_required)
+//   - unit: string (optional, max 50 chars) - Pricing unit (e.g., 'unit', 'hour')
+//   - isActive: bool (required) - Listing visibility flag
+//   - createdAt: timestamp | string (optional, immutable)
+//   - updatedAt: timestamp | string (optional)
+//
 // ===============================================================
 
 service cloud.firestore {
@@ -103,6 +121,16 @@ service cloud.firestore {
     // Check if the authenticated user matches the specified user ID
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Check if the authenticated user is the owner/manager of the provider document or offering
+    function isOfferingOwner(providerId) {
+      return isAuthenticated() && (
+        request.auth.uid == providerId ||
+        (exists(/databases/$(database)/documents/providers/$(providerId)) &&
+         (get(/databases/$(database)/documents/providers/$(providerId)).data.email == request.auth.token.email ||
+          get(/databases/$(database)/documents/providers/$(providerId)).data.id == request.auth.uid))
+      );
     }
 
     // Derive admin authority strictly from verified token claims or bootstrap admin identity
@@ -317,6 +345,38 @@ service cloud.firestore {
         (!('updatedAt' in data) || data.updatedAt is timestamp || (data.updatedAt is string && data.updatedAt.size() <= 50));
     }
 
+    // Validate /offerings/{offeringId} document schema and field constraints
+    // Supporting US OFFER-2 (SCRUM-77 / SCRUM-118)
+    function isValidOffering(data) {
+      return hasOnlyAllowedFields(data, [
+          'id', 'providerId', 'providerName', 'providerType', 'categoryId',
+          'categoryName', 'title', 'description', 'pricingMode', 'price',
+          'unit', 'isActive', 'createdAt', 'updatedAt'
+        ]) &&
+        hasRequiredFields(data, [
+          'id', 'providerId', 'categoryId', 'title', 'description',
+          'pricingMode', 'isActive'
+        ]) &&
+        data.id is string && data.id.size() >= 1 && data.id.size() <= 128 &&
+        data.providerId is string && data.providerId.size() >= 1 && data.providerId.size() <= 128 &&
+        data.categoryId is string && data.categoryId.size() >= 1 && data.categoryId.size() <= 50 &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 150 &&
+        data.description is string && data.description.size() >= 1 && data.description.size() <= 2000 &&
+        data.pricingMode is string && data.pricingMode in ['quote_required', 'quoteRequired', 'fixed'] &&
+        data.isActive is bool &&
+        (!('providerName' in data) || data.providerName == null || (data.providerName is string && data.providerName.size() <= 150)) &&
+        (!('providerType' in data) || data.providerType == null || (data.providerType is string && data.providerType in ['independent', 'company'])) &&
+        (!('categoryName' in data) || data.categoryName == null || (data.categoryName is string && data.categoryName.size() <= 100)) &&
+        (
+          (data.pricingMode in ['quote_required', 'quoteRequired']) ?
+            (!('price' in data) || data.price == null) :
+            (data.price is number && data.price >= 0)
+        ) &&
+        (!('unit' in data) || data.unit == null || (data.unit is string && data.unit.size() <= 50)) &&
+        (!('createdAt' in data) || data.createdAt == null || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
+        (!('updatedAt' in data) || data.updatedAt == null || data.updatedAt is timestamp || (data.updatedAt is string && data.updatedAt.size() <= 50));
+    }
+
     // ===============================================================
     // Root Level Default Deny
     // ===============================================================
@@ -495,6 +555,45 @@ service cloud.firestore {
 
       // Delete: Platform admin only
       allow delete: if isAdmin();
+    }
+
+    // ===============================================================
+    // Collection 5: /offerings/{offeringId}
+    // Supporting US OFFER-2 (SCRUM-77 / SCRUM-118)
+    // ===============================================================
+
+    match /offerings/{offeringId} {
+      function isOfferingPublisher(providerId) {
+        return isAdmin() || (
+          isOfferingOwner(providerId) &&
+          // Provider profile must exist and have status == 'active'
+          exists(/databases/$(database)/documents/providers/$(providerId)) &&
+          get(/databases/$(database)/documents/providers/$(providerId)).data.status == 'active' &&
+          // Requesting user must have a provider or company role (or admin)
+          (
+            !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['independent_provider', 'company', 'admin']
+          )
+        );
+      }
+
+      // Read: Active offerings are public; owners can read their own regardless of status; admins can read all
+      allow read: if resource.data.isActive == true ||
+                     isOfferingOwner(resource.data.providerId) ||
+                     isAdmin();
+
+      // Create: Provider (owner) or platform admin. Document ID must match id field.
+      allow create: if isOfferingPublisher(request.resource.data.providerId) &&
+                       isValidOffering(request.resource.data) &&
+                       request.resource.data.id == offeringId;
+
+      // Update: Provider (owner) or platform admin. Enforces immutable fields.
+      allow update: if isOfferingPublisher(resource.data.providerId) &&
+                       isValidOffering(request.resource.data) &&
+                       areImmutableFieldsUnchanged(['id', 'providerId', 'createdAt']);
+
+      // Delete: Provider (owner) or platform admin
+      allow delete: if (isOfferingOwner(resource.data.providerId) || isAdmin());
     }
   }
 }

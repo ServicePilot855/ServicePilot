@@ -25,12 +25,24 @@ class CreateBookingScreen extends ConsumerWidget {
     super.key,
     required this.providerId,
     this.initialProvider,
+    this.initialServiceTitle,
+    this.initialOfferingId,
+    this.isQuoteRequired = false,
   });
 
   final String providerId;
 
   /// Passed by the provider page so the form opens without a second fetch.
   final ProviderModel? initialProvider;
+
+  /// Preselected service offering title when launched from an offering card.
+  final String? initialServiceTitle;
+
+  /// Preselected offering ID.
+  final String? initialOfferingId;
+
+  /// Whether this intake requires a custom price quote.
+  final bool isQuoteRequired;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -92,7 +104,12 @@ class CreateBookingScreen extends ConsumerWidget {
         ],
       );
     }
-    return _BookingForm(provider: provider);
+    return _BookingForm(
+      provider: provider,
+      initialServiceTitle: initialServiceTitle,
+      initialOfferingId: initialOfferingId,
+      isQuoteRequired: isQuoteRequired,
+    );
   }
 
   static void _leave(BuildContext context) {
@@ -105,9 +122,17 @@ class CreateBookingScreen extends ConsumerWidget {
 }
 
 class _BookingForm extends ConsumerStatefulWidget {
-  const _BookingForm({required this.provider});
+  const _BookingForm({
+    required this.provider,
+    this.initialServiceTitle,
+    this.initialOfferingId,
+    this.isQuoteRequired = false,
+  });
 
   final ProviderModel provider;
+  final String? initialServiceTitle;
+  final String? initialOfferingId;
+  final bool isQuoteRequired;
 
   @override
   ConsumerState<_BookingForm> createState() => _BookingFormState();
@@ -128,12 +153,26 @@ class _BookingFormState extends ConsumerState<_BookingForm> {
 
   ProviderModel get _provider => widget.provider;
 
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialServiceTitle != null &&
+        widget.initialServiceTitle!.trim().isNotEmpty) {
+      _service = widget.initialServiceTitle!.trim();
+    }
+  }
+
   /// The services offered on the provider page. A provider without a listed
   /// specialty still gets one choice so the form can be sent.
-  List<String> _serviceOptions(AppLocalizations l10n) =>
-      _provider.specialties.isNotEmpty
-          ? _provider.specialties
-          : [l10n.bookingServiceGeneral];
+  List<String> _serviceOptions(AppLocalizations l10n) {
+    final list = _provider.specialties.isNotEmpty
+        ? List<String>.from(_provider.specialties)
+        : <String>[l10n.bookingServiceGeneral];
+    if (_service != null && !list.contains(_service)) {
+      list.insert(0, _service!);
+    }
+    return list;
+  }
 
   DateTime? get _preferredDateTime {
     final date = _date;
@@ -362,6 +401,14 @@ class _BookingFormState extends ConsumerState<_BookingForm> {
             title: l10n.bookingFormHeading,
             subtitle: l10n.bookingFormSubtitle(_provider.displayName),
           ),
+          if (widget.isQuoteRequired) ...[
+            const SizedBox(height: 16),
+            SpNotice(
+              icon: Icons.request_quote_rounded,
+              message: l10n.offeringNoticeQuoteRequiredBooking,
+              tone: SpTone.waiting,
+            ),
+          ],
           const SizedBox(height: 32),
           SpFormSection(
             title: l10n.bookingServiceSection,

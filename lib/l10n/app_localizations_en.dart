@@ -938,6 +938,128 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bookingSentBackHome => 'Back to home';
 
   @override
+  String get offeringCreateTitle => 'Add Service Offering';
+
+  @override
+  String get offeringHeaderTitle => 'New Service Offering';
+
+  @override
+  String get offeringCreateSubtitle =>
+      'Publish a new service offering with fixed or custom quote pricing.';
+
+  @override
+  String get offeringCategoryLabel => 'Service Category';
+
+  @override
+  String get offeringCategoryHint => 'Select category';
+
+  @override
+  String get offeringCategoryRequired => 'Please select a service category.';
+
+  @override
+  String get offeringTitleLabel => 'Service Title';
+
+  @override
+  String get offeringTitleHint => 'e.g., Inverter Mainboard & PCB Replacement';
+
+  @override
+  String get offeringTitleRequired => 'Please enter a service title.';
+
+  @override
+  String get offeringTitleMinLength => 'Title must be at least 3 characters.';
+
+  @override
+  String get offeringDescLabel => 'Description';
+
+  @override
+  String get offeringDescHint =>
+      'Explain the scope, prerequisites, or diagnosis required...';
+
+  @override
+  String get offeringDescRequired => 'Please enter a description.';
+
+  @override
+  String get offeringDescMinLength =>
+      'Description must be at least 10 characters.';
+
+  @override
+  String get offeringPricingModeLabel => 'Pricing Mode';
+
+  @override
+  String get offeringModeQuote => 'Requires custom quote';
+
+  @override
+  String get offeringModeQuoteDesc =>
+      'Excluded from fixed cart checkout. Customers submit inquiry for custom on-site estimation.';
+
+  @override
+  String get offeringNoticeQuoteMode =>
+      'Quote Mode Active: Fixed price checkout is disabled. Homeowners will be guided to submit problem details and photos for quote intake.';
+
+  @override
+  String get offeringBadgeQuoteRequired => 'Quote Required';
+
+  @override
+  String get offeringCtaRequestQuote => 'Request a Quote';
+
+  @override
+  String get offeringCtaBookService => 'Book Service';
+
+  @override
+  String get offeringNoticeQuoteRequiredBooking =>
+      'You are requesting a custom quote for this service. You will not be charged upfront. The provider will review your scope and provide a formal price estimate before work begins.';
+
+  @override
+  String get offeringModeFixed => 'Fixed upfront price';
+
+  @override
+  String get offeringModeFixedDesc => 'Upfront transparent flat-rate pricing.';
+
+  @override
+  String get offeringPriceLabel => 'Base Price (\$)';
+
+  @override
+  String get offeringPriceRequired => 'Please enter a valid base price.';
+
+  @override
+  String get offeringPricePositive => 'Price must be greater than zero.';
+
+  @override
+  String get offeringUnitLabel => 'Pricing Unit (Optional)';
+
+  @override
+  String get offeringUnitHint => 'e.g., job, hour, unit';
+
+  @override
+  String get offeringCreateButton => 'Publish Offering';
+
+  @override
+  String get offeringSuccessSnackbar =>
+      'Service offering published successfully!';
+
+  @override
+  String get offeringUnauthorized =>
+      'Only registered service providers and companies can publish offerings.';
+
+  @override
+  String get offeringActiveRequired =>
+      'Provider account must be active to publish service offerings.';
+
+  @override
+  String get offeringDashboardTitle => 'My Service Offerings';
+
+  @override
+  String get offeringAddButton => '+ Add Offering';
+
+  @override
+  String get offeringEmptyNotice =>
+      'You have not published any service offerings yet. Tap \"+ Add Offering\" to add fixed-price or quote-required services.';
+
+  @override
+  String get offeringLoadError =>
+      'Unable to load service offerings right now. Please check your connection and try again.';
+
+  @override
   String get adminDashboardTitle => 'Platform Administration';
 
   @override

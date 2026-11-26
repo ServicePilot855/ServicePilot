@@ -28,6 +28,7 @@ import 'package:service_pilot/features/providers/screens/provider_detail_screen.
 import 'package:service_pilot/features/providers/screens/provider_list_screen.dart';
 import 'package:service_pilot/features/services/models/category_model.dart';
 import 'package:service_pilot/features/services/screens/categories_screen.dart';
+import 'package:service_pilot/features/services/screens/create_offering_screen.dart';
 import 'package:service_pilot/shared/home/customer_home.dart';
 import 'package:service_pilot/shared/home/technician_home.dart';
 import 'package:service_pilot/shared/home/company_home.dart';
@@ -59,6 +60,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           state.matchedLocation.startsWith('/categories') ||
           state.matchedLocation.startsWith('/providers') ||
           state.matchedLocation.startsWith('/bookings') ||
+          state.matchedLocation.startsWith('/offerings') ||
           isGoingToAdmin;
       final isGoingToLogin = state.matchedLocation == '/login';
       final isGoingToSplash = state.matchedLocation == '/splash';
@@ -83,6 +85,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // Authenticated users are redirected away from /login to their home.
       if (isAuthenticated && isGoingToLogin) {
         return (authState).user.role.homeRoute;
+      }
+
+      // Restrict /offerings/create to providers and companies only (Issue 2)
+      if (isAuthenticated && state.matchedLocation.startsWith('/offerings')) {
+        final role = (authState).user.role;
+        if (role != AppRole.independentProvider &&
+            role != AppRole.company &&
+            role != AppRole.admin) {
+          return role.homeRoute;
+        }
       }
 
       return null; // No redirect needed.
@@ -145,6 +157,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const CategoriesScreen(),
       ),
       GoRoute(
+        path: '/offerings/create',
+        builder: (_, state) {
+          final categoryId = state.uri.queryParameters['categoryId'];
+          final providerId = state.uri.queryParameters['providerId'];
+          return CreateOfferingScreen(
+            initialCategoryId: categoryId,
+            initialProviderId: providerId,
+          );
+        },
+      ),
+      GoRoute(
         path: '/categories/:categoryId/providers',
         builder: (_, state) {
           final categoryId = state.pathParameters['categoryId'] ?? '';
@@ -167,15 +190,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
-      // ── Booking request (US-12) ───────────────────────────────────────
+      // ── Booking request (US-12 / OFFER-2) ─────────────────────────────
       GoRoute(
         path: '/providers/:providerId/book',
         builder: (_, state) {
           final providerId = state.pathParameters['providerId'] ?? '';
           final provider = state.extra as ProviderModel?;
+          final serviceTitle = state.uri.queryParameters['serviceTitle'];
+          final offeringId = state.uri.queryParameters['offeringId'];
+          final isQuoteRequired =
+              state.uri.queryParameters['pricingMode'] == 'quoteRequired';
           return CreateBookingScreen(
             providerId: providerId,
             initialProvider: provider,
+            initialServiceTitle: serviceTitle,
+            initialOfferingId: offeringId,
+            isQuoteRequired: isQuoteRequired,
           );
         },
       ),
