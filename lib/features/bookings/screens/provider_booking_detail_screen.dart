@@ -10,6 +10,7 @@ import 'package:service_pilot/features/bookings/models/booking_model.dart';
 import 'package:service_pilot/features/bookings/models/incoming_booking_request.dart';
 import 'package:service_pilot/features/bookings/providers/booking_provider.dart';
 import 'package:service_pilot/features/bookings/services/booking_service.dart';
+import 'package:service_pilot/features/bookings/widgets/decline_booking_dialog.dart';
 import 'package:service_pilot/l10n/l10n.dart';
 import 'package:service_pilot/shared/widgets/sp_button.dart';
 import 'package:service_pilot/shared/widgets/sp_layout.dart';
@@ -35,6 +36,7 @@ class ProviderBookingDetailScreen extends ConsumerStatefulWidget {
 class _ProviderBookingDetailScreenState
     extends ConsumerState<ProviderBookingDetailScreen> {
   bool _isConfirming = false;
+  bool _isDeclining = false;
   String? _successMessage;
   String? _errorMessage;
 
@@ -96,6 +98,61 @@ class _ProviderBookingDetailScreenState
     }
   }
 
+  /// Asks for a reason, then declines an owned `Pending` request (BOOK-3 / SCRUM-105).
+  Future<void> _declineBooking(String providerId) async {
+    final l10n = context.l10n;
+    final reason = await DeclineBookingDialog.show(context);
+    if (reason == null || !mounted) return;
+
+    setState(() {
+      _isDeclining = true;
+      _errorMessage = null;
+      _successMessage = null;
+    });
+
+    try {
+      final service = ref.read(bookingServiceProvider);
+      await service.declineBooking(
+        bookingId: widget.bookingId,
+        providerId: providerId,
+        reason: reason,
+      );
+
+      if (!mounted) return;
+      ref.invalidate(incomingBookingRequestsProvider);
+      ref.invalidate(incomingBookingRequestProvider(widget.bookingId));
+      ref.invalidate(bookingDetailProvider(widget.bookingId));
+      ref.invalidate(liveBookingDetailProvider(widget.bookingId));
+      ref.invalidate(providerBookingsProvider(providerId));
+      ref.invalidate(liveProviderBookingsProvider(providerId));
+      setState(() => _isDeclining = false);
+    } on UnauthorizedBookingDeclineException {
+      if (!mounted) return;
+      setState(() {
+        _isDeclining = false;
+        _errorMessage = l10n.providerBookingDeclineNotAuthorized;
+      });
+    } on InvalidBookingDeclineStateException {
+      if (!mounted) return;
+      setState(() {
+        _isDeclining = false;
+        _errorMessage = l10n.providerBookingDeclineIneligible;
+      });
+    } on BookingSubmissionException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isDeclining = false;
+        _errorMessage = e.message;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isDeclining = false;
+        _errorMessage = l10n.providerBookingsLoadError;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -118,7 +175,8 @@ class _ProviderBookingDetailScreenState
                   .when(
                     data: (booking) => booking != null &&
                             booking.isOwnedByProvider(providerId) &&
-                            booking.status.exposesAcceptedDetails
+                            (booking.status.exposesAcceptedDetails ||
+                                booking.status == BookingStatus.declined)
                         ? _buildBody(context, booking, providerId)
                         : _unavailable(context),
                     loading: _loading,
@@ -254,9 +312,20 @@ class _ProviderBookingDetailScreenState
               label: l10n.providerBookingConfirmButton,
               isLoading: _isConfirming,
               wrapLabel: true,
-              onPressed: _isConfirming || date == null
+              onPressed: _isConfirming || _isDeclining || date == null
                   ? null
                   : () => _confirmBooking(date, providerId),
+            ),
+            const SizedBox(height: 12),
+            SpSecondaryButton(
+              key: const Key('provider_decline_booking_button'),
+              label: l10n.providerBookingDeclineButton,
+              icon: Icons.block_rounded,
+              foregroundColor: AppTheme.errorDeep,
+              wrapLabel: true,
+              onPressed: _isConfirming || _isDeclining
+                  ? null
+                  : () => _declineBooking(providerId),
             ),
           ],
         ),
@@ -287,6 +356,15 @@ class _ProviderBookingDetailScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (booking.status == BookingStatus.declined) ...[
+              SpNotice(
+                key: const Key('provider_booking_declined_notice'),
+                icon: Icons.block_rounded,
+                message: l10n.providerBookingDeclinedNotice,
+                tone: SpTone.danger,
+              ),
+              const SizedBox(height: 16),
+            ],
             if (_successMessage != null &&
                 booking.status == BookingStatus.confirmed) ...[
               SpNotice(
@@ -422,7 +500,8 @@ class _ProviderBookingDetailScreenState
                     : () => _confirmBooking(
                         booking.preferredDateTime, activeProviderId),
               )
-            else if (booking.status != BookingStatus.confirmed)
+            else if (booking.status != BookingStatus.confirmed &&
+                booking.status != BookingStatus.declined)
               SpNotice(
                 key: const Key('provider_booking_ineligible_notice'),
                 icon: Icons.info_outline_rounded,

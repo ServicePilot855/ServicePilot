@@ -29,6 +29,9 @@ class BookingModel {
   final DateTime? confirmedAt;
   final String? confirmedBy;
 
+  /// Reason the provider gave for declining the request (BOOK-3 / SCRUM-105).
+  final String? declinedReason;
+
   /// Map pin the customer dropped for the repair address, if any.
   final double? latitude;
   final double? longitude;
@@ -58,6 +61,7 @@ class BookingModel {
     this.confirmedAppointmentAt,
     this.confirmedAt,
     this.confirmedBy,
+    this.declinedReason,
     this.latitude,
     this.longitude,
     this.photoUrls = const [],
@@ -93,6 +97,12 @@ class BookingModel {
   /// Only the customer who created the booking can cancel it, and only when
   /// its status is Pending, Assigned, or Confirmed.
   bool canBeCancelledBy(String userId) => isOwnedBy(userId) && canBeCancelled;
+
+  /// Whether the provider may decline this request (BOOK-3 / SCRUM-105):
+  /// only an owned `Pending` request can be declined.
+  bool canBeDeclinedBy(String targetProviderId) =>
+      isOwnedByProvider(targetProviderId) &&
+      status == BookingStatus.pending;
 
   factory BookingModel.fromJson(Map<String, dynamic> json) {
     return BookingModel(
@@ -130,6 +140,7 @@ class BookingModel {
           ? DateTime.tryParse(json['confirmedAt'] as String)
           : null,
       confirmedBy: json['confirmedBy'] as String?,
+      declinedReason: json['declinedReason'] as String?,
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
       photoUrls: (json['photoUrls'] as List<dynamic>?)
@@ -165,6 +176,7 @@ class BookingModel {
         'confirmedAppointmentAt': confirmedAppointmentAt!.toIso8601String(),
       if (confirmedAt != null) 'confirmedAt': confirmedAt!.toIso8601String(),
       if (confirmedBy != null) 'confirmedBy': confirmedBy,
+      if (declinedReason != null) 'declinedReason': declinedReason,
       if (latitude != null) 'latitude': latitude,
       if (longitude != null) 'longitude': longitude,
       if (photoUrls.isNotEmpty) 'photoUrls': photoUrls,
@@ -203,6 +215,7 @@ class BookingModel {
         'confirmedAppointmentAt': Timestamp.fromDate(confirmedAppointmentAt!),
       if (confirmedAt != null) 'confirmedAt': Timestamp.fromDate(confirmedAt!),
       if (confirmedBy != null) 'confirmedBy': confirmedBy,
+      if (declinedReason != null) 'declinedReason': declinedReason,
       if (hasLocation) 'location': GeoPoint(latitude!, longitude!),
       if (photoUrls.isNotEmpty) 'photos': photoUrls,
     };
@@ -239,6 +252,7 @@ class BookingModel {
       confirmedAppointmentAt: _readDate(data['confirmedAppointmentAt']),
       confirmedAt: _readDate(data['confirmedAt']),
       confirmedBy: data['confirmedBy'] as String?,
+      declinedReason: data['declinedReason'] as String?,
       latitude: (data['location'] as GeoPoint?)?.latitude,
       longitude: (data['location'] as GeoPoint?)?.longitude,
       photoUrls: (data['photos'] as List<dynamic>?)
@@ -277,6 +291,7 @@ class BookingModel {
     DateTime? confirmedAppointmentAt,
     DateTime? confirmedAt,
     String? confirmedBy,
+    String? declinedReason,
     double? latitude,
     double? longitude,
     List<String>? photoUrls,
@@ -308,6 +323,7 @@ class BookingModel {
           confirmedAppointmentAt ?? this.confirmedAppointmentAt,
       confirmedAt: confirmedAt ?? this.confirmedAt,
       confirmedBy: confirmedBy ?? this.confirmedBy,
+      declinedReason: declinedReason ?? this.declinedReason,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       photoUrls: photoUrls ?? this.photoUrls,

@@ -1342,6 +1342,53 @@ class AppLocalizationsEn extends AppLocalizations {
   String get providerBookingReviewAction => 'Review';
 
   @override
+  String get providerBookingDeclineButton => 'Decline Request';
+
+  @override
+  String get providerBookingDeclineDialogTitle => 'Decline this request?';
+
+  @override
+  String get providerBookingDeclineDialogBody =>
+      'The homeowner will see this request as Declined. You will not be able to confirm it afterwards.';
+
+  @override
+  String get providerBookingDeclineReasonLabel => 'Reason for declining';
+
+  @override
+  String get providerBookingDeclineReasonHint =>
+      'For example: outside our service area that day';
+
+  @override
+  String get providerBookingDeclineReasonRequired =>
+      'Add a short reason so the homeowner can make other arrangements.';
+
+  @override
+  String get providerBookingDeclineReasonTooLong =>
+      'Keep the reason under 300 characters.';
+
+  @override
+  String get providerBookingDeclineKeep => 'Keep Request';
+
+  @override
+  String get providerBookingDeclineConfirm => 'Confirm Decline';
+
+  @override
+  String get providerBookingDeclineSuccess =>
+      'Request declined. The homeowner can see this booking as Declined in their history.';
+
+  @override
+  String get providerBookingDeclinedNotice =>
+      'You declined this request. The homeowner has been told it is Declined.';
+
+  @override
+  String get providerBookingDeclineIneligible =>
+      'This request can no longer be declined.';
+
+  @override
+  String get providerBookingDeclineNotAuthorized =>
+      'You are not authorized to decline this request.';
+
+  @override
   String get cartAddButton => 'Add to cart';
 
   @override

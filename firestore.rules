@@ -688,11 +688,13 @@ service cloud.firestore {
       }
 
       // Providers and technicians can read private details after acceptance.
+      // BOOK-3 (SCRUM-105): the addressed provider can also see their own declined request.
       allow read: if isAuthenticated() &&
                      (
                        resource.data.customerId == request.auth.uid ||
                        (resource.data.status in ['confirmed', 'assigned', 'in_progress', 'completed'] &&
                          (ownsBookingInbox(resource.data.providerId) || isAssignedBookingTechnician(resource.data))) ||
+                       (resource.data.status == 'declined' && ownsBookingInbox(resource.data.providerId)) ||
                        isAdmin()
                      );
 

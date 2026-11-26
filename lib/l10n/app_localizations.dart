@@ -2456,6 +2456,84 @@ abstract class AppLocalizations {
   /// **'Review'**
   String get providerBookingReviewAction;
 
+  /// No description provided for @providerBookingDeclineButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline Request'**
+  String get providerBookingDeclineButton;
+
+  /// No description provided for @providerBookingDeclineDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline this request?'**
+  String get providerBookingDeclineDialogTitle;
+
+  /// No description provided for @providerBookingDeclineDialogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The homeowner will see this request as Declined. You will not be able to confirm it afterwards.'**
+  String get providerBookingDeclineDialogBody;
+
+  /// No description provided for @providerBookingDeclineReasonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason for declining'**
+  String get providerBookingDeclineReasonLabel;
+
+  /// No description provided for @providerBookingDeclineReasonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For example: outside our service area that day'**
+  String get providerBookingDeclineReasonHint;
+
+  /// No description provided for @providerBookingDeclineReasonRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a short reason so the homeowner can make other arrangements.'**
+  String get providerBookingDeclineReasonRequired;
+
+  /// No description provided for @providerBookingDeclineReasonTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep the reason under 300 characters.'**
+  String get providerBookingDeclineReasonTooLong;
+
+  /// No description provided for @providerBookingDeclineKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Request'**
+  String get providerBookingDeclineKeep;
+
+  /// No description provided for @providerBookingDeclineConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Decline'**
+  String get providerBookingDeclineConfirm;
+
+  /// No description provided for @providerBookingDeclineSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Request declined. The homeowner can see this booking as Declined in their history.'**
+  String get providerBookingDeclineSuccess;
+
+  /// No description provided for @providerBookingDeclinedNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'You declined this request. The homeowner has been told it is Declined.'**
+  String get providerBookingDeclinedNotice;
+
+  /// No description provided for @providerBookingDeclineIneligible.
+  ///
+  /// In en, this message translates to:
+  /// **'This request can no longer be declined.'**
+  String get providerBookingDeclineIneligible;
+
+  /// No description provided for @providerBookingDeclineNotAuthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'You are not authorized to decline this request.'**
+  String get providerBookingDeclineNotAuthorized;
+
   /// No description provided for @cartAddButton.
   ///
   /// In en, this message translates to:
