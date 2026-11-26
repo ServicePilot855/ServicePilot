@@ -223,14 +223,15 @@ void main() {
 
     test('the existing confirmation API removes the request from the inbox', () async {
       final created = await service.createBooking(_request());
-      final confirmed = await service.acceptBooking(
+      await service.acceptBooking(
         bookingId: created.id,
         providerId: created.providerId,
       );
 
-      expect(confirmed.status, BookingStatus.confirmed);
-      expect(confirmed.confirmedAppointmentAt, created.preferredDateTime);
-      expect(confirmed.confirmedBy, created.providerId);
+      final confirmed = await service.getBookingById(created.id);
+      expect(confirmed?.status, BookingStatus.confirmed);
+      expect(confirmed?.confirmedAppointmentAt, created.preferredDateTime);
+      expect(confirmed?.confirmedBy, created.providerId);
       expect(await service.getIncomingRequest(created.providerId, created.id), isNull);
     });
 

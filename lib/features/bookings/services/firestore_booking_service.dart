@@ -218,11 +218,10 @@ class FirestoreBookingService implements IBookingService {
   }
 
   @override
-  Future<BookingModel> acceptBooking({
+  Future<void> acceptBooking({
     required String bookingId,
     required String providerId,
     DateTime? confirmedAppointmentAt,
-    String? confirmedBy,
   }) {
     final ref = _bookings.doc(bookingId);
     final previewRef = _inbox(providerId).doc(bookingId);
@@ -258,21 +257,21 @@ class FirestoreBookingService implements IBookingService {
         }
         transaction.update(ref, {
           'status': BookingStatus.confirmed.value,
-          'confirmedAppointmentAt': appointment,
-          'confirmedAt': FieldValue.serverTimestamp(),
-          'confirmedBy': confirmedBy ?? providerId,
           'updatedAt': FieldValue.serverTimestamp(),
-          'technicianId': FieldValue.delete(),
-          'technicianName': FieldValue.delete(),
+          ..._confirmationFields(appointment!, providerId),
         });
         if (preview != null) transaction.delete(previewRef);
       });
-      final confirmed = await ref.get(const GetOptions(source: Source.server));
-      final data = confirmed.data();
-      if (data == null) throw BookingNotFoundException(bookingId);
-      return BookingModel.fromFirestore(bookingId, data);
     });
   }
+
+  Map<String, Object?> _confirmationFields(Object appointment, String providerId) => {
+        'confirmedAppointmentAt': appointment,
+        'confirmedAt': FieldValue.serverTimestamp(),
+        'confirmedBy': providerId,
+        'technicianId': FieldValue.delete(),
+        'technicianName': FieldValue.delete(),
+      };
 
   @override
   Future<BookingModel> assignBooking({
@@ -306,10 +305,15 @@ class FirestoreBookingService implements IBookingService {
   }) {
     return _update(bookingId, (booking) {
       _checkTransition(booking, newStatus);
+      final now = DateTime.now();
+      final confirming = newStatus == BookingStatus.confirmed;
       return booking.copyWith(
         status: newStatus,
-        clearAssignment: newStatus == BookingStatus.confirmed,
-        updatedAt: DateTime.now(),
+        clearAssignment: confirming,
+        confirmedAppointmentAt: confirming ? booking.preferredDateTime : null,
+        confirmedAt: confirming ? now : null,
+        confirmedBy: confirming ? booking.providerId : null,
+        updatedAt: now,
       );
     });
   }
@@ -330,13 +334,17 @@ class FirestoreBookingService implements IBookingService {
         }
         final current = BookingModel.fromFirestore(ref.id, data);
         final updated = change(current);
+        final appointment = data['appointmentDate'];
+        if (updated.status == BookingStatus.confirmed && appointment == null) {
+          throw const BookingSubmissionException(
+            'The preferred appointment is unavailable or has changed.',
+          );
+        }
         tx.update(ref, {
           'status': updated.status.value,
           'updatedAt': Timestamp.fromDate(updated.updatedAt!),
-          if (updated.status == BookingStatus.confirmed) ...{
-            'technicianId': FieldValue.delete(),
-            'technicianName': FieldValue.delete(),
-          },
+          if (updated.status == BookingStatus.confirmed)
+            ..._confirmationFields(appointment!, current.providerId),
           if (updated.status == BookingStatus.assigned) ...{
             if (updated.assignedTechnicianId != null)
               'technicianId': updated.assignedTechnicianId,

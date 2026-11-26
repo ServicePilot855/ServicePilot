@@ -641,10 +641,10 @@ service cloud.firestore {
         return !after.keys().hasAny(['technicianId', 'technicianName']) &&
           changed.hasOnly(['status', 'updatedAt', 'technicianId', 'technicianName',
             'confirmedAppointmentAt', 'confirmedAt', 'confirmedBy']) &&
-          (!changed.hasAny(['confirmedAppointmentAt', 'confirmedAt', 'confirmedBy']) ||
-           (after.confirmedAppointmentAt != null &&
-            after.confirmedAppointmentAt == before.get('appointmentDate', null) &&
-            after.confirmedAt == request.time && after.confirmedBy == request.auth.uid));
+          after.get('confirmedAppointmentAt', null) != null &&
+          after.confirmedAppointmentAt == before.get('appointmentDate', null) &&
+          after.get('confirmedAt', null) == request.time &&
+          after.get('confirmedBy', '') == request.auth.uid;
       }
 
       function canDecideRequest(before, after, changed) {
