@@ -128,7 +128,7 @@ void main() {
       await tester.pumpWidget(buildDetailApp(offerings: testOfferings));
       await tester.pumpAndSettle();
 
-      // Verify Offerings Section header
+      // Verify Offerings Section header (uses l10n key providerOfferingsSection)
       expect(find.text('Available Services & Offerings'), findsOneWidget);
 
       // Verify Fixed Price offering shows price and Book button
@@ -204,6 +204,135 @@ void main() {
       expect(find.byKey(const Key('add_offering_button')), findsOneWidget);
       expect(find.byKey(const Key('badge_quote_required_off-quote-1')),
           findsOneWidget);
+    });
+  });
+
+  group('SCRUM-74 (DISC-1): View provider service details and prices', () {
+    testWidgets(
+        'AC: inactive offerings (isActive: false) are NOT shown on provider profile',
+        (tester) async {
+      setupViewport(tester);
+
+      // One active + one inactive offering for the same provider
+      final mixedOfferings = [
+        const OfferingModel(
+          id: 'off-active-1',
+          providerId: 'prov-test-1',
+          providerName: 'Dara Technician',
+          categoryId: 'cat-ac',
+          title: 'Active Service',
+          description: 'This service is currently active.',
+          pricingMode: OfferingPricingMode.fixed,
+          price: 30.0,
+          unit: 'unit',
+          isActive: true,
+        ),
+        const OfferingModel(
+          id: 'off-inactive-1',
+          providerId: 'prov-test-1',
+          providerName: 'Dara Technician',
+          categoryId: 'cat-ac',
+          title: 'Discontinued Service',
+          description: 'This service is no longer offered.',
+          pricingMode: OfferingPricingMode.fixed,
+          price: 15.0,
+          unit: 'unit',
+          isActive: false,
+        ),
+      ];
+
+      await tester.pumpWidget(buildDetailApp(offerings: mixedOfferings));
+      await tester.pumpAndSettle();
+
+      // Active offering is visible
+      expect(find.text('Active Service'), findsOneWidget);
+      expect(find.text('\$30.00 / unit'), findsOneWidget);
+
+      // Inactive offering must NOT appear on the customer profile view
+      expect(find.text('Discontinued Service'), findsNothing);
+      expect(find.text('\$15.00 / unit'), findsNothing);
+    });
+
+    testWidgets(
+        'AC: offerings from other providers are NOT shown on this provider\'s profile',
+        (tester) async {
+      setupViewport(tester);
+
+      // prov-test-1's own offering + a different provider's offering in service store
+      final crossProviderOfferings = [
+        const OfferingModel(
+          id: 'off-mine-1',
+          providerId: 'prov-test-1',
+          providerName: 'Dara Technician',
+          categoryId: 'cat-ac',
+          title: 'My Own Service',
+          description: 'Belongs to prov-test-1.',
+          pricingMode: OfferingPricingMode.fixed,
+          price: 25.0,
+          unit: 'unit',
+          isActive: true,
+        ),
+        const OfferingModel(
+          id: 'off-other-1',
+          providerId: 'prov-other-99',
+          providerName: 'Other Provider',
+          categoryId: 'cat-ac',
+          title: 'Other Provider Service',
+          description: 'Belongs to a different provider.',
+          pricingMode: OfferingPricingMode.fixed,
+          price: 50.0,
+          unit: 'job',
+          isActive: true,
+        ),
+      ];
+
+      await tester.pumpWidget(buildDetailApp(offerings: crossProviderOfferings));
+      await tester.pumpAndSettle();
+
+      // Own offering is visible
+      expect(find.text('My Own Service'), findsOneWidget);
+
+      // Other provider's offering must NOT appear on this profile
+      expect(find.text('Other Provider Service'), findsNothing);
+      expect(find.text('\$50.00 / job'), findsNothing);
+    });
+
+    testWidgets(
+        'AC: provider profile shows no offerings section when provider has none',
+        (tester) async {
+      setupViewport(tester);
+
+      // No offerings for prov-test-1
+      await tester.pumpWidget(buildDetailApp(offerings: const []));
+      await tester.pumpAndSettle();
+
+      // The offerings section header should not appear
+      expect(find.text('Available Services & Offerings'), findsNothing);
+    });
+
+    testWidgets(
+        'AC: each offering shows service title, description, and price from listing',
+        (tester) async {
+      setupViewport(tester);
+      await tester.pumpWidget(buildDetailApp(offerings: testOfferings));
+      await tester.pumpAndSettle();
+
+      // Fixed offering: title, description, and priceDisplay from the listing
+      expect(find.text('Split Coil Deep Wash'), findsOneWidget);
+      expect(
+        find.text('Standard coil wash and drain cleaning.'),
+        findsOneWidget,
+      );
+      expect(find.text('\$25.00 / unit'), findsOneWidget);
+
+      // Quote offering: title, description visible; quote badge instead of price
+      expect(find.text('Central Inverter PCB Diagnosis'), findsOneWidget);
+      expect(
+        find.text('Micro-soldering diagnostics requiring custom on-site quote.'),
+        findsOneWidget,
+      );
+      // Price label NOT shown for quote offerings
+      expect(find.text('Quote Required'), findsOneWidget); // badge text
     });
   });
 }

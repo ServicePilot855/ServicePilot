@@ -477,5 +477,8 @@
   "technicianProfileLoadError": "Could not load your technician profile.",
   "technicianProfileSaveError": "Could not save your changes. Try again.",
   "technicianProfileSave": "Save changes",
-  "technicianProfileSaved": "Technician profile saved."
+  "technicianProfileSaved": "Technician profile saved.",
+
+  "@_DISC": {},
+  "providerOfferingsSection": "Available Services & Offerings"
 }

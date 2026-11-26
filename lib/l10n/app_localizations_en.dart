@@ -1252,4 +1252,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get technicianProfileSaved => 'Technician profile saved.';
+
+  @override
+  String get providerOfferingsSection => 'Available Services & Offerings';
 }

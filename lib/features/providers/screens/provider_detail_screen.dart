@@ -364,7 +364,7 @@ class _OfferingsSection extends ConsumerWidget {
         if (offerings.isEmpty) return const SizedBox.shrink();
 
         return _ProfileSection(
-          title: 'Available Services & Offerings',
+          title: l10n.providerOfferingsSection,
           child: Column(
             children: offerings.map((offering) {
               final isQuote = offering.isQuoteRequired;

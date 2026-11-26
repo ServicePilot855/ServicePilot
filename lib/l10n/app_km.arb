@@ -145,5 +145,7 @@
   "technicianProfileLoadError": "មិនអាចផ្ទុកព័ត៌មានជាងជួសជុលរបស់អ្នកបានទេ។",
   "technicianProfileSaveError": "មិនអាចរក្សាទុកការកែប្រែបានទេ។ សូមព្យាយាមម្តងទៀត។",
   "technicianProfileSave": "រក្សាទុកការកែប្រែ",
-  "technicianProfileSaved": "បានរក្សាទុកព័ត៌មានជាងជួសជុលហើយ។"
+  "technicianProfileSaved": "បានរក្សាទុកព័ត៌មានជាងជួសជុលហើយ។",
+
+  "providerOfferingsSection": "សេវាកម្ម និងការផ្តល់ជូនដែលមាន"
 }

@@ -2299,6 +2299,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Technician profile saved.'**
   String get technicianProfileSaved;
+
+  /// No description provided for @providerOfferingsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Available Services & Offerings'**
+  String get providerOfferingsSection;
 }
 
 class _AppLocalizationsDelegate

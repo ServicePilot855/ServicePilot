@@ -1242,4 +1242,7 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get technicianProfileSaved => 'បានរក្សាទុកព័ត៌មានជាងជួសជុលហើយ។';
+
+  @override
+  String get providerOfferingsSection => 'សេវាកម្ម និងការផ្តល់ជូនដែលមាន';
 }
