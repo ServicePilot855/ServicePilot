@@ -5,6 +5,8 @@ import 'package:service_pilot/features/bookings/models/booking_model.dart';
 import 'package:service_pilot/features/bookings/models/incoming_booking_request.dart';
 import 'package:service_pilot/features/bookings/services/booking_service.dart';
 import 'package:service_pilot/features/bookings/services/firestore_booking_service.dart';
+import 'package:service_pilot/features/quotes/providers/quote_provider.dart';
+import 'package:service_pilot/features/quotes/services/quote_service.dart';
 
 /// Resolves the active customer ID from authentication state, falling back
 /// to [BookingService.defaultCustomerId] in standalone widget tests.
@@ -23,16 +25,22 @@ final bookingServiceProvider = Provider<IBookingService>((ref) {
     return FirestoreBookingService();
   }
   final customerId = ref.watch(activeCustomerIdProvider);
-  return BookingService(customerId: customerId);
+  final quotes = ref.watch(quoteServiceProvider);
+  return BookingService(
+    customerId: customerId,
+    // QUOTE-5: book approved quotes from the in-memory quote store.
+    findQuote: quotes.getQuoteRequestById,
+    onQuoteBooked: quotes is InMemoryQuoteService ? quotes.linkBooking : null,
+  );
 });
 
 /// Fetches all repair bookings belonging to the active customer.
 final customerBookingsProvider =
     FutureProvider.autoDispose<List<BookingModel>>((ref) async {
-      final service = ref.watch(bookingServiceProvider);
-      final customerId = ref.watch(activeCustomerIdProvider);
-      return service.getCustomerBookings(customerId);
-    });
+  final service = ref.watch(bookingServiceProvider);
+  final customerId = ref.watch(activeCustomerIdProvider);
+  return service.getCustomerBookings(customerId);
+});
 
 final incomingBookingRequestsProvider =
     FutureProvider.autoDispose<List<IncomingBookingRequest>>((ref) async {
@@ -67,47 +75,49 @@ final declinedBookingRequestProvider =
 ) {
   final user = ref.watch(currentUserProvider);
   if (user == null || !user.canViewBookingInbox) return null;
-  return ref.watch(bookingServiceProvider).getDeclinedRequest(user.id, bookingId);
+  return ref
+      .watch(bookingServiceProvider)
+      .getDeclinedRequest(user.id, bookingId);
 });
 
 /// Fetches a single booking by its unique ID.
 final bookingDetailProvider =
     FutureProvider.autoDispose.family<BookingModel?, String>((
-      ref,
-      bookingId,
-    ) async {
-      final service = ref.watch(bookingServiceProvider);
-      return service.getBookingById(bookingId);
-    });
+  ref,
+  bookingId,
+) async {
+  final service = ref.watch(bookingServiceProvider);
+  return service.getBookingById(bookingId);
+});
 
 /// Emits live updates whenever the booking status changes in Firestore or in-memory.
 ///
 /// Implements US-13 (SCRUM-44) AC #3 and DoD #2.
 final liveBookingDetailProvider =
     StreamProvider.autoDispose.family<BookingModel?, String>((
-      ref,
-      bookingId,
-    ) {
-      final service = ref.watch(bookingServiceProvider);
-      return service.watchBookingById(bookingId);
-    });
+  ref,
+  bookingId,
+) {
+  final service = ref.watch(bookingServiceProvider);
+  return service.watchBookingById(bookingId);
+});
 
 /// Fetches all repair bookings addressed to [providerId] (BOOK-2 / SCRUM-104).
 final providerBookingsProvider =
     FutureProvider.autoDispose.family<List<BookingModel>, String>((
-      ref,
-      providerId,
-    ) async {
-      final service = ref.watch(bookingServiceProvider);
-      return service.getProviderBookings(providerId);
-    });
+  ref,
+  providerId,
+) async {
+  final service = ref.watch(bookingServiceProvider);
+  return service.getProviderBookings(providerId);
+});
 
 /// Emits live updates for all bookings addressed to [providerId].
 final liveProviderBookingsProvider =
     StreamProvider.autoDispose.family<List<BookingModel>, String>((
-      ref,
-      providerId,
-    ) {
-      final service = ref.watch(bookingServiceProvider);
-      return service.watchProviderBookings(providerId);
-    });
+  ref,
+  providerId,
+) {
+  final service = ref.watch(bookingServiceProvider);
+  return service.watchProviderBookings(providerId);
+});

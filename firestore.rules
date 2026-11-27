@@ -76,9 +76,12 @@ rules_version = '2';
 //   - timeSlot: string (optional, max 50 chars) - Preferred time slot
 //   - address: string (optional, max 300 chars) - Service address in Phnom Penh
 //   - serviceArea / district: string (optional, max 100 chars) - District location
-//   - notes / description: string (optional, max 1000 chars) - Customer issue notes
+//   - notes: string (optional, max 1000 chars) - Customer issue notes
+//   - description: string (optional, max 2000 chars; quote bookings copy the quote's details)
 //   - photos: list of strings (optional, max 10 items) - Photo URLs/paths of issue
 //   - totalPrice / price: number (optional, >= 0) - Quoted or final price
+//   - quoteId: string (optional, immutable) - Approved quote this booking was made from (QUOTE-5);
+//     its totalPrice must equal the quote's approvedPrice and cannot change
 //   - technicianId: string (optional, max 128 chars) - Assigned technician UID
 //   - technicianName: string (optional, max 100 chars) - Assigned technician name
 //   - cancelledAt: timestamp | string (optional) - When the customer cancelled
@@ -126,6 +129,10 @@ rules_version = '2';
 //   - photos: list of strings (optional, max 5 items, valid URLs) - Reference photo URLs
 //   - status: string (required) - One of ['requested', 'quoted', 'approved', 'rejected']
 //   - quotedPrice: number | null (optional, >= 0; forbidden when status == 'requested') - Quoted price
+//   - quotedAt: timestamp | null (optional) - When the provider sent the price (QUOTE-3)
+//   - approvedPrice: number | null (optional; Approved only; equals quotedPrice) - Agreed amount (QUOTE-4)
+//   - approvedAt: timestamp | null (optional) - When the homeowner approved (QUOTE-4)
+//   - bookingId: string | null (optional; Approved only) - Booking created from the quote (QUOTE-5)
 //   - createdAt: timestamp | string | null (optional, immutable)
 //   - updatedAt: timestamp | string | null (optional)
 //
@@ -374,9 +381,10 @@ service cloud.firestore {
           'notes', 'description', 'photos', 'totalPrice', 'price',
           'technicianId', 'technicianName', 'cancellationReason', 'declinedReason',
           'cancelledAt', 'cancelledBy', 'confirmedAppointmentAt', 'confirmedAt', 'confirmedBy',
-          'location', 'createdAt', 'updatedAt'
+          'location', 'quoteId', 'createdAt', 'updatedAt'
         ]) &&
         hasRequiredFields(data, ['customerId', 'providerId', 'status']) &&
+        (!('quoteId' in data) || (data.quoteId is string && data.quoteId.size() >= 1 && data.quoteId.size() <= 128)) &&
         data.customerId is string && data.customerId.size() >= 1 && data.customerId.size() <= 128 &&
         data.providerId is string && data.providerId.size() >= 1 && data.providerId.size() <= 128 &&
         data.status in [
@@ -397,7 +405,7 @@ service cloud.firestore {
         (!('serviceArea' in data) || (data.serviceArea is string && data.serviceArea.size() <= 100)) &&
         (!('district' in data) || (data.district is string && data.district.size() <= 100)) &&
         (!('notes' in data) || (data.notes is string && data.notes.size() <= 1000)) &&
-        (!('description' in data) || (data.description is string && data.description.size() <= 1000)) &&
+        (!('description' in data) || (data.description is string && data.description.size() <= 2000)) &&
         (!('photos' in data) || (data.photos is list && data.photos.size() <= 10)) &&
         (!('totalPrice' in data) || (data.totalPrice is number && data.totalPrice >= 0)) &&
         (!('price' in data) || (data.price is number && data.price >= 0)) &&
@@ -464,7 +472,8 @@ service cloud.firestore {
       return hasOnlyAllowedFields(data, [
           'id', 'customerId', 'customerName', 'providerId', 'providerName',
           'offeringId', 'offeringTitle', 'categoryId', 'categoryName',
-          'description', 'photos', 'status', 'quotedPrice', 'createdAt', 'updatedAt'
+          'description', 'photos', 'status', 'quotedPrice', 'quotedAt',
+          'approvedPrice', 'approvedAt', 'bookingId', 'createdAt', 'updatedAt'
         ]) &&
         hasRequiredFields(data, [
           'id', 'customerId', 'providerId', 'offeringId',
@@ -485,6 +494,16 @@ service cloud.firestore {
         (!('photos' in data) || isValidQuotePhotoList(data.photos)) &&
         data.status is string && data.status in ['requested', 'quoted', 'approved', 'rejected'] &&
         (!('quotedPrice' in data) || data.quotedPrice == null || (data.status != 'requested' && data.quotedPrice is number && data.quotedPrice >= 0)) &&
+        (!('quotedAt' in data) || data.quotedAt == null || data.quotedAt is timestamp) &&
+        // QUOTE-4: the agreed amount exists only on an Approved record and equals the quoted price.
+        (!('approvedPrice' in data) || data.approvedPrice == null ||
+          (data.status == 'approved' && data.approvedPrice is number &&
+            data.get('quotedPrice', null) == data.approvedPrice)) &&
+        (!('approvedAt' in data) || data.approvedAt == null || data.approvedAt is timestamp) &&
+        // QUOTE-5: only an Approved quote links to a booking.
+        (!('bookingId' in data) || data.bookingId == null ||
+          (data.status == 'approved' && data.bookingId is string &&
+            data.bookingId.size() >= 1 && data.bookingId.size() <= 128)) &&
         (!('createdAt' in data) || data.createdAt == null || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
         (!('updatedAt' in data) || data.updatedAt == null || data.updatedAt is timestamp || (data.updatedAt is string && data.updatedAt.size() <= 50));
     }
@@ -677,6 +696,19 @@ service cloud.firestore {
           : !existsAfter(archived));
     }
 
+    // QUOTE-5 (SCRUM-87): a booking created from a quote copies the approved
+    // quote's provider and amount, and the same write links the quote to it.
+    function matchesApprovedQuote(bookingId, booking) {
+      let path = /databases/$(database)/documents/quoteRequests/$(booking.quoteId);
+      return exists(path) &&
+        get(path).data.status == 'approved' &&
+        get(path).data.customerId == request.auth.uid &&
+        get(path).data.get('bookingId', null) == null &&
+        get(path).data.providerId == booking.providerId &&
+        booking.get('totalPrice', null) == get(path).data.get('approvedPrice', -1) &&
+        getAfter(path).data.get('bookingId', '') == bookingId;
+    }
+
     function noProviderPreviews(providerId, bookingId) {
       return !existsAfter(inboxDocument(providerId, bookingId)) &&
         !existsAfter(declinedRequestDocument(providerId, bookingId));
@@ -805,7 +837,9 @@ service cloud.firestore {
                            request.resource.data.customerId == request.auth.uid &&
                            request.resource.data.status == 'pending' &&
                            !request.resource.data.keys().hasAny(['technicianId', 'technicianName',
-                             'confirmedAppointmentAt', 'confirmedAt', 'confirmedBy', 'declinedReason'])
+                             'confirmedAppointmentAt', 'confirmedAt', 'confirmedBy', 'declinedReason']) &&
+                           (!('quoteId' in request.resource.data) ||
+                             matchesApprovedQuote(bookingId, request.resource.data))
                          ) ||
                          isAdmin()
                        );
@@ -819,7 +853,10 @@ service cloud.firestore {
                          noProviderPreviews(resource.data.providerId, bookingId)) &&
                        (
                          isAdmin() ||
-                         (areImmutableFieldsUnchanged(['customerId', 'providerId', 'createdAt']) &&
+                         (areImmutableFieldsUnchanged(['customerId', 'providerId', 'createdAt', 'quoteId']) &&
+                           // The approved quote amount stays fixed on a quote booking.
+                           (!('quoteId' in resource.data) ||
+                             areImmutableFieldsUnchanged(['totalPrice', 'price'])) &&
                            canUpdateBooking(resource.data, request.resource.data))
                        );
 
@@ -968,10 +1005,64 @@ service cloud.firestore {
                          )
                        );
 
-      // Update: Platform admin only, preserving immutable identity and origin fields
-      allow update: if isAdmin() &&
+      function quoteChanges() {
+        return request.resource.data.diff(resource.data).affectedKeys();
+      }
+
+      // Same account checks as quote creation.
+      function isActiveHomeowner() {
+        let path = /databases/$(database)/documents/users/$(request.auth.uid);
+        return !exists(path) ||
+          (get(path).data.role == 'homeowner' && get(path).data.status != 'suspended');
+      }
+
+      // QUOTE-3 (SCRUM-85): the addressed provider prices a Requested record.
+      function canSendQuotePrice() {
+        let before = resource.data;
+        let after = request.resource.data;
+        return before.status == 'requested' && after.status == 'quoted' &&
+          quoteChanges().hasOnly(['status', 'quotedPrice', 'quotedAt', 'updatedAt']) &&
+          after.quotedPrice is number && after.quotedPrice > 0 &&
+          after.quotedAt == request.time && after.updatedAt == request.time &&
+          ownsVerifiedQuoteInbox(before.providerId);
+      }
+
+      // QUOTE-4 (SCRUM-86): the requesting homeowner approves the quoted price.
+      function canApproveQuote() {
+        let before = resource.data;
+        let after = request.resource.data;
+        return isOwner(before.customerId) && isActiveHomeowner() &&
+          before.status == 'quoted' && after.status == 'approved' &&
+          before.get('quotedPrice', null) is number &&
+          quoteChanges().hasOnly(['status', 'approvedPrice', 'approvedAt', 'updatedAt']) &&
+          after.approvedPrice == before.quotedPrice &&
+          after.approvedAt == request.time && after.updatedAt == request.time;
+      }
+
+      // QUOTE-5 (SCRUM-87): the homeowner links the Pending booking written in
+      // the same transaction. A quote can be booked once.
+      function canLinkQuoteBooking() {
+        let before = resource.data;
+        let after = request.resource.data;
+        let bookingPath = /databases/$(database)/documents/bookings/$(after.get('bookingId', ''));
+        return isOwner(before.customerId) && isActiveHomeowner() &&
+          before.status == 'approved' && before.get('bookingId', null) == null &&
+          quoteChanges().hasOnly(['bookingId', 'updatedAt']) &&
+          after.updatedAt == request.time &&
+          existsAfter(bookingPath) &&
+          getAfter(bookingPath).data.get('quoteId', '') == quoteId &&
+          getAfter(bookingPath).data.customerId == before.customerId &&
+          getAfter(bookingPath).data.providerId == before.providerId &&
+          getAfter(bookingPath).data.status == 'pending' &&
+          getAfter(bookingPath).data.get('totalPrice', null) == before.approvedPrice;
+      }
+
+      // Update: platform admin, or one of the quote transitions above.
+      // Identity and origin fields never change.
+      allow update: if isAuthenticated() &&
                        isValidQuoteRequest(request.resource.data) &&
-                       areImmutableFieldsUnchanged(['id', 'customerId', 'providerId', 'offeringId', 'createdAt']);
+                       areImmutableFieldsUnchanged(['id', 'customerId', 'providerId', 'offeringId', 'createdAt']) &&
+                       (isAdmin() || canSendQuotePrice() || canApproveQuote() || canLinkQuoteBooking());
 
       // Delete: Platform admin only
       allow delete: if isAdmin();

@@ -135,9 +135,8 @@ class FirestoreQuoteService implements IQuoteService {
   Future<List<QuoteRequestModel>> getCustomerQuoteRequests(
     String customerId,
   ) async {
-    final snapshot = await _quoteRequests
-        .where('customerId', isEqualTo: customerId)
-        .get();
+    final snapshot =
+        await _quoteRequests.where('customerId', isEqualTo: customerId).get();
     final quotes = snapshot.docs
         .map((d) => QuoteRequestModel.fromFirestore(d.id, d.data()))
         .toList()
@@ -206,6 +205,10 @@ class FirestoreQuoteService implements IQuoteService {
             final ordered = byId.values.toList()..sort(compareQuoteActivity);
             controller.add(QuoteRequestPage(ordered, size));
           }, onError: (Object error, StackTrace stack) {
+            // A missing index or a rules refusal lands here; the message
+            // names which (and links to create a missing index).
+            debugPrint(
+                '[FirestoreQuoteService] provider quotes by ${entry.key} failed: $error');
             feeds.remove(entry.key);
             controller.addError(error, stack);
           }),
@@ -285,6 +288,79 @@ class FirestoreQuoteService implements IQuoteService {
     });
   }
 
+  @override
+  Future<QuoteRequestModel> submitQuotePrice({
+    required String quoteId,
+    required String providerId,
+    required double price,
+  }) async {
+    // Check the price before any network round trip.
+    final priceError = QuotePriceValidator.validate(price);
+    if (priceError != null) throw InvalidQuotePriceException(priceError);
+
+    return _transition(
+      quoteId,
+      (current) => applyQuotePrice(
+        current,
+        quoteId: quoteId,
+        providerId: providerId,
+        price: price,
+        now: DateTime.now(),
+      ),
+      (updated) => {
+        'status': QuoteStatus.quoted.value,
+        'quotedPrice': updated.quotedPrice,
+        'quotedAt': FieldValue.serverTimestamp(),
+      },
+    );
+  }
+
+  @override
+  Future<QuoteRequestModel> approveQuote({
+    required String quoteId,
+    required String customerId,
+  }) {
+    return _transition(
+      quoteId,
+      (current) => applyQuoteApproval(
+        current,
+        quoteId: quoteId,
+        customerId: customerId,
+        now: DateTime.now(),
+      ),
+      (updated) => {
+        'status': QuoteStatus.approved.value,
+        // The rules require this to equal the stored quotedPrice.
+        'approvedPrice': updated.approvedPrice,
+        'approvedAt': FieldValue.serverTimestamp(),
+      },
+    );
+  }
+
+  /// Reads the quote, applies [change] and writes [fields] in one
+  /// transaction, so two devices cannot both move the same request.
+  /// [change] throws to abort without writing.
+  Future<QuoteRequestModel> _transition(
+    String quoteId,
+    QuoteRequestModel Function(QuoteRequestModel? current) change,
+    Map<String, Object?> Function(QuoteRequestModel updated) fields,
+  ) {
+    final ref = _quoteRequests.doc(quoteId);
+    return _guard(() => _firestore.runTransaction((transaction) async {
+          final snapshot = await transaction.get(ref);
+          final data = snapshot.data();
+          final current = snapshot.exists && data != null
+              ? QuoteRequestModel.fromFirestore(snapshot.id, data)
+              : null;
+          final updated = change(current);
+          transaction.update(ref, {
+            ...fields(updated),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+          return updated;
+        }));
+  }
+
   Future<T> _guard<T>(
     Future<T> Function() run, {
     Duration timeout = writeTimeout,
@@ -300,7 +376,14 @@ class FirestoreQuoteService implements IQuoteService {
         'Request timed out. Check your connection and try again.',
       );
     } on FirebaseException catch (e) {
-      debugPrint('[FirestoreQuoteService] FirebaseException ${e.code}: ${e.message}');
+      debugPrint(
+          '[FirestoreQuoteService] FirebaseException ${e.code}: ${e.message}');
+      if (e.code == 'permission-denied') {
+        // The rules refused the change: wrong account or a stale status.
+        throw const QuoteSubmissionException(
+          'You are not allowed to change this quote request.',
+        );
+      }
       throw QuoteSubmissionException(
         e.message ?? 'Could not save quote request. Please try again.',
       );

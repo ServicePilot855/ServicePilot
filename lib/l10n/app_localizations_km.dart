@@ -1630,4 +1630,101 @@ class AppLocalizationsKm extends AppLocalizations {
   @override
   String get providerQuoteDecisionRequested =>
       'មិនទាន់មានការផ្ដល់តម្លៃសម្រាប់សំណើនេះទេ។';
+
+  @override
+  String get providerQuotePriceSection => 'តម្លៃរបស់អ្នក';
+
+  @override
+  String get providerQuotePriceInputLabel => 'តម្លៃ (ដុល្លារ)';
+
+  @override
+  String get providerQuotePriceInputHint => '45.00';
+
+  @override
+  String get providerQuotePriceInputHelper =>
+      'ម្ចាស់ផ្ទះនឹងឃើញតម្លៃនេះ ហើយត្រូវអនុម័តវាមុនពេលកក់ម៉ោង។';
+
+  @override
+  String get providerQuotePriceRequired => 'សូមបញ្ចូលតម្លៃសម្រាប់ការងារនេះ។';
+
+  @override
+  String get providerQuoteSendPrice => 'ផ្ញើសម្រង់តម្លៃ';
+
+  @override
+  String get providerQuoteErrorAlreadyPriced => 'សំណើនេះមានតម្លៃរួចហើយ។';
+
+  @override
+  String get providerQuoteErrorNotAllowed =>
+      'អ្នកមិនអាចផ្ដល់តម្លៃសម្រាប់សំណើនេះពីគណនីនេះបានទេ។';
+
+  @override
+  String get providerQuoteErrorSaveFailed =>
+      'មិនអាចផ្ញើតម្លៃរបស់អ្នកបានទេ។ សូមពិនិត្យការតភ្ជាប់ ហើយព្យាយាមម្តងទៀត។';
+
+  @override
+  String quoteDetailReviewMessage(String provider, String price) {
+    return '$provider បានផ្ដល់តម្លៃ $price។ សូមអនុម័តដើម្បីកក់ម៉ោង។';
+  }
+
+  @override
+  String quoteApproveButton(String price) {
+    return 'អនុម័ត $price';
+  }
+
+  @override
+  String get quoteApprovedPriceLabel => 'តម្លៃដែលបានអនុម័ត';
+
+  @override
+  String quoteApprovedMessage(String price, String provider) {
+    return 'អ្នកបានអនុម័តតម្លៃ $price។ សូមកក់ម៉ោងជាមួយ $provider។';
+  }
+
+  @override
+  String get quoteApproveErrorChanged =>
+      'សម្រង់តម្លៃនេះបានផ្លាស់ប្តូរ។ សូមពិនិត្យស្ថានភាពចុងក្រោយ។';
+
+  @override
+  String get quoteApproveErrorFailed =>
+      'មិនអាចអនុម័តសម្រង់តម្លៃនេះបានទេ។ សូមពិនិត្យការតភ្ជាប់ ហើយព្យាយាមម្តងទៀត។';
+
+  @override
+  String get quoteBookButton => 'កក់ម៉ោង';
+
+  @override
+  String get quoteViewBooking => 'មើលការកក់';
+
+  @override
+  String get quoteBookedMessage =>
+      'អ្នកបានកក់ម៉ោងសម្រាប់សម្រង់តម្លៃនេះហើយ។ សូមតាមដានវានៅលើទំព័រស្ថានភាពការកក់។';
+
+  @override
+  String get quoteBookingTitle => 'កក់ម៉ោង';
+
+  @override
+  String get quoteBookingHeading => 'ជ្រើសរើសម៉ោង';
+
+  @override
+  String quoteBookingSubtitle(String service, String provider) {
+    return '$service ជាមួយ $provider';
+  }
+
+  @override
+  String quoteBookingPriceNote(String price) {
+    return 'តម្លៃ $price ដែលអ្នកបានអនុម័តត្រូវបានរក្សាទុកជាមួយសំណើនេះ។ មិនមានការបង់ប្រាក់នៅក្នុងកម្មវិធីទេ។';
+  }
+
+  @override
+  String get quoteBookingSubmit => 'ផ្ញើសំណើកក់';
+
+  @override
+  String get quoteBookingNotApproved =>
+      'សូមអនុម័តតម្លៃដែលបានផ្ដល់ មុនពេលកក់ម៉ោង។';
+
+  @override
+  String get quoteBookingAlreadyBooked =>
+      'អ្នកបានកក់ម៉ោងសម្រាប់សម្រង់តម្លៃនេះរួចហើយ។';
+
+  @override
+  String get quoteBookingUnavailable =>
+      'សម្រង់តម្លៃនេះមិនអាចកក់ពីគណនីរបស់អ្នកបានទេ។';
 }
