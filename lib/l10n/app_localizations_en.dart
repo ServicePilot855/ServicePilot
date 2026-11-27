@@ -1500,4 +1500,103 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return 'Open cart, $_temp0';
   }
+
+  @override
+  String get quoteFormTitle => 'Request a quote';
+
+  @override
+  String get quoteFormHeading => 'Describe the job';
+
+  @override
+  String quoteFormSubtitle(String provider) {
+    return '$provider will review your details and photos and send a price quote.';
+  }
+
+  @override
+  String get quoteSelectedOfferingLabel => 'Selected service';
+
+  @override
+  String get quoteDescriptionHint =>
+      'For example: the outdoor AC board clicks and shows an E5 error after a power surge';
+
+  @override
+  String get quoteRequestFooterNote =>
+      'This quote request stays separate from your cart. You can book a time after you review and approve the provider\'s price.';
+
+  @override
+  String get quoteSubmit => 'Send quote request';
+
+  @override
+  String get quoteErrorSaveFailed =>
+      'We couldn\'t send your quote request. Check your connection and try again.';
+
+  @override
+  String get quoteOfferingUnavailable =>
+      'This service isn\'t available for quote requests right now.';
+
+  @override
+  String get quoteOfferingNotFound =>
+      'We couldn\'t find this service offering.';
+
+  @override
+  String get quoteSentTitle => 'Quote request sent';
+
+  @override
+  String quoteSentMessage(String provider) {
+    return '$provider will review your request and send a price quote. Your cart was not changed.';
+  }
+
+  @override
+  String get quoteSentMessageGeneric =>
+      'The provider will review your request and send a price quote.';
+
+  @override
+  String get quoteStatusLabel => 'Status';
+
+  @override
+  String get quoteStatusRequested => 'Requested';
+
+  @override
+  String get quoteStatusQuoted => 'Quoted';
+
+  @override
+  String get quoteStatusApproved => 'Approved';
+
+  @override
+  String get quoteStatusRejected => 'Rejected';
+
+  @override
+  String get quoteSummaryProvider => 'Provider';
+
+  @override
+  String get quoteSummaryDescription => 'Problem details';
+
+  @override
+  String get quoteSentViewStatus => 'View quote request';
+
+  @override
+  String get quoteDetailTitle => 'Quote request';
+
+  @override
+  String get quoteDetailLoading => 'Loading quote request';
+
+  @override
+  String get quoteDetailNotFound => 'We couldn\'t find this quote request.';
+
+  @override
+  String quoteDetailWaitingMessage(String provider) {
+    return 'Waiting for $provider to review your details and send a price quote.';
+  }
+
+  @override
+  String get discoveryHomeQuotes => 'My quote requests';
+
+  @override
+  String get discoveryNoQuotes => 'You have no quote requests yet.';
+
+  @override
+  String get discoveryQuotesError => 'Couldn\'t load your quote requests.';
+
+  @override
+  String get discoveryLoadingQuotes => 'Loading your quote requests';
 }

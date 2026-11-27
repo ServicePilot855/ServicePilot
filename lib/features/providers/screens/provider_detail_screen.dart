@@ -9,6 +9,7 @@ import 'package:service_pilot/features/providers/models/provider_model.dart';
 import 'package:service_pilot/features/providers/providers/provider_provider.dart';
 import 'package:service_pilot/features/providers/widgets/provider_rating_summary.dart';
 import 'package:service_pilot/features/providers/widgets/provider_type_badge.dart';
+import 'package:service_pilot/features/quotes/screens/create_quote_request_screen.dart';
 import 'package:service_pilot/features/services/models/offering_model.dart';
 import 'package:service_pilot/features/services/providers/offering_provider.dart';
 import 'package:service_pilot/l10n/l10n.dart';
@@ -619,8 +620,15 @@ class _OfferingsSection extends ConsumerWidget {
                             ),
                             onPressed: provider.canAcceptBookings
                                 ? () => context.push(
-                                      '/providers/${Uri.encodeComponent(provider.id)}/book?serviceTitle=${Uri.encodeComponent(offering.title)}&offeringId=${Uri.encodeComponent(offering.id)}&pricingMode=${Uri.encodeComponent(offering.pricingMode.value)}',
-                                      extra: provider,
+                                      isQuote
+                                          ? '/providers/${Uri.encodeComponent(provider.id)}/quote?offeringId=${Uri.encodeComponent(offering.id)}'
+                                          : '/providers/${Uri.encodeComponent(provider.id)}/book?serviceTitle=${Uri.encodeComponent(offering.title)}&offeringId=${Uri.encodeComponent(offering.id)}&pricingMode=${Uri.encodeComponent(offering.pricingMode.value)}',
+                                      extra: isQuote
+                                          ? QuoteRequestRouteArgs(
+                                              provider: provider,
+                                              offering: offering,
+                                            )
+                                          : provider,
                                     )
                                 : null,
                             child: Row(

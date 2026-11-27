@@ -75,6 +75,13 @@ void main() {
             return const Scaffold(body: Center(child: Text('Booking Page')));
           },
         ),
+        GoRoute(
+          path: '/providers/:providerId/quote',
+          builder: (_, state) {
+            onNavigated?.call('/providers/prov-test-1/quote');
+            return const Scaffold(body: Center(child: Text('Quote Page')));
+          },
+        ),
       ],
     );
 
@@ -169,8 +176,8 @@ void main() {
       await tester.tap(find.byKey(const Key('btn_quote_off-quote-1')));
       await tester.pumpAndSettle();
 
-      // Navigated to booking / quote intake
-      expect(navigatedRoute, '/providers/prov-test-1/book');
+      // Navigated to separate quote request intake
+      expect(navigatedRoute, '/providers/prov-test-1/quote');
     });
 
     testWidgets('Provider dashboard displays quote badge for published offerings',

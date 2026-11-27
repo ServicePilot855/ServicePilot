@@ -1477,4 +1477,102 @@ class AppLocalizationsKm extends AppLocalizations {
   String cartOpenSemantics(int count) {
     return 'បើកកន្ត្រក សេវាកម្មចំនួន $count';
   }
+
+  @override
+  String get quoteFormTitle => 'ស្នើសុំសម្រង់តម្លៃ';
+
+  @override
+  String get quoteFormHeading => 'ពិពណ៌នាអំពីការងារ';
+
+  @override
+  String quoteFormSubtitle(String provider) {
+    return '$provider នឹងពិនិត្យមើលព័ត៌មានលម្អិត និងរូបថតរបស់អ្នក រួចផ្ញើសម្រង់តម្លៃមកវិញ។';
+  }
+
+  @override
+  String get quoteSelectedOfferingLabel => 'សេវាកម្មដែលបានជ្រើស';
+
+  @override
+  String get quoteDescriptionHint =>
+      'ឧទាហរណ៍៖ បន្ទះម៉ាស៊ីនត្រជាក់ខាងក្រៅលោតកូដ E5 បន្ទាប់ពីដាច់ភ្លើង';
+
+  @override
+  String get quoteRequestFooterNote =>
+      'សំណើសម្រង់តម្លៃនេះដាច់ដោយឡែកពីកន្ត្រករបស់អ្នក។ អ្នកអាចកក់ម៉ោងបានបន្ទាប់ពីពិនិត្យ និងយល់ព្រមលើតម្លៃរបស់អ្នកផ្តល់សេវា។';
+
+  @override
+  String get quoteSubmit => 'ផ្ញើសំណើសម្រង់តម្លៃ';
+
+  @override
+  String get quoteErrorSaveFailed =>
+      'មិនអាចផ្ញើសំណើសម្រង់តម្លៃបានទេ។ សូមពិនិត្យការភ្ជាប់អ៊ីនធឺណិត ហើយព្យាយាមម្តងទៀត។';
+
+  @override
+  String get quoteOfferingUnavailable =>
+      'សេវាកម្មនេះមិនអាចស្នើសុំសម្រង់តម្លៃបានទេនាពេលបច្ចុប្បន្ន។';
+
+  @override
+  String get quoteOfferingNotFound => 'រកមិនឃើញសេវាកម្មនេះទេ។';
+
+  @override
+  String get quoteSentTitle => 'បានផ្ញើសំណើសម្រង់តម្លៃ';
+
+  @override
+  String quoteSentMessage(String provider) {
+    return '$provider នឹងពិនិត្យមើលសំណើរបស់អ្នក ហើយផ្ញើសម្រង់តម្លៃមកវិញ។ កន្ត្រករបស់អ្នកមិនត្រូវបានកែប្រែទេ។';
+  }
+
+  @override
+  String get quoteSentMessageGeneric =>
+      'អ្នកផ្តល់សេវានឹងពិនិត្យមើលសំណើរបស់អ្នក ហើយផ្ញើសម្រង់តម្លៃមកវិញ។';
+
+  @override
+  String get quoteStatusLabel => 'ស្ថានភាព';
+
+  @override
+  String get quoteStatusRequested => 'បានស្នើសុំ';
+
+  @override
+  String get quoteStatusQuoted => 'បានផ្ដល់តម្លៃ';
+
+  @override
+  String get quoteStatusApproved => 'បានអនុម័ត';
+
+  @override
+  String get quoteStatusRejected => 'បានបដិសេធ';
+
+  @override
+  String get quoteSummaryProvider => 'អ្នកផ្តល់សេវា';
+
+  @override
+  String get quoteSummaryDescription => 'ព័ត៌មានលម្អិតអំពីបញ្ហា';
+
+  @override
+  String get quoteSentViewStatus => 'មើលសំណើសម្រង់តម្លៃ';
+
+  @override
+  String get quoteDetailTitle => 'សំណើសម្រង់តម្លៃ';
+
+  @override
+  String get quoteDetailLoading => 'កំពុងផ្ទុកសំណើសម្រង់តម្លៃ';
+
+  @override
+  String get quoteDetailNotFound => 'រកមិនឃើញសំណើសម្រង់តម្លៃនេះទេ។';
+
+  @override
+  String quoteDetailWaitingMessage(String provider) {
+    return 'កំពុងរង់ចាំ $provider ពិនិត្យមើលព័ត៌មានលម្អិត និងផ្ញើសម្រង់តម្លៃមកវិញ។';
+  }
+
+  @override
+  String get discoveryHomeQuotes => 'សំណើសម្រង់តម្លៃរបស់ខ្ញុំ';
+
+  @override
+  String get discoveryNoQuotes => 'អ្នកមិនទាន់មានសំណើសម្រង់តម្លៃទេ។';
+
+  @override
+  String get discoveryQuotesError => 'មិនអាចផ្ទុកសំណើសម្រង់តម្លៃរបស់អ្នកបានទេ។';
+
+  @override
+  String get discoveryLoadingQuotes => 'កំពុងផ្ទុកសំណើសម្រង់តម្លៃរបស់អ្នក';
 }
