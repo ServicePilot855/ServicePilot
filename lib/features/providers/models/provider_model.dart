@@ -60,6 +60,8 @@ class ProviderModel {
   final String status; // 'active', 'pending_verification', 'suspended'
   final String phone;
   final String email;
+  final String? telegramUrl;
+  final String? messengerUrl;
   final bool isVerified;
   final String? avatarUrl;
   final DateTime? createdAt;
@@ -89,6 +91,8 @@ class ProviderModel {
     String phone = '',
     String? phoneNumber,
     this.email = '',
+    this.telegramUrl,
+    this.messengerUrl,
     this.isVerified = true,
     this.avatarUrl,
     this.createdAt,
@@ -160,7 +164,7 @@ class ProviderModel {
       coverageAreas.isNotEmpty ? coverageAreas.join(', ') : serviceArea;
 
   factory ProviderModel.fromMap(Map<String, dynamic> data, String id) {
-    final rawType = data['type'];
+    final rawType = data['type'] ?? data['providerType'];
     final providerType = ProviderTypeExtension.fromValue(rawType?.toString());
 
     DateTime? createdDate;
@@ -179,7 +183,7 @@ class ProviderModel {
       updatedDate = DateTime.tryParse(rawUpdated);
     }
 
-    final rawCoverage = data['coverageAreas'];
+    final rawCoverage = data['coverageAreas'] ?? data['serviceAreas'];
     List<String> coverage = [];
     if (rawCoverage is List) {
       coverage = rawCoverage.map((e) => e.toString()).toList();
@@ -204,7 +208,11 @@ class ProviderModel {
 
     return ProviderModel(
       id: id,
-      name: data['name'] as String? ?? 'Service Provider',
+      name: (data['name'] as String?)?.trim().isNotEmpty == true
+          ? data['name'] as String
+          : ((data['fullName'] as String?)?.trim().isNotEmpty == true
+              ? data['fullName'] as String
+              : 'Service Provider'),
       businessName: data['businessName'] as String?,
       type: providerType,
       description: data['description'] as String? ?? '',
@@ -231,6 +239,8 @@ class ProviderModel {
       status: data['status'] as String? ?? 'active',
       phone: data['phone'] as String? ?? data['phoneNumber'] as String? ?? '',
       email: data['email'] as String? ?? '',
+      telegramUrl: data['telegramUrl'] as String?,
+      messengerUrl: data['messengerUrl'] as String?,
       isVerified: data['isVerified'] as bool? ?? true,
       avatarUrl: data['avatarUrl'] as String?,
       createdAt: createdDate,
@@ -271,6 +281,8 @@ class ProviderModel {
       'phone': phone,
       'phoneNumber': phone,
       'email': email,
+      if (telegramUrl != null) 'telegramUrl': telegramUrl,
+      if (messengerUrl != null) 'messengerUrl': messengerUrl,
       'isVerified': isVerified,
       if (avatarUrl != null) 'avatarUrl': avatarUrl,
       if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),
@@ -304,6 +316,8 @@ class ProviderModel {
     String? phone,
     String? phoneNumber,
     String? email,
+    String? telegramUrl,
+    String? messengerUrl,
     bool? isVerified,
     String? avatarUrl,
     DateTime? createdAt,
@@ -330,6 +344,8 @@ class ProviderModel {
       status: status ?? this.status,
       phone: phone ?? phoneNumber ?? this.phone,
       email: email ?? this.email,
+      telegramUrl: telegramUrl ?? this.telegramUrl,
+      messengerUrl: messengerUrl ?? this.messengerUrl,
       isVerified: isVerified ?? this.isVerified,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       createdAt: createdAt ?? this.createdAt,

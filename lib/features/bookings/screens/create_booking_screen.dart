@@ -6,7 +6,7 @@ import 'package:service_pilot/core/theme/app_theme.dart';
 import 'package:service_pilot/features/bookings/models/booking_request.dart';
 import 'package:service_pilot/features/bookings/providers/booking_provider.dart';
 import 'package:service_pilot/features/bookings/services/booking_service.dart';
-import 'package:service_pilot/features/bookings/services/photo_source.dart';
+import 'package:service_pilot/features/bookings/widgets/problem_photo_controls.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
 import 'package:service_pilot/features/providers/providers/provider_provider.dart';
 import 'package:service_pilot/features/services/providers/category_provider.dart';
@@ -25,12 +25,24 @@ class CreateBookingScreen extends ConsumerWidget {
     super.key,
     required this.providerId,
     this.initialProvider,
+    this.initialServiceTitle,
+    this.initialOfferingId,
+    this.isQuoteRequired = false,
   });
 
   final String providerId;
 
   /// Passed by the provider page so the form opens without a second fetch.
   final ProviderModel? initialProvider;
+
+  /// Preselected service offering title when launched from an offering card.
+  final String? initialServiceTitle;
+
+  /// Preselected offering ID.
+  final String? initialOfferingId;
+
+  /// Whether this intake requires a custom price quote.
+  final bool isQuoteRequired;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -92,7 +104,12 @@ class CreateBookingScreen extends ConsumerWidget {
         ],
       );
     }
-    return _BookingForm(provider: provider);
+    return _BookingForm(
+      provider: provider,
+      initialServiceTitle: initialServiceTitle,
+      initialOfferingId: initialOfferingId,
+      isQuoteRequired: isQuoteRequired,
+    );
   }
 
   static void _leave(BuildContext context) {
@@ -105,9 +122,17 @@ class CreateBookingScreen extends ConsumerWidget {
 }
 
 class _BookingForm extends ConsumerStatefulWidget {
-  const _BookingForm({required this.provider});
+  const _BookingForm({
+    required this.provider,
+    this.initialServiceTitle,
+    this.initialOfferingId,
+    this.isQuoteRequired = false,
+  });
 
   final ProviderModel provider;
+  final String? initialServiceTitle;
+  final String? initialOfferingId;
+  final bool isQuoteRequired;
 
   @override
   ConsumerState<_BookingForm> createState() => _BookingFormState();
@@ -128,12 +153,26 @@ class _BookingFormState extends ConsumerState<_BookingForm> {
 
   ProviderModel get _provider => widget.provider;
 
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialServiceTitle != null &&
+        widget.initialServiceTitle!.trim().isNotEmpty) {
+      _service = widget.initialServiceTitle!.trim();
+    }
+  }
+
   /// The services offered on the provider page. A provider without a listed
   /// specialty still gets one choice so the form can be sent.
-  List<String> _serviceOptions(AppLocalizations l10n) =>
-      _provider.specialties.isNotEmpty
-          ? _provider.specialties
-          : [l10n.bookingServiceGeneral];
+  List<String> _serviceOptions(AppLocalizations l10n) {
+    final list = _provider.specialties.isNotEmpty
+        ? List<String>.from(_provider.specialties)
+        : <String>[l10n.bookingServiceGeneral];
+    if (_service != null && !list.contains(_service)) {
+      list.insert(0, _service!);
+    }
+    return list;
+  }
 
   DateTime? get _preferredDateTime {
     final date = _date;
@@ -159,51 +198,8 @@ class _BookingFormState extends ConsumerState<_BookingForm> {
     super.dispose();
   }
 
-  String _message(BookingFieldError error) {
-    final l10n = context.l10n;
-    switch (error) {
-      case BookingFieldError.serviceRequired:
-        return l10n.bookingErrorServiceRequired;
-      case BookingFieldError.descriptionRequired:
-        return l10n.bookingErrorDescriptionRequired;
-      case BookingFieldError.descriptionTooShort:
-        return l10n.bookingErrorDescriptionTooShort(
-          BookingRequestValidator.descriptionMinLength,
-        );
-      case BookingFieldError.descriptionTooLong:
-        return l10n.bookingErrorDescriptionTooLong(
-          BookingRequestValidator.descriptionMaxLength,
-        );
-      case BookingFieldError.addressRequired:
-        return l10n.bookingErrorAddressRequired;
-      case BookingFieldError.addressTooShort:
-        return l10n.bookingErrorAddressTooShort;
-      case BookingFieldError.addressTooLong:
-        return l10n.bookingErrorAddressTooLong(
-          BookingRequestValidator.addressMaxLength,
-        );
-      case BookingFieldError.dateTimeRequired:
-        return l10n.bookingErrorDateTimeRequired;
-      case BookingFieldError.dateTimeTooSoon:
-        return l10n.bookingErrorDateTimeTooSoon(
-          BookingRequestValidator.minimumNotice.inHours,
-        );
-      case BookingFieldError.dateTimeTooFar:
-        return l10n.bookingErrorDateTimeTooFar(
-          BookingRequestValidator.maximumAdvance.inDays,
-        );
-      case BookingFieldError.tooManyPhotos:
-        return l10n.bookingErrorTooManyPhotos(BookingRequestValidator.maxPhotos);
-      case BookingFieldError.photoTooLarge:
-        return l10n.bookingErrorPhotoTooLarge(_maxPhotoMb);
-    }
-  }
-
-  static const int _maxPhotoMb =
-      BookingRequestValidator.maxPhotoBytes ~/ (1024 * 1024);
-
   String? _check(BookingFieldError? error) =>
-      error == null ? null : _message(error);
+      error == null ? null : bookingFieldErrorMessage(context.l10n, error);
 
   Future<void> _pickDate(FormFieldState<DateTime> field) async {
     final today = DateUtils.dateOnly(DateTime.now());
@@ -229,52 +225,13 @@ class _BookingFormState extends ConsumerState<_BookingForm> {
   }
 
   Future<void> _addPhotos() async {
-    final l10n = context.l10n;
-    final origin = await showModalBottomSheet<PhotoOrigin>(
+    final fitting = await pickProblemPhotos(
       context: context,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              key: const Key('booking_photo_camera'),
-              leading: const Icon(Icons.photo_camera_outlined),
-              title: Text(l10n.bookingPhotosTake),
-              onTap: () => Navigator.of(sheetContext).pop(PhotoOrigin.camera),
-            ),
-            ListTile(
-              key: const Key('booking_photo_gallery'),
-              leading: const Icon(Icons.photo_library_outlined),
-              title: Text(l10n.bookingPhotosChoose),
-              onTap: () => Navigator.of(sheetContext).pop(PhotoOrigin.gallery),
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
+      ref: ref,
+      currentCount: _photos.length,
     );
-    if (origin == null || !mounted) return;
-
-    final List<BookingPhoto> picked;
-    try {
-      picked = await ref.read(photoSourceProvider).pick(
-            origin,
-            limit: BookingRequestValidator.maxPhotos - _photos.length,
-          );
-    } catch (_) {
-      if (mounted) showSpError(context, l10n.bookingErrorPhotoPick);
-      return;
-    }
-    if (!mounted || picked.isEmpty) return;
-
-    final fitting = picked
-        .where((p) => p.sizeInBytes <= BookingRequestValidator.maxPhotoBytes)
-        .toList();
+    if (!mounted || fitting.isEmpty) return;
     setState(() => _photos.addAll(fitting));
-    if (fitting.length < picked.length) {
-      showSpError(context, l10n.bookingErrorPhotoTooLarge(_maxPhotoMb));
-    }
   }
 
   Future<void> _pickLocation() async {
@@ -362,6 +319,14 @@ class _BookingFormState extends ConsumerState<_BookingForm> {
             title: l10n.bookingFormHeading,
             subtitle: l10n.bookingFormSubtitle(_provider.displayName),
           ),
+          if (widget.isQuoteRequired) ...[
+            const SizedBox(height: 16),
+            SpNotice(
+              icon: Icons.request_quote_rounded,
+              message: l10n.offeringNoticeQuoteRequiredBooking,
+              tone: SpTone.waiting,
+            ),
+          ],
           const SizedBox(height: 32),
           SpFormSection(
             title: l10n.bookingServiceSection,
@@ -379,19 +344,12 @@ class _BookingFormState extends ConsumerState<_BookingForm> {
           SpFormSection(
             title: l10n.bookingProblemSection,
             children: [
-              SpTextField(
-                key: const Key('booking_description_field'),
-                label: l10n.bookingProblemLabel,
-                hint: l10n.bookingProblemHint,
+              ProblemDescriptionField(
+                fieldKey: const Key('booking_description_field'),
                 controller: _descriptionController,
-                maxLines: 4,
-                maxLength: BookingRequestValidator.descriptionMaxLength,
-                keyboardType: TextInputType.multiline,
-                validator: (value) =>
-                    _check(BookingRequestValidator.description(value)),
               ),
               const SizedBox(height: 16),
-              _PhotoStrip(
+              ProblemPhotoStrip(
                 photos: _photos,
                 onAdd: _submitting ? null : _addPhotos,
                 onRemove: (index) => setState(() => _photos.removeAt(index)),
@@ -690,150 +648,6 @@ class _FieldError extends StatelessWidget {
           style: AppTheme.text(size: 13, color: AppTheme.error),
         ),
       ),
-    );
-  }
-}
-
-/// Thumbnails of the attached problem photos with an "Add photo" tile.
-class _PhotoStrip extends StatelessWidget {
-  const _PhotoStrip({
-    required this.photos,
-    required this.onAdd,
-    required this.onRemove,
-  });
-
-  final List<BookingPhoto> photos;
-  final VoidCallback? onAdd;
-  final ValueChanged<int> onRemove;
-
-  static const double _tile = 88;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final canAdd = photos.length < BookingRequestValidator.maxPhotos;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          l10n.bookingPhotosLabel,
-          style: AppTheme.text(
-            size: 14,
-            weight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (var i = 0; i < photos.length; i++)
-              SizedBox.square(
-                key: Key('booking_photo_$i'),
-                dimension: _tile,
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: ClipRRect(
-                        borderRadius:
-                            BorderRadius.circular(AppTheme.radiusControl),
-                        child: Image.memory(
-                          photos[i].bytes,
-                          fit: BoxFit.cover,
-                          gaplessPlayback: true,
-                          errorBuilder: (_, __, ___) => const ColoredBox(
-                            color: AppTheme.surfaceElevated,
-                            child: Icon(
-                              Icons.image_outlined,
-                              color: AppTheme.textSecondary,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      child: Semantics(
-                        button: true,
-                        label: l10n.bookingPhotoRemove(i + 1),
-                        excludeSemantics: true,
-                        child: InkResponse(
-                          key: Key('booking_photo_remove_$i'),
-                          onTap: () => onRemove(i),
-                          radius: 24,
-                          child: SizedBox.square(
-                            dimension: 48,
-                            child: Center(
-                              child: Container(
-                                width: 26,
-                                height: 26,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xCC0E1726),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.close_rounded,
-                                  size: 16,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            if (canAdd)
-              SizedBox.square(
-                dimension: _tile,
-                child: Material(
-                  color: AppTheme.surface,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusControl),
-                    side: const BorderSide(color: AppTheme.fieldBorder),
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: InkWell(
-                    key: const Key('booking_add_photo'),
-                    onTap: onAdd,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.add_a_photo_outlined,
-                          color: AppTheme.primary,
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          l10n.bookingPhotosAdd,
-                          textAlign: TextAlign.center,
-                          style: AppTheme.text(
-                            size: 12.5,
-                            weight: FontWeight.w600,
-                            color: AppTheme.primary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          l10n.bookingPhotosHelper(
-            BookingRequestValidator.maxPhotos,
-            BookingRequestValidator.maxPhotoBytes ~/ (1024 * 1024),
-          ),
-          style: AppTheme.text(size: 13, color: AppTheme.textSecondary),
-        ),
-      ],
     );
   }
 }

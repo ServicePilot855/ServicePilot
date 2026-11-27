@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -11,7 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 ///
 /// Features:
 /// - Real [FirebaseAuth] integration for user identity, sessions, and security.
-/// - Extended user profile persistence via [SharedPreferences] keyed by Firebase UID.
+/// - Local profile caching and Firestore persistence for company accounts.
 /// - Full role-based user management across Customers, Technicians, Companies, and Admins.
 /// - Comprehensive [FirebaseAuthException] mapping to user-friendly messages.
 class FirebaseAuthService implements IAuthService {
@@ -19,12 +20,20 @@ class FirebaseAuthService implements IAuthService {
 
   final FirebaseAuth? _injectedAuth;
   final SharedPreferences? _injectedPrefs;
+  final FirebaseFirestore? _injectedFirestore;
 
   FirebaseAuthService({
     FirebaseAuth? firebaseAuth,
     SharedPreferences? prefs,
+    FirebaseFirestore? firestore,
   })  : _injectedAuth = firebaseAuth,
-        _injectedPrefs = prefs;
+        _injectedPrefs = prefs,
+        _injectedFirestore = firestore;
+
+  FirebaseFirestore? get _companyFirestore => _injectedFirestore ??
+      (_injectedAuth == null && Firebase.apps.isNotEmpty
+          ? FirebaseFirestore.instance
+          : null);
 
   FirebaseAuth get _auth {
     final injected = _injectedAuth;
@@ -254,7 +263,11 @@ class FirebaseAuthService implements IAuthService {
         createdAt: fbUser.metadata.creationTime ?? DateTime.now(),
       );
 
-      await _saveUserProfile(user);
+      await _persistNewProviderRegistration(
+        fbUser,
+        user,
+        _pendingIndependentProfile(user),
+      );
       return user;
     } on FirebaseAuthException catch (e) {
       throw AuthException(_mapFirebaseError(e));
@@ -320,12 +333,17 @@ class FirebaseAuthService implements IAuthService {
         phoneNumber: cleanPhone,
         role: AppRole.company,
         status: 'pending_verification',
+        companyId: fbUser.uid,
         companyName: cleanCompany,
         serviceArea: cleanArea,
         createdAt: fbUser.metadata.creationTime ?? DateTime.now(),
       );
 
-      await _saveUserProfile(user);
+      await _persistNewProviderRegistration(
+        fbUser,
+        user,
+        _pendingCompanyProfile(user),
+      );
       return user;
     } on FirebaseAuthException catch (e) {
       throw AuthException(_mapFirebaseError(e));
@@ -460,6 +478,136 @@ class FirebaseAuthService implements IAuthService {
 
   // ── Profile Persistence Helpers ───────────────────────────────────────────
 
+  Future<void> _persistNewProviderRegistration(
+    User fbUser,
+    UserModel user,
+    Map<String, dynamic> profileData,
+  ) async {
+    final firestore = _companyFirestore;
+    if (firestore != null) {
+      final batch = firestore.batch();
+      batch.set(firestore.collection('users').doc(user.id), user.toJson());
+      batch.set(firestore.collection('providers').doc(user.id), profileData);
+      try {
+        await batch.commit();
+      } catch (_) {
+        try {
+          await fbUser.delete();
+        } on FirebaseAuthException catch (error) {
+          debugPrint(
+            '[FirebaseAuth] Could not roll back provider sign-up: ${error.code}',
+          );
+        }
+        rethrow;
+      }
+    }
+    await _saveUserProfile(user);
+  }
+
+  Map<String, dynamic> _pendingCompanyProfile(UserModel owner) => {
+        'id': owner.id,
+        'businessName': owner.companyName,
+        'providerType': 'company',
+        'status': 'pending_verification',
+        'isVerified': false,
+        'serviceArea': owner.serviceArea,
+        'createdAt': FieldValue.serverTimestamp(),
+      };
+
+  Map<String, dynamic> _pendingIndependentProfile(UserModel technician) => {
+        'id': technician.id,
+        'name': technician.fullName,
+        'fullName': technician.fullName,
+        if (technician.email.trim().isNotEmpty) 'email': technician.email.trim(),
+        'phoneNumber': technician.phoneNumber,
+        'providerType': 'independent',
+        'status': 'pending_verification',
+        'isVerified': false,
+        if (technician.serviceArea != null &&
+            technician.serviceArea!.trim().isNotEmpty)
+          'serviceArea': technician.serviceArea!.trim(),
+        'createdAt': Timestamp.fromDate(technician.createdAt ?? DateTime.now()),
+      };
+
+  Future<UserModel> _linkLegacyCompany(UserModel owner) async {
+    if (owner.companyName?.trim().isNotEmpty != true ||
+        owner.serviceArea?.trim().isNotEmpty != true) {
+      return owner;
+    }
+    final linked = owner.copyWith(companyId: owner.id);
+    return _linkLegacyProviderAccount(
+      actor: owner,
+      linked: linked,
+      expectedRole: 'company',
+      isMatchingProfile: (profileData) =>
+          (profileData['type'] ?? profileData['providerType']) == 'company',
+      isMatchingAccount: (accountData) =>
+          (accountData['companyId'] ?? owner.id) == owner.id,
+      buildProfile: _pendingCompanyProfile,
+    );
+  }
+
+  Future<UserModel> _linkLegacyTechnician(UserModel technician) async {
+    if (technician.fullName.trim().isEmpty) {
+      return technician;
+    }
+    return _linkLegacyProviderAccount(
+      actor: technician,
+      linked: technician,
+      expectedRole: AppRole.independentProvider.value,
+      isMatchingProfile: (profileData) =>
+          (profileData['type'] ?? profileData['providerType']) != 'company',
+      isMatchingAccount: (_) => true,
+      buildProfile: _pendingIndependentProfile,
+    );
+  }
+
+  Future<UserModel> _linkLegacyProviderAccount({
+    required UserModel actor,
+    required UserModel linked,
+    required String expectedRole,
+    required bool Function(Map<String, dynamic>) isMatchingProfile,
+    required bool Function(Map<String, dynamic>) isMatchingAccount,
+    required Map<String, dynamic> Function(UserModel) buildProfile,
+  }) async {
+    final firestore = _companyFirestore;
+    if (firestore == null) return actor;
+
+    final account = firestore.collection('users').doc(actor.id);
+    final profile = firestore.collection('providers').doc(actor.id);
+    try {
+      final didLink = await firestore.runTransaction((transaction) async {
+        final accountData = (await transaction.get(account)).data();
+        final profileData = (await transaction.get(profile)).data();
+        if (accountData != null &&
+            (accountData['role'] != expectedRole ||
+                accountData['status'] == 'suspended' ||
+                !isMatchingAccount(accountData))) {
+          return false;
+        }
+        if (profileData != null && !isMatchingProfile(profileData)) {
+          return false;
+        }
+        // A device-only registration can create a pending record, never approve one.
+        if (accountData == null) {
+          transaction.set(account,
+              linked.copyWith(status: 'pending_verification').toJson());
+        }
+        if (profileData == null) {
+          transaction.set(profile, buildProfile(linked));
+        }
+        return accountData == null || profileData == null;
+      });
+      if (didLink) {
+        await _saveUserProfile(linked);
+        return linked;
+      }
+    } on FirebaseException catch (error) {
+      debugPrint('[FirebaseAuth] Could not link legacy provider: ${error.code}');
+    }
+    return actor;
+  }
+
   Future<void> _saveUserProfile(UserModel user) async {
     final prefs = await _getPrefs();
     final jsonStr = jsonEncode(user.toJson());
@@ -496,10 +644,61 @@ class FirebaseAuthService implements IAuthService {
     AppRole? defaultRole,
     String? defaultName,
   }) async {
-    final cached = await _loadCachedProfile(fbUser.uid, email: email ?? fbUser.email);
+    final cached = await _loadCachedProfile(fbUser.uid);
     if (cached != null) {
+      if (cached.isCompany && !cached.isSuspended && cached.companyId == null &&
+          cached.id == fbUser.uid &&
+          cached.email.toLowerCase() == fbUser.email?.toLowerCase()) {
+        final company = await _linkLegacyCompany(cached);
+        await _recordActiveSession(company.id);
+        return company;
+      }
+      if (cached.isIndependentTechnician && !cached.isSuspended &&
+          cached.id == fbUser.uid &&
+          cached.email.toLowerCase() == fbUser.email?.toLowerCase()) {
+        final technician = await _linkLegacyTechnician(cached);
+        await _recordActiveSession(technician.id);
+        return technician;
+      }
       await _recordActiveSession(cached.id);
       return cached;
+    }
+
+    final firestore = _companyFirestore;
+    if (firestore != null) {
+      try {
+        final data = (await firestore.collection('users').doc(fbUser.uid).get())
+            .data();
+        if (data != null &&
+            (data['role'] == AppRole.company.value ||
+                data['role'] == AppRole.independentProvider.value)) {
+          final createdAt = data['createdAt'];
+          final updatedAt = data['updatedAt'];
+          final providerUser = UserModel.fromJson({
+            ...data,
+            'id': fbUser.uid,
+            if (createdAt is Timestamp)
+              'createdAt': createdAt.toDate().toIso8601String(),
+            if (updatedAt is Timestamp)
+              'updatedAt': updatedAt.toDate().toIso8601String(),
+          });
+          final linkedUser = providerUser.isIndependentTechnician &&
+                  !providerUser.isSuspended
+              ? await _linkLegacyTechnician(providerUser)
+              : providerUser;
+          await _saveUserProfile(linkedUser);
+          return linkedUser;
+        }
+      } on FirebaseException catch (error) {
+        debugPrint('[FirebaseAuth] Provider account lookup failed: ${error.code}');
+      }
+    }
+
+    final cachedByEmail =
+        await _loadCachedProfile(fbUser.uid, email: email ?? fbUser.email);
+    if (cachedByEmail != null) {
+      await _recordActiveSession(cachedByEmail.id);
+      return cachedByEmail;
     }
 
     final userEmail = (email ?? fbUser.email ?? '').trim().toLowerCase();
@@ -516,8 +715,11 @@ class FirebaseAuthService implements IAuthService {
       createdAt: fbUser.metadata.creationTime ?? DateTime.now(),
     );
 
-    await _saveUserProfile(user);
-    return user;
+    final linkedUser = user.isIndependentTechnician
+        ? await _linkLegacyTechnician(user)
+        : user;
+    await _saveUserProfile(linkedUser);
+    return linkedUser;
   }
 
   Future<void> _recordActiveSession(String userId) async {

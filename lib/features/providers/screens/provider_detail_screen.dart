@@ -2,10 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:service_pilot/core/theme/app_theme.dart';
+import 'package:service_pilot/features/cart/models/cart_state.dart';
+import 'package:service_pilot/features/cart/providers/cart_provider.dart';
+import 'package:service_pilot/features/cart/screens/cart_screen.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
 import 'package:service_pilot/features/providers/providers/provider_provider.dart';
 import 'package:service_pilot/features/providers/widgets/provider_rating_summary.dart';
 import 'package:service_pilot/features/providers/widgets/provider_type_badge.dart';
+import 'package:service_pilot/features/quotes/screens/create_quote_request_screen.dart';
+import 'package:service_pilot/features/services/models/offering_model.dart';
+import 'package:service_pilot/features/services/providers/offering_provider.dart';
 import 'package:service_pilot/l10n/l10n.dart';
 import 'package:service_pilot/shared/widgets/sp_button.dart';
 import 'package:service_pilot/shared/widgets/sp_layout.dart';
@@ -34,6 +40,7 @@ class ProviderDetailScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final profile = providerDetailsProvider(providerId);
     final providerAsync = ref.watch(profile);
+    final cart = ref.watch(cartProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.browseBackground,
@@ -44,6 +51,36 @@ class ProviderDetailScreen extends ConsumerWidget {
           l10n.providerProfileTitle,
           style: AppTheme.display(size: 18, color: AppTheme.browseInk),
         ),
+        actions: [
+          if (cart.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Center(
+                // Opens the cart review (CART-2 / SCRUM-81). The 48dp
+                // target is larger than the visible chip.
+                child: Semantics(
+                  button: true,
+                  label: l10n.cartOpenSemantics(cart.itemCount),
+                  excludeSemantics: true,
+                  child: InkWell(
+                    key: const Key('provider_detail_cart_badge'),
+                    onTap: () => context.push(CartScreen.path),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusChip),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 48),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Center(
+                          widthFactor: 1,
+                          child: _CartChip(count: cart.itemCount),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
       body: providerAsync.when(
         data: (fetched) {
@@ -99,18 +136,22 @@ class ProviderDetailScreen extends ConsumerWidget {
   }
 }
 
-class _ProviderProfile extends StatelessWidget {
+class _ProviderProfile extends ConsumerWidget {
   const _ProviderProfile({required this.provider});
 
   final ProviderModel provider;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final canBook = provider.canAcceptBookings;
     final unavailableReason = provider.unavailableReason?.trim();
     final about = provider.bio.trim();
     final description = provider.description.trim();
+    final contactLinks = {
+      l10n.companyProfileTelegram: provider.telegramUrl?.trim() ?? '',
+      l10n.companyProfileMessenger: provider.messengerUrl?.trim() ?? '',
+    }.entries.where((link) => link.value.isNotEmpty);
     final areas = provider.coverageAreas.isEmpty
         ? [provider.serviceArea]
         : provider.coverageAreas;
@@ -210,6 +251,26 @@ class _ProviderProfile extends StatelessWidget {
                         ],
                       ),
                     ),
+                  if (provider.isApprovedAndActive && contactLinks.isNotEmpty)
+                    _ProfileSection(
+                      title: l10n.companyProfileContacts,
+                      child: SelectionArea(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            for (final link in contactLinks) ...[
+                              Text(
+                                link.key,
+                                style: AppTheme.text(weight: FontWeight.w600),
+                              ),
+                              Text(link.value, style: bodyStyle),
+                              const SizedBox(height: 8),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  _OfferingsSection(provider: provider),
                 ],
               ),
             ),
@@ -247,6 +308,43 @@ class _ProviderProfile extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// The visible "Cart (n)" chip in the provider page's top bar.
+class _CartChip extends StatelessWidget {
+  const _CartChip({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppTheme.primarySoft,
+        borderRadius: BorderRadius.circular(AppTheme.radiusChip),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.shopping_cart_outlined,
+            size: 16,
+            color: AppTheme.onPrimarySoft,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            context.l10n.cartBadgeLabel(count),
+            style: AppTheme.text(
+              size: 13,
+              weight: FontWeight.w600,
+              color: AppTheme.onPrimarySoft,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -320,6 +418,296 @@ class _ProviderMessage extends StatelessWidget {
           children: [message, const SizedBox(height: 16), action],
         ),
       ),
+    );
+  }
+}
+
+class _OfferingsSection extends ConsumerWidget {
+  const _OfferingsSection({required this.provider});
+
+  final ProviderModel provider;
+
+  void _handleAddToCart(
+    BuildContext context,
+    WidgetRef ref,
+    OfferingModel offering,
+  ) {
+    final l10n = context.l10n;
+    final result = ref
+        .read(cartProvider.notifier)
+        .addOffering(offering, providerName: provider.displayName);
+
+    if (result.accepted) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            backgroundColor: AppTheme.successDeep,
+            content: Row(
+              children: [
+                const Icon(
+                  Icons.check_circle_outline_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    l10n.cartAddedSnackbar(offering.title),
+                    style: AppTheme.text(size: 14, color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      return;
+    }
+
+    final String message;
+    switch (result.rejectionReason) {
+      case CartAddRejectionReason.differentProvider:
+        final existingName = result.existingProviderName?.trim() ?? '';
+        message = existingName.isNotEmpty
+            ? l10n.cartErrorDifferentProvider(existingName)
+            : l10n.cartErrorDifferentProviderGeneric;
+      case CartAddRejectionReason.quoteRequired:
+        message = l10n.cartErrorQuoteRequired;
+      case CartAddRejectionReason.inactiveOffering:
+      case CartAddRejectionReason.invalidPrice:
+      case CartAddRejectionReason.notHomeowner:
+      case null:
+        message = l10n.cartErrorUnavailable;
+    }
+    showSpError(context, message);
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final offeringsAsync = ref.watch(offeringsByProviderProvider(provider.id));
+    final cart = ref.watch(cartProvider);
+    final canUseCart = ref.watch(cartOwnerIdProvider) != null;
+
+    return offeringsAsync.when(
+      data: (offerings) {
+        if (offerings.isEmpty) return const SizedBox.shrink();
+
+        return _ProfileSection(
+          title: l10n.providerOfferingsSection,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (cart.isNotEmpty) ...[
+                SpNotice(
+                  key: const Key('cart_active_provider_notice'),
+                  icon: Icons.shopping_cart_outlined,
+                  message: l10n.cartActiveProviderNotice(
+                    cart.itemCount,
+                    cart.providerName ?? '',
+                  ),
+                  tone: cart.providerId == provider.id
+                      ? SpTone.brand
+                      : SpTone.neutral,
+                ),
+                const SizedBox(height: 12),
+              ],
+              ...offerings.map((offering) {
+              final isQuote = offering.isQuoteRequired;
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.surface,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusControl),
+                  border: Border.all(
+                    color: isQuote ? AppTheme.accent : AppTheme.browseBorder,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: [
+                        Text(
+                          offering.title,
+                          style: AppTheme.display(
+                            size: 15,
+                            color: AppTheme.browseInk,
+                          ),
+                        ),
+                        if (isQuote)
+                          Container(
+                            key: Key('badge_quote_${offering.id}'),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.accentSoft,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: AppTheme.accent),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.request_quote_rounded,
+                                  size: 13,
+                                  color: AppTheme.accentDeep,
+                                ),
+                                const SizedBox(width: 4),
+                                Flexible(
+                                  child: Text(
+                                    l10n.offeringBadgeQuoteRequired,
+                                    style: AppTheme.text(
+                                      size: 11.5,
+                                      weight: FontWeight.w700,
+                                      color: AppTheme.accentDeep,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        else
+                          Text(
+                            offering.priceDisplay,
+                            style: AppTheme.display(
+                              size: 14,
+                              color: AppTheme.primary,
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      offering.description,
+                      style: AppTheme.text(
+                        size: 13.5,
+                        color: AppTheme.browseSecondary,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        if (isQuote)
+                          Text(
+                            'Excluded from direct cart checkout',
+                            style: AppTheme.text(
+                              size: 12,
+                              color: AppTheme.textMuted,
+                              weight: FontWeight.w500,
+                            ),
+                          ),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(minHeight: 48),
+                          child: OutlinedButton(
+                            key: Key(isQuote
+                                ? 'btn_quote_${offering.id}'
+                                : 'btn_book_${offering.id}'),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size(0, 48),
+                            ),
+                            onPressed: provider.canAcceptBookings
+                                ? () => context.push(
+                                      isQuote
+                                          ? '/providers/${Uri.encodeComponent(provider.id)}/quote?offeringId=${Uri.encodeComponent(offering.id)}'
+                                          : '/providers/${Uri.encodeComponent(provider.id)}/book?serviceTitle=${Uri.encodeComponent(offering.title)}&offeringId=${Uri.encodeComponent(offering.id)}&pricingMode=${Uri.encodeComponent(offering.pricingMode.value)}',
+                                      extra: isQuote
+                                          ? QuoteRequestRouteArgs(
+                                              provider: provider,
+                                              offering: offering,
+                                            )
+                                          : provider,
+                                    )
+                                : null,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  isQuote
+                                      ? Icons.request_quote_rounded
+                                      : Icons.calendar_today_rounded,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Text(
+                                    isQuote
+                                        ? l10n.offeringCtaRequestQuote
+                                        : l10n.offeringCtaBookService,
+                                    style: AppTheme.text(
+                                      size: 13.5,
+                                      weight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        if (!isQuote && canUseCart)
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(minHeight: 48),
+                            child: OutlinedButton(
+                              key: Key('btn_add_to_cart_${offering.id}'),
+                              style: OutlinedButton.styleFrom(
+                                minimumSize: const Size(0, 48),
+                                foregroundColor: AppTheme.primary,
+                                side: const BorderSide(
+                                  color: AppTheme.browseControlBorder,
+                                ),
+                              ),
+                              onPressed: provider.canAcceptBookings
+                                  ? () => _handleAddToCart(
+                                        context,
+                                        ref,
+                                        offering,
+                                      )
+                                  : null,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.add_shopping_cart_rounded,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Text(
+                                      l10n.cartAddButton,
+                                      style: AppTheme.text(
+                                        size: 13.5,
+                                        weight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            }),
+            ],
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 }

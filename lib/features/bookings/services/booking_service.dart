@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:service_pilot/core/constants/booking_status.dart';
 import 'package:service_pilot/features/bookings/models/booking_model.dart';
 import 'package:service_pilot/features/bookings/models/booking_request.dart';
+import 'package:service_pilot/features/bookings/models/incoming_booking_request.dart';
 
 /// Thrown when a requested booking ID does not exist.
 class BookingNotFoundException implements Exception {
@@ -61,6 +62,71 @@ class CannotCancelBookingException implements Exception {
   @override
   String toString() =>
       'CannotCancelBookingException(bookingId: $bookingId, status: ${currentStatus.value}): $message';
+}
+
+/// Thrown when a provider attempts to confirm a booking addressed to another
+/// provider.
+///
+/// Enforces BOOK-2 (SCRUM-104) AC:
+/// "A cancelled booking or another provider's booking cannot be confirmed."
+class UnauthorizedBookingConfirmationException implements Exception {
+  final String bookingId;
+  final String providerId;
+  final String message;
+
+  const UnauthorizedBookingConfirmationException({
+    required this.bookingId,
+    required this.providerId,
+    this.message = 'Only the assigned service provider can confirm this booking.',
+  });
+
+  @override
+  String toString() =>
+      'UnauthorizedBookingConfirmationException(bookingId: $bookingId, providerId: $providerId): $message';
+}
+
+/// Thrown when a provider attempts to decline a request addressed to another
+/// provider.
+///
+/// Enforces BOOK-3 (SCRUM-105) AC:
+/// "An unrelated provider cannot decline the request."
+class UnauthorizedBookingDeclineException implements Exception {
+  final String bookingId;
+  final String providerId;
+  final String message;
+
+  const UnauthorizedBookingDeclineException({
+    required this.bookingId,
+    required this.providerId,
+    this.message = 'Only the provider this request was sent to can decline it.',
+  });
+
+  @override
+  String toString() =>
+      'UnauthorizedBookingDeclineException(bookingId: $bookingId, providerId: $providerId): $message';
+}
+
+/// Thrown when a decline is attempted on a booking that is no longer `Pending`
+/// (already confirmed, assigned, in progress, cancelled, completed or declined).
+///
+/// Enforces BOOK-3 (SCRUM-105) AC:
+/// "An authorized provider can decline an eligible request."
+class InvalidBookingDeclineStateException implements Exception {
+  final String bookingId;
+  final BookingStatus currentStatus;
+  final String message;
+
+  InvalidBookingDeclineStateException({
+    required this.bookingId,
+    required this.currentStatus,
+    String? message,
+  }) : message =
+           message ??
+           'This request cannot be declined because it is already ${currentStatus.label}.';
+
+  @override
+  String toString() =>
+      'InvalidBookingDeclineStateException(bookingId: $bookingId, status: ${currentStatus.value}): $message';
 }
 
 /// Thrown when an invalid status transition is attempted on a booking
@@ -125,6 +191,26 @@ abstract class IBookingService {
   /// Returns all bookings belonging to [customerId].
   Future<List<BookingModel>> getCustomerBookings(String customerId);
 
+  /// Returns accepted bookings addressed to [providerId].
+  Future<List<BookingModel>> getProviderBookings(String providerId);
+
+  /// Emits real-time updates for accepted bookings addressed to [providerId].
+  Stream<List<BookingModel>> watchProviderBookings(String providerId);
+
+  Future<List<IncomingBookingRequest>> getIncomingRequests(String providerId);
+
+  Future<IncomingBookingRequest?> getIncomingRequest(
+    String providerId,
+    String bookingId,
+  );
+
+  Future<List<IncomingBookingRequest>> getDeclinedRequests(String providerId);
+
+  Future<IncomingBookingRequest?> getDeclinedRequest(
+    String providerId,
+    String bookingId,
+  );
+
   /// Fetches a single booking by its [bookingId].
   Future<BookingModel?> getBookingById(String bookingId);
 
@@ -141,13 +227,32 @@ abstract class IBookingService {
     String? reason,
   });
 
-  /// Provider accepts (`Confirmed`) a pending booking.
+  /// Provider confirms (`Confirmed`) an eligible pending/assigned booking and
+  /// records the agreed appointment time.
   ///
-  /// Throws [InvalidBookingTransitionException] if the booking was cancelled
-  /// or cannot transition to [BookingStatus.confirmed].
-  Future<BookingModel> acceptBooking({
+  /// Throws:
+  /// - [BookingNotFoundException] if [bookingId] does not exist.
+  /// - [UnauthorizedBookingConfirmationException] if [providerId] does not own the booking.
+  /// - [InvalidBookingTransitionException] if the booking was cancelled
+  ///   or cannot transition to [BookingStatus.confirmed].
+  Future<void> acceptBooking({
     required String bookingId,
     required String providerId,
+    DateTime? confirmedAppointmentAt,
+  });
+
+  /// Provider declines (`Declined`) a `Pending` request addressed to them.
+  /// The customer history keeps the full booking and the provider history
+  /// keeps a limited request preview.
+  ///
+  /// Throws:
+  /// - [BookingNotFoundException] if [bookingId] does not exist.
+  /// - [UnauthorizedBookingDeclineException] if [providerId] does not own the request.
+  /// - [InvalidBookingDeclineStateException] if the booking is not `Pending`.
+  Future<void> declineBooking({
+    required String bookingId,
+    required String providerId,
+    String? reason,
   });
 
   /// Company/provider assigns a technician (`Assigned`) to a booking.
@@ -187,6 +292,54 @@ class BookingService implements IBookingService {
   static const String defaultCustomerId = 'customer-1';
 
   final List<BookingModel> _bookings;
+
+  @override
+  Future<List<IncomingBookingRequest>> getIncomingRequests(
+    String providerId,
+  ) => _requests(providerId, BookingStatus.pending);
+
+  @override
+  Future<List<IncomingBookingRequest>> getDeclinedRequests(
+    String providerId,
+  ) => _requests(providerId, BookingStatus.declined);
+
+  Future<List<IncomingBookingRequest>> _requests(
+    String providerId,
+    BookingStatus status,
+  ) async {
+    return _bookings
+        .where((booking) =>
+            booking.providerId == providerId &&
+            booking.status == status)
+        .map(IncomingBookingRequest.fromBooking)
+        .toList();
+  }
+
+  @override
+  Future<IncomingBookingRequest?> getIncomingRequest(
+    String providerId,
+    String bookingId,
+  ) => _request(providerId, bookingId, BookingStatus.pending);
+
+  @override
+  Future<IncomingBookingRequest?> getDeclinedRequest(
+    String providerId,
+    String bookingId,
+  ) => _request(providerId, bookingId, BookingStatus.declined);
+
+  Future<IncomingBookingRequest?> _request(
+    String providerId,
+    String bookingId,
+    BookingStatus status,
+  ) async {
+    final booking = await getBookingById(bookingId);
+    if (booking == null ||
+        booking.providerId != providerId ||
+        booking.status != status) {
+      return null;
+    }
+    return IncomingBookingRequest.fromBooking(booking);
+  }
   final StreamController<List<BookingModel>> _updatesController =
       StreamController<List<BookingModel>>.broadcast();
 
@@ -324,6 +477,37 @@ class BookingService implements IBookingService {
         totalPrice: 20.0,
         createdAt: now.subtract(const Duration(hours: 2)),
       ),
+      // Owned Pending fixtures for demo technician and company accounts (BOOK-2)
+      BookingModel(
+        id: 'bk-virak-pending-01',
+        customerId: 'demo-homeowner-2',
+        providerId: 'prov-virak-ac',
+        providerName: 'Virak Chan',
+        serviceCategory: 'Air Conditioner Repair & Care',
+        serviceTitle: 'Split AC Chemical Wash & Diagnostic',
+        description:
+            'Living room AC leaks water from indoor blower after 20 minutes.',
+        address: 'St. 360, Boeung Keng Kang 3, Chamkarmon, Phnom Penh',
+        preferredDateTime: now.add(const Duration(days: 1, hours: 3)),
+        status: BookingStatus.pending,
+        totalPrice: 25.0,
+        createdAt: now.subtract(const Duration(hours: 1)),
+      ),
+      BookingModel(
+        id: 'bk-fixco-pending-01',
+        customerId: 'demo-homeowner-2',
+        providerId: 'prov-fixco-company',
+        providerName: 'Phnom Penh Fix Co.',
+        serviceCategory: 'Plumbing & Drainage',
+        serviceTitle: 'Water Pump Pressure & Valve Service',
+        description:
+            'Booster pump cycles on and off continuously even with taps closed.',
+        address: 'St. 516, Boeung Kak 1, Toul Kork, Phnom Penh',
+        preferredDateTime: now.add(const Duration(days: 2, hours: 2)),
+        status: BookingStatus.pending,
+        totalPrice: 35.0,
+        createdAt: now.subtract(const Duration(hours: 2)),
+      ),
     ];
   }
 
@@ -369,6 +553,32 @@ class BookingService implements IBookingService {
   }
 
   @override
+  Future<List<BookingModel>> getProviderBookings(String providerId) async {
+    return List.unmodifiable(
+      _bookings.where((booking) => _isAcceptedBy(booking, providerId)),
+    );
+  }
+
+  @override
+  Stream<List<BookingModel>> watchProviderBookings(String providerId) async* {
+    List<BookingModel> filter() => List.unmodifiable(
+          _bookings.where((booking) => _isAcceptedBy(booking, providerId)),
+        );
+
+    yield filter();
+    yield* _updatesController.stream.map(
+      (list) => List.unmodifiable(
+        list.where((booking) => _isAcceptedBy(booking, providerId)),
+      ),
+    );
+  }
+
+  bool _isAcceptedBy(BookingModel booking, String providerId) {
+    return booking.providerId == providerId &&
+        booking.status.exposesAcceptedDetails;
+  }
+
+  @override
   Future<BookingModel?> getBookingById(String bookingId) async {
     for (final booking in _bookings) {
       if (booking.id == bookingId) {
@@ -390,7 +600,6 @@ class BookingService implements IBookingService {
     }
 
     final booking = _bookings[index];
-
     // US-14 AC #6: Only the customer who created the booking can cancel it.
     if (!booking.isOwnedBy(customerId)) {
       throw UnauthorizedBookingCancellationException(
@@ -427,14 +636,88 @@ class BookingService implements IBookingService {
   }
 
   @override
-  Future<BookingModel> acceptBooking({
+  Future<void> acceptBooking({
     required String bookingId,
     required String providerId,
+    DateTime? confirmedAppointmentAt,
   }) async {
-    return updateBookingStatus(
-      bookingId: bookingId,
-      newStatus: BookingStatus.confirmed,
+    final index = _bookings.indexWhere((b) => b.id == bookingId);
+    if (index == -1) {
+      throw BookingNotFoundException(bookingId);
+    }
+
+    final booking = _bookings[index];
+    if (!booking.isOwnedByProvider(providerId)) {
+      throw UnauthorizedBookingConfirmationException(
+        bookingId: bookingId,
+        providerId: providerId,
+      );
+    }
+
+    if (!booking.status.canTransitionTo(BookingStatus.confirmed)) {
+      throw InvalidBookingTransitionException(
+        bookingId: bookingId,
+        currentStatus: booking.status,
+        targetStatus: BookingStatus.confirmed,
+        message: booking.status == BookingStatus.cancelled
+            ? 'Cancelled bookings cannot be accepted, assigned, or started afterward.'
+            : null,
+      );
+    }
+
+    final now = DateTime.now();
+    if (confirmedAppointmentAt != null &&
+        !confirmedAppointmentAt.isAtSameMomentAs(booking.preferredDateTime)) {
+      throw const BookingSubmissionException(
+        'The preferred appointment is unavailable or has changed.',
+      );
+    }
+    final updated = booking.copyWith(
+      status: BookingStatus.confirmed,
+      clearAssignment: true,
+      confirmedAppointmentAt: booking.preferredDateTime,
+      confirmedAt: now,
+      confirmedBy: providerId,
+      updatedAt: now,
     );
+    _bookings[index] = updated;
+    _notifyListeners();
+  }
+
+  @override
+  Future<void> declineBooking({
+    required String bookingId,
+    required String providerId,
+    String? reason,
+  }) async {
+    final index = _bookings.indexWhere((b) => b.id == bookingId);
+    if (index == -1) {
+      throw BookingNotFoundException(bookingId);
+    }
+
+    final booking = _bookings[index];
+    if (!booking.isOwnedByProvider(providerId)) {
+      throw UnauthorizedBookingDeclineException(
+        bookingId: bookingId,
+        providerId: providerId,
+      );
+    }
+    if (booking.status != BookingStatus.pending) {
+      throw InvalidBookingDeclineStateException(
+        bookingId: bookingId,
+        currentStatus: booking.status,
+      );
+    }
+
+    final trimmedReason = reason?.trim();
+    final updated = booking.copyWith(
+      status: BookingStatus.declined,
+      updatedAt: DateTime.now(),
+      declinedReason: trimmedReason,
+      clearDeclinedReason: trimmedReason == null || trimmedReason.isEmpty,
+    );
+    _bookings[index] = updated;
+    _notifyListeners();
   }
 
   @override
@@ -503,9 +786,15 @@ class BookingService implements IBookingService {
       );
     }
 
+    final now = DateTime.now();
+    final confirming = newStatus == BookingStatus.confirmed;
     final updated = booking.copyWith(
       status: newStatus,
-      updatedAt: DateTime.now(),
+      clearAssignment: confirming,
+      confirmedAppointmentAt: confirming ? booking.preferredDateTime : null,
+      confirmedAt: confirming ? now : null,
+      confirmedBy: confirming ? booking.providerId : null,
+      updatedAt: now,
     );
     _bookings[index] = updated;
     _notifyListeners();

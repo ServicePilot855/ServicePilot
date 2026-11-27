@@ -268,6 +268,7 @@
   "bookingProblemSection": "What's wrong?",
   "bookingProblemLabel": "Describe the problem",
   "bookingProblemHint": "For example: the bedroom AC blows warm air and drips water",
+  "bookingProblemPrivacyHelper": "The provider can read this before accepting. Leave out your address and phone number.",
   "bookingAddressLabel": "Repair address",
   "bookingAddressHint": "House no., street, sangkat, khan",
   "bookingAddressHelper": "Include the street and khan so the technician can find you.",
@@ -362,6 +363,58 @@
   "bookingSummaryAddress": "Address",
   "bookingSentViewStatus": "View booking status",
   "bookingSentBackHome": "Back to home",
+  "bookingInboxTitle": "Incoming requests",
+  "bookingInboxDetailTitle": "Booking request",
+  "bookingInboxEmpty": "You have no pending booking requests.",
+  "bookingInboxUnavailable": "This booking request is unavailable.",
+  "bookingInboxPending": "Pending",
+  "bookingInboxJobDetails": "Job details",
+  "bookingInboxDateUnavailable": "Appointment time unavailable",
+  "bookingInboxLoading": "Loading booking requests",
+  "bookingInboxError": "Could not load booking requests. Check your connection and try again.",
+  "bookingInboxRetry": "Try again",
+
+  "@_OFFERINGS": {},
+  "offeringCreateTitle": "Add Service Offering",
+  "offeringHeaderTitle": "New Service Offering",
+  "offeringCreateSubtitle": "Publish a new service offering with fixed or custom quote pricing.",
+  "offeringCategoryLabel": "Service Category",
+  "offeringCategoryHint": "Select category",
+  "offeringCategoryRequired": "Please select a service category.",
+  "offeringCategoriesEmpty": "There are no active service categories.",
+  "offeringCategoriesError": "Couldn’t load service categories. Go back and reopen the form to try again.",
+  "offeringTitleLabel": "Service Title",
+  "offeringTitleHint": "e.g., Inverter Mainboard & PCB Replacement",
+  "offeringTitleRequired": "Please enter a service title.",
+  "offeringTitleMinLength": "Title must be at least 3 characters.",
+  "offeringDescLabel": "Description",
+  "offeringDescHint": "Explain the scope, prerequisites, or diagnosis required...",
+  "offeringDescRequired": "Please enter a description.",
+  "offeringDescMinLength": "Description must be at least 10 characters.",
+  "offeringPricingModeLabel": "Pricing Mode",
+  "offeringModeQuote": "Requires custom quote",
+  "offeringModeQuoteDesc": "Excluded from fixed cart checkout. Customers submit inquiry for custom on-site estimation.",
+  "offeringNoticeQuoteMode": "Quote Mode Active: Fixed price checkout is disabled. Homeowners will be guided to submit problem details and photos for quote intake.",
+  "offeringBadgeQuoteRequired": "Quote Required",
+  "offeringCtaRequestQuote": "Request a Quote",
+  "offeringCtaBookService": "Book Service",
+  "offeringNoticeQuoteRequiredBooking": "You are requesting a custom quote for this service. You will not be charged upfront. The provider will review your scope and provide a formal price estimate before work begins.",
+  "offeringModeFixed": "Fixed upfront price",
+  "offeringModeFixedDesc": "Upfront transparent flat-rate pricing.",
+  "offeringPriceLabel": "Base Price ($)",
+  "offeringPriceRequired": "Please enter a valid base price.",
+  "offeringPricePositive": "Enter an amount greater than zero with up to two decimal places.",
+  "offeringUnitLabel": "Pricing Unit (Optional)",
+  "offeringUnitHint": "e.g., job, hour, unit",
+  "offeringCreateButton": "Publish Offering",
+  "offeringSuccessSnackbar": "Service offering published successfully!",
+  "offeringPublishError": "Couldn’t publish your offering. Check your connection and provider access, then try again.",
+  "offeringUnauthorized": "Only registered service providers and companies can publish offerings.",
+  "offeringActiveRequired": "Provider account must be active to publish service offerings.",
+  "offeringDashboardTitle": "My Service Offerings",
+  "offeringAddButton": "Add Offering",
+  "offeringEmptyNotice": "You have not published any service offerings yet. Tap \"+ Add Offering\" to add fixed-price or quote-required services.",
+  "offeringLoadError": "Unable to load service offerings right now. Please check your connection and try again.",
 
   "@_ADMIN": {},
   "adminDashboardTitle": "Platform Administration",
@@ -383,5 +436,190 @@
   "adminContactPhoneLabel": "Contact phone",
   "adminAccessDeniedTitle": "Admin access required",
   "adminAccessDeniedMessage": "Only Platform Admins can review or approve provider accounts.",
-  "adminViewCustomerProfileButton": "Preview customer profile"
+  "adminViewCustomerProfileButton": "Preview customer profile",
+
+  "companyProfileEdit": "Edit company profile",
+  "companyProfileDescription": "Description (optional)",
+  "companyProfileDescriptionHint": "Home plumbing and electrical repairs",
+  "companyProfileAreaHint": "Sen Sok, Tuol Kork",
+  "companyProfileAreaRequired": "Enter a service area.",
+  "companyProfileContacts": "Contact links",
+  "companyProfileOptionalContacts": "Contact links (optional)",
+  "companyProfileTelegram": "Telegram",
+  "companyProfileTelegramExample": "https://t.me/coolair",
+  "companyProfileMessenger": "Messenger",
+  "companyProfileMessengerExample": "https://m.me/coolair",
+  "companyProfileInvalidLink": "Enter a link like {example}.",
+  "@companyProfileInvalidLink": {
+    "placeholders": {"example": {"type": "String"}}
+  },
+  "companyProfileLengthError": "Use {limit} characters or fewer.",
+  "@companyProfileLengthError": {
+    "placeholders": {"limit": {"type": "int"}}
+  },
+  "companyProfileUnavailable": "No editable company profile is linked to this account.",
+  "companyProfileLoading": "Loading company profile",
+  "companyProfileLoadError": "Could not load your company profile.",
+  "companyProfileSaveError": "Could not save your changes. Try again.",
+  "companyProfileSave": "Save changes",
+  "companyProfileSaved": "Company profile saved.",
+
+  "technicianProfileEdit": "Edit technician profile",
+  "technicianProfileName": "Full name",
+  "technicianProfileNameHint": "Virak Chan",
+  "technicianProfileNameRequired": "Enter your full name.",
+  "technicianProfileDescription": "Bio / description (optional)",
+  "technicianProfileDescriptionHint": "Certified AC technician with 7+ years of experience",
+  "technicianProfileAreaHint": "Sen Sok, Tuol Kork",
+  "technicianProfileAreaRequired": "Enter a service area.",
+  "technicianProfileContacts": "Contact links",
+  "technicianProfileOptionalContacts": "Contact links (optional)",
+  "technicianProfileTelegram": "Telegram",
+  "technicianProfileTelegramExample": "https://t.me/virakchan",
+  "technicianProfileMessenger": "Messenger",
+  "technicianProfileMessengerExample": "https://m.me/virakchan",
+  "technicianProfileInvalidLink": "Enter a link like {example}.",
+  "@technicianProfileInvalidLink": {
+    "placeholders": {"example": {"type": "String"}}
+  },
+  "technicianProfileLengthError": "Use {limit} characters or fewer.",
+  "@technicianProfileLengthError": {
+    "placeholders": {"limit": {"type": "int"}}
+  },
+  "technicianProfileUnavailable": "No editable technician profile is linked to this account.",
+  "technicianProfileLoading": "Loading technician profile",
+  "technicianProfileLoadError": "Could not load your technician profile.",
+  "technicianProfileSaveError": "Could not save your changes. Try again.",
+  "technicianProfileSave": "Save changes",
+  "technicianProfileSaved": "Technician profile saved.",
+
+  "@_DISC": {},
+  "providerOfferingsSection": "Available Services & Offerings",
+
+  "@_BOOKING_CONFIRMATION": {},
+  "bookingConfirmedAppointmentLabel": "Confirmed Appointment",
+  "bookingPreferredAppointmentLabel": "Preferred Date & Time",
+  "providerBookingsTitle": "Accepted bookings",
+  "providerBookingsEmpty": "You have no accepted bookings.",
+  "providerBookingsLoadError": "Unable to load booking requests right now. Please try again.",
+  "providerBookingDetailTitle": "Booking Request",
+  "providerBookingConfirmButton": "Confirm Appointment",
+  "providerBookingConfirmSuccess": "Appointment confirmed! The homeowner can now see the confirmed date and time.",
+  "providerBookingNotAuthorized": "You are not authorized to confirm this booking.",
+  "providerBookingIneligible": "This booking cannot be confirmed in its current state.",
+  "providerBookingReviewAction": "Review",
+
+  "@_BOOKING_DECLINE": {},
+  "providerBookingDeclineButton": "Decline Request",
+  "providerBookingDeclineDialogTitle": "Decline this request?",
+  "providerBookingDeclineDialogBody": "The homeowner will see this request as Declined. You will not be able to confirm it afterwards.",
+  "providerBookingDeclineReasonLabel": "Reason for declining",
+  "providerBookingDeclineReasonHint": "For example: outside our service area that day",
+  "providerBookingDeclineReasonRequired": "Add a short reason so the homeowner can make other arrangements.",
+  "providerBookingDeclineReasonTooLong": "Keep the reason under 300 characters.",
+  "providerBookingDeclineKeep": "Keep Request",
+  "providerBookingDeclineConfirm": "Confirm Decline",
+  "providerBookingDeclineSuccess": "Request declined. The homeowner can see this booking as Declined in their history.",
+  "providerBookingDeclinedNotice": "You declined this request. The homeowner can see it as Declined in their booking history.",
+  "providerDeclinedRequestsTitle": "Declined requests",
+  "providerDeclinedRequestsEmpty": "You have no declined requests.",
+  "providerBookingDeclineIneligible": "This request can no longer be declined.",
+  "providerBookingDeclineNotAuthorized": "You are not authorized to decline this request.",
+
+  "@_CART": {},
+  "cartAddButton": "Add to cart",
+  "cartAddedSnackbar": "Added {serviceTitle} to cart.",
+  "@cartAddedSnackbar": {
+    "placeholders": {"serviceTitle": {"type": "String"}}
+  },
+  "cartErrorDifferentProvider": "Your cart already has services from {providerName}. Clear your cart before adding from another provider.",
+  "@cartErrorDifferentProvider": {
+    "placeholders": {"providerName": {"type": "String"}}
+  },
+  "cartErrorDifferentProviderGeneric": "Your cart already has services from another provider. Clear your cart before adding this service.",
+  "cartErrorQuoteRequired": "Quote-required services cannot be added to the cart. Use Request a Quote instead.",
+  "cartErrorUnavailable": "This service is currently unavailable and cannot be added to the cart.",
+  "cartBadgeLabel": "Cart ({count})",
+  "@cartBadgeLabel": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "cartActiveProviderNotice": "Cart has {count, plural, =1{1 service} other{{count} services}} from {providerName}.",
+  "@cartActiveProviderNotice": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "providerName": {"type": "String"}
+    }
+  },
+  "cartTitle": "Cart",
+  "cartHeading": "Review your cart",
+  "cartItemCount": "{count, plural, =1{1 service} other{{count} services}}",
+  "@cartItemCount": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "cartProviderLabel": "Provider",
+  "cartProviderUnknown": "Provider name unavailable",
+  "cartItemQuantityPrice": "{quantity} × {price}",
+  "@cartItemQuantityPrice": {
+    "placeholders": {
+      "quantity": {"type": "int"},
+      "price": {"type": "String"}
+    }
+  },
+  "cartRemoveItem": "Remove {serviceTitle}",
+  "@cartRemoveItem": {
+    "placeholders": {"serviceTitle": {"type": "String"}}
+  },
+  "cartTotalLabel": "Total",
+  "cartTotalSemantics": "Total {price}",
+  "@cartTotalSemantics": {
+    "placeholders": {"price": {"type": "String"}}
+  },
+  "cartPaymentNote": "These are the provider's fixed prices. No payment is taken in the app; you pay the provider directly after the job.",
+  "cartEmptyTitle": "Your cart is empty",
+  "cartEmptyBody": "Add fixed-price services from a provider's page and they will appear here.",
+  "cartBrowseServices": "Browse services",
+  "cartOpenSemantics": "Open cart, {count, plural, =1{1 service} other{{count} services}}",
+  "@cartOpenSemantics": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+
+  "@_QUOTES": {},
+  "quoteFormTitle": "Request a quote",
+  "quoteFormHeading": "Describe the job",
+  "quoteFormSubtitle": "{provider} will review your details and photos and send a price quote.",
+  "@quoteFormSubtitle": {
+    "placeholders": {"provider": {"type": "String"}}
+  },
+  "quoteSelectedOfferingLabel": "Selected service",
+  "quoteDescriptionHint": "For example: the outdoor AC board clicks and shows an E5 error after a power surge",
+  "quoteRequestFooterNote": "This quote request stays separate from your cart. You can book a time after you review and approve the provider's price.",
+  "quoteSubmit": "Send quote request",
+  "quoteErrorSaveFailed": "We couldn't send your quote request. Check your connection and try again.",
+  "quoteOfferingUnavailable": "This service isn't available for quote requests right now.",
+  "quoteOfferingNotFound": "We couldn't find this service offering.",
+  "quoteSentTitle": "Quote request sent",
+  "quoteSentMessage": "{provider} will review your request and send a price quote. Your cart was not changed.",
+  "@quoteSentMessage": {
+    "placeholders": {"provider": {"type": "String"}}
+  },
+  "quoteSentMessageGeneric": "The provider will review your request and send a price quote.",
+  "quoteStatusLabel": "Status",
+  "quoteStatusRequested": "Requested",
+  "quoteStatusQuoted": "Quoted",
+  "quoteStatusApproved": "Approved",
+  "quoteStatusRejected": "Rejected",
+  "quoteSummaryProvider": "Provider",
+  "quoteSummaryDescription": "Problem details",
+  "quoteSentViewStatus": "View quote request",
+  "quoteDetailTitle": "Quote request",
+  "quoteDetailLoading": "Loading quote request",
+  "quoteDetailNotFound": "We couldn't find this quote request.",
+  "quoteDetailWaitingMessage": "Waiting for {provider} to review your details and send a price quote.",
+  "@quoteDetailWaitingMessage": {
+    "placeholders": {"provider": {"type": "String"}}
+  },
+  "discoveryHomeQuotes": "My quote requests",
+  "discoveryNoQuotes": "You have no quote requests yet.",
+  "discoveryQuotesError": "Couldn't load your quote requests.",
+  "discoveryLoadingQuotes": "Loading your quote requests"
 }

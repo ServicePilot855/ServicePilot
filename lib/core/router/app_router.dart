@@ -21,12 +21,23 @@ import 'package:service_pilot/features/bookings/screens/booking_confirmation_scr
 import 'package:service_pilot/features/bookings/screens/booking_history_screen.dart';
 import 'package:service_pilot/features/bookings/screens/booking_tracking_screen.dart';
 import 'package:service_pilot/features/bookings/screens/create_booking_screen.dart';
+import 'package:service_pilot/features/bookings/screens/incoming_booking_screen.dart';
 import 'package:service_pilot/features/bookings/screens/location_picker_screen.dart';
+import 'package:service_pilot/features/bookings/screens/provider_booking_detail_screen.dart';
+import 'package:service_pilot/features/cart/screens/cart_screen.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
+import 'package:service_pilot/features/providers/screens/company_profile_edit_screen.dart';
 import 'package:service_pilot/features/providers/screens/provider_detail_screen.dart';
 import 'package:service_pilot/features/providers/screens/provider_list_screen.dart';
+import 'package:service_pilot/features/providers/screens/technician_profile_edit_screen.dart';
+import 'package:service_pilot/features/quotes/models/quote_request_model.dart';
+import 'package:service_pilot/features/quotes/screens/create_quote_request_screen.dart';
+import 'package:service_pilot/features/quotes/screens/quote_request_confirmation_screen.dart';
+import 'package:service_pilot/features/quotes/screens/quote_request_detail_screen.dart';
 import 'package:service_pilot/features/services/models/category_model.dart';
+import 'package:service_pilot/features/services/models/offering_model.dart';
 import 'package:service_pilot/features/services/screens/categories_screen.dart';
+import 'package:service_pilot/features/services/screens/create_offering_screen.dart';
 import 'package:service_pilot/shared/home/customer_home.dart';
 import 'package:service_pilot/shared/home/technician_home.dart';
 import 'package:service_pilot/shared/home/company_home.dart';
@@ -54,10 +65,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isAuthenticated = authState is AuthStateAuthenticated;
       final isGoingToAdmin = state.matchedLocation.startsWith('/home/admin') ||
           state.matchedLocation.startsWith('/admin');
+      final isGoingToBookingInbox =
+          state.matchedLocation.startsWith(IncomingBookingScreen.path) ||
+          state.matchedLocation.startsWith('/provider/bookings');
       final isGoingToHome = state.matchedLocation.startsWith('/home') ||
           state.matchedLocation.startsWith('/categories') ||
           state.matchedLocation.startsWith('/providers') ||
           state.matchedLocation.startsWith('/bookings') ||
+          state.matchedLocation.startsWith('/quotes') ||
+          state.matchedLocation.startsWith('/offerings') ||
+          state.matchedLocation.startsWith(CartScreen.path) ||
+          isGoingToBookingInbox ||
           isGoingToAdmin;
       final isGoingToLogin = state.matchedLocation == '/login';
       final isGoingToSplash = state.matchedLocation == '/splash';
@@ -68,14 +86,49 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // Unauthenticated users cannot access home, category, booking, or admin screens.
       if (!isAuthenticated && isGoingToHome) return '/login';
 
+      if (isAuthenticated &&
+          isGoingToBookingInbox &&
+          !authState.user.canViewBookingInbox) {
+        return authState.user.role.homeRoute;
+      }
+
+      // Only homeowners have a cart (CART-2 / SCRUM-81).
+      if (isAuthenticated &&
+          state.matchedLocation.startsWith(CartScreen.path) &&
+          !authState.user.isHomeowner) {
+        return authState.user.role.homeRoute;
+      }
+
       // Non-admin authenticated users cannot access Platform Admin routes (SCRUM-94 / ADM-2).
       if (isAuthenticated && isGoingToAdmin && !authState.user.isAdmin) {
+        return authState.user.role.homeRoute;
+      }
+
+      if (isAuthenticated &&
+          state.matchedLocation == '/home/company/profile' &&
+          (!authState.user.isCompany || authState.user.isSuspended)) {
+        return authState.user.role.homeRoute;
+      }
+
+      if (isAuthenticated &&
+          state.matchedLocation == '/home/technician/profile' &&
+          (!authState.user.isIndependentTechnician || authState.user.isSuspended)) {
         return authState.user.role.homeRoute;
       }
 
       // Authenticated users are redirected away from /login to their home.
       if (isAuthenticated && isGoingToLogin) {
         return (authState).user.role.homeRoute;
+      }
+
+      // Restrict /offerings to providers, companies and administrators.
+      if (isAuthenticated && state.matchedLocation.startsWith('/offerings')) {
+        final role = (authState).user.role;
+        if (role != AppRole.independentProvider &&
+            role != AppRole.company &&
+            role != AppRole.admin) {
+          return role.homeRoute;
+        }
       }
 
       return null; // No redirect needed.
@@ -138,6 +191,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const CategoriesScreen(),
       ),
       GoRoute(
+        path: '/offerings/create',
+        builder: (_, state) {
+          final categoryId = state.uri.queryParameters['categoryId'];
+          final providerId = state.uri.queryParameters['providerId'];
+          return CreateOfferingScreen(
+            initialCategoryId: categoryId,
+            initialProviderId: providerId,
+          );
+        },
+      ),
+      GoRoute(
         path: '/categories/:categoryId/providers',
         builder: (_, state) {
           final categoryId = state.pathParameters['categoryId'] ?? '';
@@ -147,6 +211,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             category: category,
           );
         },
+      ),
+      // ── Cart review (CART-2 / SCRUM-81) ───────────────────────────────
+      GoRoute(
+        path: CartScreen.path,
+        builder: (_, __) => const CartScreen(),
       ),
       // ── Provider Details & Profiles (US-11) ───────────────────────────
       GoRoute(
@@ -160,15 +229,61 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
-      // ── Booking request (US-12) ───────────────────────────────────────
+      GoRoute(
+        path: '/providers/:providerId/quote',
+        builder: (_, state) {
+          final providerId = state.pathParameters['providerId'] ?? '';
+          final offeringId = state.uri.queryParameters['offeringId'] ?? '';
+          final extra = state.extra;
+          final args = extra is QuoteRequestRouteArgs ? extra : null;
+          return CreateQuoteRequestScreen(
+            providerId: providerId,
+            offeringId: offeringId,
+            initialProvider:
+                args?.provider ?? (extra is ProviderModel ? extra : null),
+            initialOffering:
+                args?.offering ?? (extra is OfferingModel ? extra : null),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/quotes/:quoteId/sent',
+        builder: (_, state) {
+          final quoteId = state.pathParameters['quoteId'] ?? '';
+          final quote = state.extra as QuoteRequestModel?;
+          return QuoteRequestConfirmationScreen(
+            quoteId: quoteId,
+            quote: quote,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/quotes/:quoteId',
+        builder: (_, state) {
+          final quoteId = state.pathParameters['quoteId'] ?? '';
+          final quote = state.extra as QuoteRequestModel?;
+          return QuoteRequestDetailScreen(
+            quoteId: quoteId,
+            initialQuote: quote,
+          );
+        },
+      ),
+      // ── Booking request (US-12 / OFFER-2) ─────────────────────────────
       GoRoute(
         path: '/providers/:providerId/book',
         builder: (_, state) {
           final providerId = state.pathParameters['providerId'] ?? '';
           final provider = state.extra as ProviderModel?;
+          final serviceTitle = state.uri.queryParameters['serviceTitle'];
+          final offeringId = state.uri.queryParameters['offeringId'];
+          final isQuoteRequired =
+              state.uri.queryParameters['pricingMode'] == 'quoteRequired';
           return CreateBookingScreen(
             providerId: providerId,
             initialProvider: provider,
+            initialServiceTitle: serviceTitle,
+            initialOfferingId: offeringId,
+            isQuoteRequired: isQuoteRequired,
           );
         },
       ),
@@ -189,11 +304,35 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
+      // ── Provider Booking Confirmation (BOOK-2 / SCRUM-104) ─────────────
+      GoRoute(
+        path: '/provider/bookings/:bookingId',
+        builder: (_, state) => ProviderBookingDetailScreen(
+          bookingId: state.pathParameters['bookingId']!,
+        ),
+      ),
 
       // ── Booking History (US-15 / SCRUM-46) ────────────────────────────
       GoRoute(
         path: '/bookings/history',
         builder: (_, __) => const BookingHistoryScreen(),
+      ),
+
+      GoRoute(
+        path: IncomingBookingScreen.path,
+        builder: (_, __) => const IncomingBookingScreen(),
+        routes: [
+          GoRoute(
+            path: IncomingBookingScreen.historySegment,
+            builder: (_, __) => const IncomingBookingScreen(showDeclined: true),
+          ),
+          GoRoute(
+            path: ':bookingId',
+            builder: (_, state) => ProviderBookingDetailScreen(
+              bookingId: state.pathParameters['bookingId']!,
+            ),
+          ),
+        ],
       ),
 
       // ── Bookings & Cancellation (US-13 / US-14) ───────────────────────
@@ -223,10 +362,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/home/technician',
         builder: (_, __) => const TechnicianHome(),
+        routes: [
+          GoRoute(
+            path: 'profile',
+            builder: (_, __) => const TechnicianProfileEditScreen(),
+          ),
+        ],
       ),
       GoRoute(
         path: '/home/company',
         builder: (_, __) => const CompanyHome(),
+        routes: [
+          GoRoute(
+            path: 'profile',
+            builder: (_, __) => const CompanyProfileEditScreen(),
+          ),
+        ],
       ),
       GoRoute(
         path: '/home/company-technician',

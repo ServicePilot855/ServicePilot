@@ -210,6 +210,69 @@ PROVIDERS = [
     },
 ]
 
+OFFERINGS = [
+    {
+        "id": "offering-sophea-sonar-leak",
+        "providerId": "prov-dara-plumbing",
+        "providerName": "Sophea Lim Services",
+        "providerType": "independent",
+        "categoryId": "cat-plumbing",
+        "categoryName": "Plumbing & Drainage",
+        "title": "Underground Pipe Leak Sonar Inspection",
+        "description": "Advanced ultrasonic acoustic sonar leak detection for concealed breaks in water mains and under-slab plumbing.",
+        "pricingMode": "quoteRequired",
+        "price": None,
+        "unit": "job",
+        "isActive": True,
+        "createdAt": "2025-03-01T00:00:00Z",
+    },
+    {
+        "id": "offering-sophea-drain-unblock",
+        "providerId": "prov-dara-plumbing",
+        "providerName": "Sophea Lim Services",
+        "providerType": "independent",
+        "categoryId": "cat-plumbing",
+        "categoryName": "Plumbing & Drainage",
+        "title": "High-Torque Drain Snake Unblocking",
+        "description": "Mechanical drain snaking for clearing kitchen, bathroom, and main line blockages.",
+        "pricingMode": "fixed",
+        "price": 25.0,
+        "unit": "job",
+        "isActive": True,
+        "createdAt": "2025-03-01T00:00:00Z",
+    },
+    {
+        "id": "offering-virak-ac-quote",
+        "providerId": "prov-virak-ac",
+        "providerName": "Virak Chan",
+        "providerType": "independent",
+        "categoryId": "cat-ac",
+        "categoryName": "Air Conditioner Repair & Care",
+        "title": "Multi-Split VRV Diagnostic & Custom Piping",
+        "description": "Comprehensive multi-split inverter diagnostics and custom refrigerant pipe sizing. Requires on-site quote assessment.",
+        "pricingMode": "quoteRequired",
+        "price": None,
+        "unit": "job",
+        "isActive": True,
+        "createdAt": "2025-03-01T00:00:00Z",
+    },
+    {
+        "id": "offering-fixco-commercial-quote",
+        "providerId": "prov-fixco-company",
+        "providerName": "Phnom Penh Fix Co.",
+        "providerType": "company",
+        "categoryId": "cat-plumbing",
+        "categoryName": "Plumbing & Drainage",
+        "title": "Commercial Building Sewer System Overhaul",
+        "description": "Heavy industrial sewer relining, grease trap rebuilds, and pump station maintenance. Custom quote required upon blueprint inspection.",
+        "pricingMode": "quoteRequired",
+        "price": None,
+        "unit": "job",
+        "isActive": True,
+        "createdAt": "2025-03-01T00:00:00Z",
+    },
+]
+
 def main():
     print(f"Connecting to Firestore for project: {PROJECT_ID}...")
     token = get_access_token()
@@ -221,6 +284,10 @@ def main():
     print("\n--- Seeding /providers ---")
     for prov in PROVIDERS:
         upsert_document("providers", prov["id"], prov, token)
+
+    print("\n--- Seeding /offerings ---")
+    for off in OFFERINGS:
+        upsert_document("offerings", off["id"], off, token)
 
     print("\nFirestore cloud seeding successfully completed!")
 

@@ -1400,6 +1400,12 @@ abstract class AppLocalizations {
   /// **'For example: the bedroom AC blows warm air and drips water'**
   String get bookingProblemHint;
 
+  /// No description provided for @bookingProblemPrivacyHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'The provider can read this before accepting. Leave out your address and phone number.'**
+  String get bookingProblemPrivacyHelper;
+
   /// No description provided for @bookingAddressLabel.
   ///
   /// In en, this message translates to:
@@ -1730,6 +1736,306 @@ abstract class AppLocalizations {
   /// **'Back to home'**
   String get bookingSentBackHome;
 
+  /// No description provided for @bookingInboxTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming requests'**
+  String get bookingInboxTitle;
+
+  /// No description provided for @bookingInboxDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking request'**
+  String get bookingInboxDetailTitle;
+
+  /// No description provided for @bookingInboxEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no pending booking requests.'**
+  String get bookingInboxEmpty;
+
+  /// No description provided for @bookingInboxUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This booking request is unavailable.'**
+  String get bookingInboxUnavailable;
+
+  /// No description provided for @bookingInboxPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get bookingInboxPending;
+
+  /// No description provided for @bookingInboxJobDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Job details'**
+  String get bookingInboxJobDetails;
+
+  /// No description provided for @bookingInboxDateUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Appointment time unavailable'**
+  String get bookingInboxDateUnavailable;
+
+  /// No description provided for @bookingInboxLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading booking requests'**
+  String get bookingInboxLoading;
+
+  /// No description provided for @bookingInboxError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load booking requests. Check your connection and try again.'**
+  String get bookingInboxError;
+
+  /// No description provided for @bookingInboxRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get bookingInboxRetry;
+
+  /// No description provided for @offeringCreateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Service Offering'**
+  String get offeringCreateTitle;
+
+  /// No description provided for @offeringHeaderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New Service Offering'**
+  String get offeringHeaderTitle;
+
+  /// No description provided for @offeringCreateSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish a new service offering with fixed or custom quote pricing.'**
+  String get offeringCreateSubtitle;
+
+  /// No description provided for @offeringCategoryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Category'**
+  String get offeringCategoryLabel;
+
+  /// No description provided for @offeringCategoryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select category'**
+  String get offeringCategoryHint;
+
+  /// No description provided for @offeringCategoryRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a service category.'**
+  String get offeringCategoryRequired;
+
+  /// No description provided for @offeringCategoriesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'There are no active service categories.'**
+  String get offeringCategoriesEmpty;
+
+  /// No description provided for @offeringCategoriesError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t load service categories. Go back and reopen the form to try again.'**
+  String get offeringCategoriesError;
+
+  /// No description provided for @offeringTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Title'**
+  String get offeringTitleLabel;
+
+  /// No description provided for @offeringTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., Inverter Mainboard & PCB Replacement'**
+  String get offeringTitleHint;
+
+  /// No description provided for @offeringTitleRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a service title.'**
+  String get offeringTitleRequired;
+
+  /// No description provided for @offeringTitleMinLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Title must be at least 3 characters.'**
+  String get offeringTitleMinLength;
+
+  /// No description provided for @offeringDescLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get offeringDescLabel;
+
+  /// No description provided for @offeringDescHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Explain the scope, prerequisites, or diagnosis required...'**
+  String get offeringDescHint;
+
+  /// No description provided for @offeringDescRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a description.'**
+  String get offeringDescRequired;
+
+  /// No description provided for @offeringDescMinLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Description must be at least 10 characters.'**
+  String get offeringDescMinLength;
+
+  /// No description provided for @offeringPricingModeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pricing Mode'**
+  String get offeringPricingModeLabel;
+
+  /// No description provided for @offeringModeQuote.
+  ///
+  /// In en, this message translates to:
+  /// **'Requires custom quote'**
+  String get offeringModeQuote;
+
+  /// No description provided for @offeringModeQuoteDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Excluded from fixed cart checkout. Customers submit inquiry for custom on-site estimation.'**
+  String get offeringModeQuoteDesc;
+
+  /// No description provided for @offeringNoticeQuoteMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote Mode Active: Fixed price checkout is disabled. Homeowners will be guided to submit problem details and photos for quote intake.'**
+  String get offeringNoticeQuoteMode;
+
+  /// No description provided for @offeringBadgeQuoteRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote Required'**
+  String get offeringBadgeQuoteRequired;
+
+  /// No description provided for @offeringCtaRequestQuote.
+  ///
+  /// In en, this message translates to:
+  /// **'Request a Quote'**
+  String get offeringCtaRequestQuote;
+
+  /// No description provided for @offeringCtaBookService.
+  ///
+  /// In en, this message translates to:
+  /// **'Book Service'**
+  String get offeringCtaBookService;
+
+  /// No description provided for @offeringNoticeQuoteRequiredBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'You are requesting a custom quote for this service. You will not be charged upfront. The provider will review your scope and provide a formal price estimate before work begins.'**
+  String get offeringNoticeQuoteRequiredBooking;
+
+  /// No description provided for @offeringModeFixed.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed upfront price'**
+  String get offeringModeFixed;
+
+  /// No description provided for @offeringModeFixedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Upfront transparent flat-rate pricing.'**
+  String get offeringModeFixedDesc;
+
+  /// No description provided for @offeringPriceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Base Price (\$)'**
+  String get offeringPriceLabel;
+
+  /// No description provided for @offeringPriceRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid base price.'**
+  String get offeringPriceRequired;
+
+  /// No description provided for @offeringPricePositive.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an amount greater than zero with up to two decimal places.'**
+  String get offeringPricePositive;
+
+  /// No description provided for @offeringUnitLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pricing Unit (Optional)'**
+  String get offeringUnitLabel;
+
+  /// No description provided for @offeringUnitHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., job, hour, unit'**
+  String get offeringUnitHint;
+
+  /// No description provided for @offeringCreateButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish Offering'**
+  String get offeringCreateButton;
+
+  /// No description provided for @offeringSuccessSnackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Service offering published successfully!'**
+  String get offeringSuccessSnackbar;
+
+  /// No description provided for @offeringPublishError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t publish your offering. Check your connection and provider access, then try again.'**
+  String get offeringPublishError;
+
+  /// No description provided for @offeringUnauthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'Only registered service providers and companies can publish offerings.'**
+  String get offeringUnauthorized;
+
+  /// No description provided for @offeringActiveRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider account must be active to publish service offerings.'**
+  String get offeringActiveRequired;
+
+  /// No description provided for @offeringDashboardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My Service Offerings'**
+  String get offeringDashboardTitle;
+
+  /// No description provided for @offeringAddButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Offering'**
+  String get offeringAddButton;
+
+  /// No description provided for @offeringEmptyNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'You have not published any service offerings yet. Tap \"+ Add Offering\" to add fixed-price or quote-required services.'**
+  String get offeringEmptyNotice;
+
+  /// No description provided for @offeringLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load service offerings right now. Please check your connection and try again.'**
+  String get offeringLoadError;
+
   /// No description provided for @adminDashboardTitle.
   ///
   /// In en, this message translates to:
@@ -1831,6 +2137,720 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Preview customer profile'**
   String get adminViewCustomerProfileButton;
+
+  /// No description provided for @companyProfileEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit company profile'**
+  String get companyProfileEdit;
+
+  /// No description provided for @companyProfileDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description (optional)'**
+  String get companyProfileDescription;
+
+  /// No description provided for @companyProfileDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Home plumbing and electrical repairs'**
+  String get companyProfileDescriptionHint;
+
+  /// No description provided for @companyProfileAreaHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sen Sok, Tuol Kork'**
+  String get companyProfileAreaHint;
+
+  /// No description provided for @companyProfileAreaRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a service area.'**
+  String get companyProfileAreaRequired;
+
+  /// No description provided for @companyProfileContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact links'**
+  String get companyProfileContacts;
+
+  /// No description provided for @companyProfileOptionalContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact links (optional)'**
+  String get companyProfileOptionalContacts;
+
+  /// No description provided for @companyProfileTelegram.
+  ///
+  /// In en, this message translates to:
+  /// **'Telegram'**
+  String get companyProfileTelegram;
+
+  /// No description provided for @companyProfileTelegramExample.
+  ///
+  /// In en, this message translates to:
+  /// **'https://t.me/coolair'**
+  String get companyProfileTelegramExample;
+
+  /// No description provided for @companyProfileMessenger.
+  ///
+  /// In en, this message translates to:
+  /// **'Messenger'**
+  String get companyProfileMessenger;
+
+  /// No description provided for @companyProfileMessengerExample.
+  ///
+  /// In en, this message translates to:
+  /// **'https://m.me/coolair'**
+  String get companyProfileMessengerExample;
+
+  /// No description provided for @companyProfileInvalidLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a link like {example}.'**
+  String companyProfileInvalidLink(String example);
+
+  /// No description provided for @companyProfileLengthError.
+  ///
+  /// In en, this message translates to:
+  /// **'Use {limit} characters or fewer.'**
+  String companyProfileLengthError(int limit);
+
+  /// No description provided for @companyProfileUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No editable company profile is linked to this account.'**
+  String get companyProfileUnavailable;
+
+  /// No description provided for @companyProfileLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading company profile'**
+  String get companyProfileLoading;
+
+  /// No description provided for @companyProfileLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load your company profile.'**
+  String get companyProfileLoadError;
+
+  /// No description provided for @companyProfileSaveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save your changes. Try again.'**
+  String get companyProfileSaveError;
+
+  /// No description provided for @companyProfileSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get companyProfileSave;
+
+  /// No description provided for @companyProfileSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Company profile saved.'**
+  String get companyProfileSaved;
+
+  /// No description provided for @technicianProfileEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit technician profile'**
+  String get technicianProfileEdit;
+
+  /// No description provided for @technicianProfileName.
+  ///
+  /// In en, this message translates to:
+  /// **'Full name'**
+  String get technicianProfileName;
+
+  /// No description provided for @technicianProfileNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Virak Chan'**
+  String get technicianProfileNameHint;
+
+  /// No description provided for @technicianProfileNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your full name.'**
+  String get technicianProfileNameRequired;
+
+  /// No description provided for @technicianProfileDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Bio / description (optional)'**
+  String get technicianProfileDescription;
+
+  /// No description provided for @technicianProfileDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Certified AC technician with 7+ years of experience'**
+  String get technicianProfileDescriptionHint;
+
+  /// No description provided for @technicianProfileAreaHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sen Sok, Tuol Kork'**
+  String get technicianProfileAreaHint;
+
+  /// No description provided for @technicianProfileAreaRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a service area.'**
+  String get technicianProfileAreaRequired;
+
+  /// No description provided for @technicianProfileContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact links'**
+  String get technicianProfileContacts;
+
+  /// No description provided for @technicianProfileOptionalContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact links (optional)'**
+  String get technicianProfileOptionalContacts;
+
+  /// No description provided for @technicianProfileTelegram.
+  ///
+  /// In en, this message translates to:
+  /// **'Telegram'**
+  String get technicianProfileTelegram;
+
+  /// No description provided for @technicianProfileTelegramExample.
+  ///
+  /// In en, this message translates to:
+  /// **'https://t.me/virakchan'**
+  String get technicianProfileTelegramExample;
+
+  /// No description provided for @technicianProfileMessenger.
+  ///
+  /// In en, this message translates to:
+  /// **'Messenger'**
+  String get technicianProfileMessenger;
+
+  /// No description provided for @technicianProfileMessengerExample.
+  ///
+  /// In en, this message translates to:
+  /// **'https://m.me/virakchan'**
+  String get technicianProfileMessengerExample;
+
+  /// No description provided for @technicianProfileInvalidLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a link like {example}.'**
+  String technicianProfileInvalidLink(String example);
+
+  /// No description provided for @technicianProfileLengthError.
+  ///
+  /// In en, this message translates to:
+  /// **'Use {limit} characters or fewer.'**
+  String technicianProfileLengthError(int limit);
+
+  /// No description provided for @technicianProfileUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No editable technician profile is linked to this account.'**
+  String get technicianProfileUnavailable;
+
+  /// No description provided for @technicianProfileLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading technician profile'**
+  String get technicianProfileLoading;
+
+  /// No description provided for @technicianProfileLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load your technician profile.'**
+  String get technicianProfileLoadError;
+
+  /// No description provided for @technicianProfileSaveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save your changes. Try again.'**
+  String get technicianProfileSaveError;
+
+  /// No description provided for @technicianProfileSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get technicianProfileSave;
+
+  /// No description provided for @technicianProfileSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Technician profile saved.'**
+  String get technicianProfileSaved;
+
+  /// No description provided for @providerOfferingsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Available Services & Offerings'**
+  String get providerOfferingsSection;
+
+  /// No description provided for @bookingConfirmedAppointmentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed Appointment'**
+  String get bookingConfirmedAppointmentLabel;
+
+  /// No description provided for @bookingPreferredAppointmentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred Date & Time'**
+  String get bookingPreferredAppointmentLabel;
+
+  /// No description provided for @providerBookingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted bookings'**
+  String get providerBookingsTitle;
+
+  /// No description provided for @providerBookingsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no accepted bookings.'**
+  String get providerBookingsEmpty;
+
+  /// No description provided for @providerBookingsLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load booking requests right now. Please try again.'**
+  String get providerBookingsLoadError;
+
+  /// No description provided for @providerBookingDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking Request'**
+  String get providerBookingDetailTitle;
+
+  /// No description provided for @providerBookingConfirmButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Appointment'**
+  String get providerBookingConfirmButton;
+
+  /// No description provided for @providerBookingConfirmSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Appointment confirmed! The homeowner can now see the confirmed date and time.'**
+  String get providerBookingConfirmSuccess;
+
+  /// No description provided for @providerBookingNotAuthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'You are not authorized to confirm this booking.'**
+  String get providerBookingNotAuthorized;
+
+  /// No description provided for @providerBookingIneligible.
+  ///
+  /// In en, this message translates to:
+  /// **'This booking cannot be confirmed in its current state.'**
+  String get providerBookingIneligible;
+
+  /// No description provided for @providerBookingReviewAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get providerBookingReviewAction;
+
+  /// No description provided for @providerBookingDeclineButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline Request'**
+  String get providerBookingDeclineButton;
+
+  /// No description provided for @providerBookingDeclineDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline this request?'**
+  String get providerBookingDeclineDialogTitle;
+
+  /// No description provided for @providerBookingDeclineDialogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The homeowner will see this request as Declined. You will not be able to confirm it afterwards.'**
+  String get providerBookingDeclineDialogBody;
+
+  /// No description provided for @providerBookingDeclineReasonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason for declining'**
+  String get providerBookingDeclineReasonLabel;
+
+  /// No description provided for @providerBookingDeclineReasonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For example: outside our service area that day'**
+  String get providerBookingDeclineReasonHint;
+
+  /// No description provided for @providerBookingDeclineReasonRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a short reason so the homeowner can make other arrangements.'**
+  String get providerBookingDeclineReasonRequired;
+
+  /// No description provided for @providerBookingDeclineReasonTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep the reason under 300 characters.'**
+  String get providerBookingDeclineReasonTooLong;
+
+  /// No description provided for @providerBookingDeclineKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Request'**
+  String get providerBookingDeclineKeep;
+
+  /// No description provided for @providerBookingDeclineConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Decline'**
+  String get providerBookingDeclineConfirm;
+
+  /// No description provided for @providerBookingDeclineSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Request declined. The homeowner can see this booking as Declined in their history.'**
+  String get providerBookingDeclineSuccess;
+
+  /// No description provided for @providerBookingDeclinedNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'You declined this request. The homeowner can see it as Declined in their booking history.'**
+  String get providerBookingDeclinedNotice;
+
+  /// No description provided for @providerDeclinedRequestsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Declined requests'**
+  String get providerDeclinedRequestsTitle;
+
+  /// No description provided for @providerDeclinedRequestsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no declined requests.'**
+  String get providerDeclinedRequestsEmpty;
+
+  /// No description provided for @providerBookingDeclineIneligible.
+  ///
+  /// In en, this message translates to:
+  /// **'This request can no longer be declined.'**
+  String get providerBookingDeclineIneligible;
+
+  /// No description provided for @providerBookingDeclineNotAuthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'You are not authorized to decline this request.'**
+  String get providerBookingDeclineNotAuthorized;
+
+  /// No description provided for @cartAddButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to cart'**
+  String get cartAddButton;
+
+  /// No description provided for @cartAddedSnackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {serviceTitle} to cart.'**
+  String cartAddedSnackbar(String serviceTitle);
+
+  /// No description provided for @cartErrorDifferentProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Your cart already has services from {providerName}. Clear your cart before adding from another provider.'**
+  String cartErrorDifferentProvider(String providerName);
+
+  /// No description provided for @cartErrorDifferentProviderGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Your cart already has services from another provider. Clear your cart before adding this service.'**
+  String get cartErrorDifferentProviderGeneric;
+
+  /// No description provided for @cartErrorQuoteRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote-required services cannot be added to the cart. Use Request a Quote instead.'**
+  String get cartErrorQuoteRequired;
+
+  /// No description provided for @cartErrorUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This service is currently unavailable and cannot be added to the cart.'**
+  String get cartErrorUnavailable;
+
+  /// No description provided for @cartBadgeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cart ({count})'**
+  String cartBadgeLabel(int count);
+
+  /// No description provided for @cartActiveProviderNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Cart has {count, plural, =1{1 service} other{{count} services}} from {providerName}.'**
+  String cartActiveProviderNotice(int count, String providerName);
+
+  /// No description provided for @cartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cart'**
+  String get cartTitle;
+
+  /// No description provided for @cartHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Review your cart'**
+  String get cartHeading;
+
+  /// No description provided for @cartItemCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 service} other{{count} services}}'**
+  String cartItemCount(int count);
+
+  /// No description provided for @cartProviderLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider'**
+  String get cartProviderLabel;
+
+  /// No description provided for @cartProviderUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider name unavailable'**
+  String get cartProviderUnknown;
+
+  /// No description provided for @cartItemQuantityPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'{quantity} × {price}'**
+  String cartItemQuantityPrice(int quantity, String price);
+
+  /// No description provided for @cartRemoveItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {serviceTitle}'**
+  String cartRemoveItem(String serviceTitle);
+
+  /// No description provided for @cartTotalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get cartTotalLabel;
+
+  /// No description provided for @cartTotalSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Total {price}'**
+  String cartTotalSemantics(String price);
+
+  /// No description provided for @cartPaymentNote.
+  ///
+  /// In en, this message translates to:
+  /// **'These are the provider\'s fixed prices. No payment is taken in the app; you pay the provider directly after the job.'**
+  String get cartPaymentNote;
+
+  /// No description provided for @cartEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your cart is empty'**
+  String get cartEmptyTitle;
+
+  /// No description provided for @cartEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add fixed-price services from a provider\'s page and they will appear here.'**
+  String get cartEmptyBody;
+
+  /// No description provided for @cartBrowseServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse services'**
+  String get cartBrowseServices;
+
+  /// No description provided for @cartOpenSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Open cart, {count, plural, =1{1 service} other{{count} services}}'**
+  String cartOpenSemantics(int count);
+
+  /// No description provided for @quoteFormTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Request a quote'**
+  String get quoteFormTitle;
+
+  /// No description provided for @quoteFormHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe the job'**
+  String get quoteFormHeading;
+
+  /// No description provided for @quoteFormSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{provider} will review your details and photos and send a price quote.'**
+  String quoteFormSubtitle(String provider);
+
+  /// No description provided for @quoteSelectedOfferingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected service'**
+  String get quoteSelectedOfferingLabel;
+
+  /// No description provided for @quoteDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For example: the outdoor AC board clicks and shows an E5 error after a power surge'**
+  String get quoteDescriptionHint;
+
+  /// No description provided for @quoteRequestFooterNote.
+  ///
+  /// In en, this message translates to:
+  /// **'This quote request stays separate from your cart. You can book a time after you review and approve the provider\'s price.'**
+  String get quoteRequestFooterNote;
+
+  /// No description provided for @quoteSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Send quote request'**
+  String get quoteSubmit;
+
+  /// No description provided for @quoteErrorSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t send your quote request. Check your connection and try again.'**
+  String get quoteErrorSaveFailed;
+
+  /// No description provided for @quoteOfferingUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This service isn\'t available for quote requests right now.'**
+  String get quoteOfferingUnavailable;
+
+  /// No description provided for @quoteOfferingNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t find this service offering.'**
+  String get quoteOfferingNotFound;
+
+  /// No description provided for @quoteSentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote request sent'**
+  String get quoteSentTitle;
+
+  /// No description provided for @quoteSentMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{provider} will review your request and send a price quote. Your cart was not changed.'**
+  String quoteSentMessage(String provider);
+
+  /// No description provided for @quoteSentMessageGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'The provider will review your request and send a price quote.'**
+  String get quoteSentMessageGeneric;
+
+  /// No description provided for @quoteStatusLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get quoteStatusLabel;
+
+  /// No description provided for @quoteStatusRequested.
+  ///
+  /// In en, this message translates to:
+  /// **'Requested'**
+  String get quoteStatusRequested;
+
+  /// No description provided for @quoteStatusQuoted.
+  ///
+  /// In en, this message translates to:
+  /// **'Quoted'**
+  String get quoteStatusQuoted;
+
+  /// No description provided for @quoteStatusApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get quoteStatusApproved;
+
+  /// No description provided for @quoteStatusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get quoteStatusRejected;
+
+  /// No description provided for @quoteSummaryProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider'**
+  String get quoteSummaryProvider;
+
+  /// No description provided for @quoteSummaryDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Problem details'**
+  String get quoteSummaryDescription;
+
+  /// No description provided for @quoteSentViewStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'View quote request'**
+  String get quoteSentViewStatus;
+
+  /// No description provided for @quoteDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote request'**
+  String get quoteDetailTitle;
+
+  /// No description provided for @quoteDetailLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading quote request'**
+  String get quoteDetailLoading;
+
+  /// No description provided for @quoteDetailNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t find this quote request.'**
+  String get quoteDetailNotFound;
+
+  /// No description provided for @quoteDetailWaitingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for {provider} to review your details and send a price quote.'**
+  String quoteDetailWaitingMessage(String provider);
+
+  /// No description provided for @discoveryHomeQuotes.
+  ///
+  /// In en, this message translates to:
+  /// **'My quote requests'**
+  String get discoveryHomeQuotes;
+
+  /// No description provided for @discoveryNoQuotes.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no quote requests yet.'**
+  String get discoveryNoQuotes;
+
+  /// No description provided for @discoveryQuotesError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your quote requests.'**
+  String get discoveryQuotesError;
+
+  /// No description provided for @discoveryLoadingQuotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading your quote requests'**
+  String get discoveryLoadingQuotes;
 }
 
 class _AppLocalizationsDelegate

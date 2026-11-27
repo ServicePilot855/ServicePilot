@@ -80,6 +80,27 @@ void main() {
   }
 
   group('SCRUM-54 / US-11: ProviderDetailScreen Acceptance Criteria Tests', () {
+    testWidgets('an approved company profile shows its saved contact links',
+        (tester) async {
+      setupViewport(tester);
+      await tester.pumpWidget(buildProviderDetailTestApp(
+        providerId: 'company-a',
+        customService: ProviderService(initialProviders: const [
+          ProviderModel(
+            id: 'company-a',
+            name: 'Company A',
+            type: ProviderType.company,
+            telegramUrl: 'https://t.me/company_a',
+          ),
+        ]),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Contact links'), findsOneWidget);
+      expect(find.text('https://t.me/company_a'), findsOneWidget);
+      expect(find.text('Messenger'), findsNothing);
+    });
+
     testWidgets(
         'AC #1: Displays provider name, description, bio, and service specialties',
         (tester) async {

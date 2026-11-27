@@ -9,28 +9,41 @@ import 'package:service_pilot/shared/widgets/sp_brand.dart';
 import 'package:service_pilot/shared/widgets/sp_button.dart';
 import 'package:service_pilot/shared/widgets/sp_layout.dart';
 
-/// Placeholder home shown to every role until its features are built:
-/// confirms who is signed in, says what comes next, and offers log out.
+/// Shared role home with a sign-in summary and an optional role action.
 class ComingSoonHome extends ConsumerWidget {
   const ComingSoonHome({
     super.key,
     required this.roleIcon,
     required this.greeting,
     required this.role,
+    this.primaryAction,
+    this.secondaryAction,
+    this.displayName,
+    this.companyName,
+    this.extraContent,
   });
 
   final IconData roleIcon;
   final String greeting;
   final AppRole role;
+  final Widget? primaryAction;
+  final Widget? secondaryAction;
+  final String? displayName;
+  final String? companyName;
+  final Widget? extraContent;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final authNotifier = ref.read(authProvider.notifier);
     final user = ref.watch(authProvider.notifier).currentUser;
-    final name = user?.fullName ?? l10n.homeFallbackName;
+    final customName = displayName?.trim();
+    final name = (customName != null && customName.isNotEmpty)
+        ? customName
+        : (user?.fullName ?? l10n.homeFallbackName);
     final firstName = name.trim().split(RegExp(r'\s+')).first;
-    final companyName = user?.companyName;
+    final displayCompany =
+        role == AppRole.company ? companyName : user?.companyName;
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -81,9 +94,9 @@ class ComingSoonHome extends ConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  companyName == null
+                  displayCompany == null
                       ? name
-                      : l10n.homeNameWithCompany(name, companyName),
+                      : l10n.homeNameWithCompany(name, displayCompany),
                   style: AppTheme.text(
                     size: 15,
                     color: AppTheme.textSecondary,
@@ -116,14 +129,23 @@ class ComingSoonHome extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      SpNotice(
-                        icon: Icons.hourglass_top_rounded,
-                        tone: SpTone.waiting,
-                        message: l10n.homeComingSoonNotice,
-                      ),
+                      primaryAction ??
+                          SpNotice(
+                            icon: Icons.hourglass_top_rounded,
+                            tone: SpTone.waiting,
+                            message: l10n.homeComingSoonNotice,
+                          ),
+                      if (secondaryAction != null) ...[
+                        const SizedBox(height: 12),
+                        secondaryAction!,
+                      ],
                     ],
                   ),
                 ),
+                if (extraContent != null) ...[
+                  const SizedBox(height: 24),
+                  extraContent!,
+                ],
                 const SizedBox(height: 24),
                 SpSecondaryButton(
                   label: l10n.homeLogOut,

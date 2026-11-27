@@ -5,6 +5,9 @@ import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/core/theme/app_theme.dart';
 import 'package:service_pilot/features/bookings/models/booking_model.dart';
 import 'package:service_pilot/features/bookings/providers/booking_provider.dart';
+import 'package:service_pilot/features/quotes/models/quote_request_model.dart';
+import 'package:service_pilot/features/quotes/providers/quote_provider.dart';
+import 'package:service_pilot/features/quotes/widgets/quote_status_badge.dart';
 import 'package:service_pilot/features/services/models/category_model.dart';
 import 'package:service_pilot/features/services/providers/category_provider.dart';
 import 'package:service_pilot/features/services/widgets/category_card.dart';
@@ -37,6 +40,7 @@ class CustomerHome extends ConsumerWidget {
     final firstName = name.trim().split(RegExp(r'\s+')).first;
     final categoriesAsync = ref.watch(categoriesListProvider);
     final bookingsAsync = ref.watch(customerBookingsProvider);
+    final quotesAsync = ref.watch(customerQuoteRequestsProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.browseBackground,
@@ -240,8 +244,129 @@ class CustomerHome extends ConsumerWidget {
                     tone: SpTone.danger,
                   ),
                 ),
+                const SizedBox(height: 24),
+
+                // My Quote Requests Section (QUOTE-1 / SCRUM-83)
+                Text(
+                  l10n.discoveryHomeQuotes,
+                  style: AppTheme.display(
+                    size: 18,
+                    color: AppTheme.browseInk,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                quotesAsync.when(
+                  data: (quotes) {
+                    if (quotes.isEmpty) {
+                      return SpNotice(
+                        icon: Icons.request_quote_outlined,
+                        message: l10n.discoveryNoQuotes,
+                        tone: SpTone.neutral,
+                      );
+                    }
+                    return Column(
+                      children: quotes.map((quote) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _CustomerQuoteCard(
+                            key: Key('home_quote_${quote.id}'),
+                            quote: quote,
+                            onTap: () => context.push(
+                              '/quotes/${Uri.encodeComponent(quote.id)}',
+                              extra: quote,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  },
+                  loading: () => Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: CircularProgressIndicator(
+                        semanticsLabel: l10n.discoveryLoadingQuotes,
+                      ),
+                    ),
+                  ),
+                  error: (_, __) => SpNotice(
+                    icon: Icons.error_outline_rounded,
+                    message: l10n.discoveryQuotesError,
+                    tone: SpTone.danger,
+                  ),
+                ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CustomerQuoteCard extends StatelessWidget {
+  const _CustomerQuoteCard({
+    super.key,
+    required this.quote,
+    required this.onTap,
+  });
+
+  final QuoteRequestModel quote;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppTheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.radiusCard),
+        side: const BorderSide(color: AppTheme.browseBorder),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      quote.offeringTitle,
+                      style: AppTheme.text(
+                        size: 15.5,
+                        weight: FontWeight.w600,
+                        color: AppTheme.browseInk,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  QuoteStatusBadge(status: quote.status),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                quote.providerName,
+                style: AppTheme.text(
+                  size: 13.5,
+                  color: AppTheme.browseSecondary,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                quote.description,
+                style: AppTheme.text(
+                  size: 12.5,
+                  color: AppTheme.browseSecondary,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
         ),
       ),

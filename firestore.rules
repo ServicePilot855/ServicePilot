@@ -17,7 +17,7 @@ rules_version = '2';
 //   - status: string (required) - One of ['active', 'pending_verification', 'suspended']
 //   - serviceArea: string (optional, max 300 chars) - Service coverage area
 //   - companyId: string (optional, max 100 chars) - Associated company ID
-//   - companyName: string (optional, max 100 chars) - Associated company name
+//   - companyName: string (optional, max 150 chars) - Associated company name
 //   - createdAt: timestamp | string (optional, immutable) - Account creation timestamp
 //   - updatedAt: timestamp | string (optional) - Last update timestamp
 //
@@ -28,10 +28,11 @@ rules_version = '2';
 //   - name / fullName / businessName: string (required, 1-150 chars) - Provider or business name
 //   - email: string (optional, valid email pattern, max 150 chars) - Provider email
 //   - phoneNumber: string (optional, max 30 chars) - Provider phone
-//   - providerType: string (optional, max 50 chars) - 'independent_provider', 'company', etc.
+//   - type / providerType: string (optional, max 50 chars) - 'independent', 'independent_provider', 'company', etc.
 //   - status: string (required) - One of ['active', 'pending_verification', 'suspended', 'inactive']
+//   - isVerified: bool (optional, immutable for provider) - Admin verification flag
 //   - serviceArea: string (optional, max 300 chars) - Service area description
-//   - serviceAreas: list of strings (optional, max 20 items) - Specific coverage areas
+//   - coverageAreas / serviceAreas: list of strings (optional, max 20 items) - Specific coverage areas (cleared on profile edit)
 //   - categoryIds: list of strings (optional, max 20 items) - Categories of service offered
 //   - categories: list of strings (optional, max 20 items) - Category display names
 //   - rating: number (optional, 0.0 - 5.0, immutable for provider) - Customer satisfaction rating
@@ -39,6 +40,8 @@ rules_version = '2';
 //   - description / bio: string (optional, max 2000 chars) - Bio or company description
 //   - avatarUrl / photoUrl: string (optional, max 500 chars) - Avatar or logo URL
 //   - isAvailable: bool (optional) - Real-time availability flag
+//   - telegramUrl: string (optional, max 500 chars, https://t.me/<handle>) - Telegram contact URL
+//   - messengerUrl: string (optional, max 500 chars, https://m.me/<handle>) - Messenger contact URL
 //   - createdAt: timestamp | string (optional, immutable)
 //   - updatedAt: timestamp | string (optional)
 //
@@ -80,11 +83,51 @@ rules_version = '2';
 //   - technicianName: string (optional, max 100 chars) - Assigned technician name
 //   - cancelledAt: timestamp | string (optional) - When the customer cancelled
 //   - cancelledBy: string (optional, max 128 chars) - UID of who cancelled
+//   - confirmedAppointmentAt: timestamp | string | null (optional) - Confirmed appointment date & time
+//   - confirmedAt: timestamp | string | null (optional) - When the booking was confirmed
+//   - confirmedBy: string | null (optional, max 128 chars) - UID of who confirmed
 //   - location: latlng (optional) - Map pin for the repair address (GeoPoint)
 //   - cancellationReason: string (optional, max 300 chars) - Reason for cancellation
 //   - declinedReason: string (optional, max 300 chars) - Reason for decline
 //   - createdAt: timestamp | string (optional, immutable)
 //   - updatedAt: timestamp | string (optional)
+//
+// Collection: offerings
+// Document ID: {offeringId}
+// Fields:
+//   - id: string (required, 1-128 chars, immutable) - Unique offering identifier
+//   - providerId: string (required, 1-128 chars, immutable) - Provider UID
+//   - providerName: string (optional, max 150 chars) - Denormalized provider name
+//   - providerType: string (optional) - One of ['independent', 'company']
+//   - categoryId: string (required, 1-50 chars) - Associated category ID
+//   - categoryName: string (optional, max 100 chars) - Associated category name
+//   - title: string (required, 1-150 chars) - Service offering title
+//   - description: string (required, 1-2000 chars) - Service offering description
+//   - pricingMode: string (required) - One of ['quote_required', 'quoteRequired', 'fixed']
+//   - price: number (optional, >= 0 for fixed pricing; null/absent for quote_required)
+//   - unit: string (optional, max 50 chars) - Pricing unit (e.g., 'unit', 'hour')
+//   - isActive: bool (required) - Listing visibility flag
+//   - createdAt: timestamp | string (optional, immutable)
+//   - updatedAt: timestamp | string (optional)
+//
+// Collection: quoteRequests
+// Document ID: {quoteId}
+// Fields:
+//   - id: string (required, 1-128 chars, immutable) - Unique quote request identifier
+//   - customerId: string (required, 1-128 chars, immutable) - Homeowner UID
+//   - customerName: string | null (optional, max 100 chars) - Denormalized customer name
+//   - providerId: string (required, 1-128 chars, immutable) - Provider UID
+//   - providerName: string | null (optional, max 150 chars) - Denormalized provider name
+//   - offeringId: string (required, 1-128 chars, immutable) - Associated offering ID
+//   - offeringTitle: string (required, 1-150 chars, non-whitespace) - Offering title
+//   - categoryId: string | null (optional, max 50 chars) - Service category ID
+//   - categoryName: string | null (optional, max 100 chars) - Service category name
+//   - description: string (required, 15-2000 chars, non-whitespace) - Customer quote request description
+//   - photos: list of strings (optional, max 5 items, valid URLs) - Reference photo URLs
+//   - status: string (required) - One of ['requested', 'quoted', 'approved', 'rejected']
+//   - quotedPrice: number | null (optional, >= 0; forbidden when status == 'requested') - Quoted price
+//   - createdAt: timestamp | string | null (optional, immutable)
+//   - updatedAt: timestamp | string | null (optional)
 //
 // ===============================================================
 
@@ -105,19 +148,25 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    // Check if the authenticated user is the owner/manager of the provider document or offering
+    function isOfferingOwner(providerId) {
+      return isAuthenticated() && (
+        request.auth.uid == providerId ||
+        (exists(/databases/$(database)/documents/providers/$(providerId)) &&
+         (get(/databases/$(database)/documents/providers/$(providerId)).data.email == request.auth.token.email ||
+          get(/databases/$(database)/documents/providers/$(providerId)).data.id == request.auth.uid))
+      );
+    }
+
     // Derive admin authority strictly from verified token claims or bootstrap admin identity
     function isAdmin() {
       return isAuthenticated() &&
         (
-          request.auth.token.admin == true ||
-          request.auth.token.role == 'admin' ||
+          request.auth.token.get('admin', false) == true ||
+          request.auth.token.get('role', '') == 'admin' ||
           (
-            request.auth.token.email != null &&
-            request.auth.token.email_verified == true &&
-            (
-              request.auth.token.email.matches('.*admin.*@servicepilot\\.app') ||
-              request.auth.token.email.matches('.*admin@.*')
-            )
+            request.auth.token.get('email_verified', false) == true &&
+            request.auth.token.get('email', '').matches('^[^@]*admin[^@]*@servicepilot\\.app$')
           )
         );
     }
@@ -174,7 +223,7 @@ service cloud.firestore {
         data.status in ['active', 'pending_verification', 'suspended'] &&
         (!('serviceArea' in data) || (data.serviceArea is string && data.serviceArea.size() <= 300)) &&
         (!('companyId' in data) || (data.companyId is string && data.companyId.size() <= 100)) &&
-        (!('companyName' in data) || (data.companyName is string && data.companyName.size() <= 100)) &&
+        (!('companyName' in data) || (data.companyName is string && data.companyName.size() <= 150)) &&
         (!('createdAt' in data) || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
         (!('updatedAt' in data) || data.updatedAt is timestamp || (data.updatedAt is string && data.updatedAt.size() <= 50));
     }
@@ -183,10 +232,10 @@ service cloud.firestore {
     function isValidProvider(data) {
       return hasOnlyAllowedFields(data, [
           'id', 'name', 'fullName', 'businessName', 'email', 'phoneNumber',
-          'providerType', 'status', 'serviceArea', 'serviceAreas',
+          'providerType', 'status', 'isVerified', 'serviceArea', 'serviceAreas',
           'categoryIds', 'categories', 'rating', 'reviewCount',
           'description', 'bio', 'avatarUrl', 'photoUrl', 'isAvailable',
-          'createdAt', 'updatedAt'
+          'telegramUrl', 'messengerUrl', 'createdAt', 'updatedAt'
         ]) &&
         hasRequiredFields(data, ['id', 'status']) &&
         data.id is string && data.id.size() >= 1 && data.id.size() <= 128 &&
@@ -199,6 +248,7 @@ service cloud.firestore {
         (!('email' in data) || isValidEmail(data.email)) &&
         (!('phoneNumber' in data) || (data.phoneNumber is string && data.phoneNumber.size() <= 30)) &&
         (!('providerType' in data) || (data.providerType is string && data.providerType.size() <= 50)) &&
+        (!('isVerified' in data) || data.isVerified is bool) &&
         (!('serviceArea' in data) || (data.serviceArea is string && data.serviceArea.size() <= 300)) &&
         (!('serviceAreas' in data) || (data.serviceAreas is list && data.serviceAreas.size() <= 20)) &&
         (!('categoryIds' in data) || (data.categoryIds is list && data.categoryIds.size() <= 20)) &&
@@ -210,8 +260,91 @@ service cloud.firestore {
         (!('avatarUrl' in data) || isValidUrl(data.avatarUrl)) &&
         (!('photoUrl' in data) || isValidUrl(data.photoUrl)) &&
         (!('isAvailable' in data) || data.isAvailable is bool) &&
+        validContactLinks(data) &&
         (!('createdAt' in data) || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
         (!('updatedAt' in data) || data.updatedAt is timestamp || (data.updatedAt is string && data.updatedAt.size() <= 50));
+    }
+
+    function isCompanyProfile(data) {
+      return data.get('type', data.get('providerType', '')) == 'company';
+    }
+
+    function isIndependentProfile(data) {
+      return data.get('type', data.get('providerType', '')) in [
+        'independent', 'independent_provider'
+      ];
+    }
+
+    function validContactLinks(data) {
+      return (!('telegramUrl' in data) ||
+          (data.telegramUrl is string && data.telegramUrl.size() <= 500 &&
+           data.telegramUrl.matches('^https://t\\.me/[A-Za-z0-9_.+-]+/?$'))) &&
+        (!('messengerUrl' in data) ||
+          (data.messengerUrl is string && data.messengerUrl.size() <= 500 &&
+           data.messengerUrl.matches('^https://m\\.me/[A-Za-z0-9_.+-]+/?$')));
+    }
+
+    function canEditCompanyProfile(providerId) {
+      let account = /databases/$(database)/documents/users/$(providerId);
+      return isOwner(providerId) && isCompanyProfile(resource.data) &&
+        resource.data.status in ['pending_verification', 'active', 'inactive'] &&
+        (exists(account)
+          ? get(account).data.role == 'company' &&
+            get(account).data.get('companyId', providerId) == providerId &&
+            get(account).data.status != 'suspended'
+          : resource.data.status in ['active', 'inactive']);
+    }
+
+    function isValidCompanyProfileEdit() {
+      let data = request.resource.data;
+      let changed = data.diff(resource.data).affectedKeys();
+      return changed.hasOnly([
+          'businessName', 'description', 'serviceArea', 'coverageAreas',
+          'serviceAreas', 'telegramUrl', 'messengerUrl', 'updatedAt'
+        ]) &&
+        data.businessName is string && data.businessName.size() <= 150 &&
+        data.businessName.matches('(?s).*\\S.*') &&
+        data.description is string && data.description.size() <= 2000 &&
+        data.serviceArea is string && data.serviceArea.size() <= 300 &&
+        data.serviceArea.matches('(?s).*\\S.*') &&
+        (!changed.hasAny(['coverageAreas']) || !('coverageAreas' in data)) &&
+        (!changed.hasAny(['serviceAreas']) || !('serviceAreas' in data)) &&
+        validContactLinks(data) && data.updatedAt == request.time;
+    }
+
+    function canEditIndependentProfile(providerId) {
+      let account = /databases/$(database)/documents/users/$(providerId);
+      return isOwner(providerId) && isIndependentProfile(resource.data) &&
+        resource.data.status in ['pending_verification', 'active', 'inactive'] &&
+        (exists(account)
+          ? get(account).data.role in ['independent_provider', 'independentProvider'] &&
+            get(account).data.status != 'suspended'
+          : resource.data.status in ['active', 'inactive']);
+    }
+
+    function isValidIndependentProfileEdit() {
+      let data = request.resource.data;
+      let changed = data.diff(resource.data).affectedKeys();
+      return changed.hasOnly([
+          'name', 'fullName', 'description', 'bio', 'serviceArea',
+          'coverageAreas', 'serviceAreas', 'telegramUrl', 'messengerUrl',
+          'updatedAt'
+        ]) &&
+        'name' in data && data.name is string && data.name.size() <= 100 &&
+        data.name.matches('(?s).*\\S.*') &&
+        (!('fullName' in data) ||
+          (data.fullName is string && data.fullName.size() <= 100 &&
+           data.fullName.matches('(?s).*\\S.*') && data.fullName == data.name)) &&
+        (!('description' in data) ||
+          (data.description is string && data.description.size() <= 2000)) &&
+        (!('bio' in data) ||
+          (data.bio is string && data.bio.size() <= 2000)) &&
+        'serviceArea' in data && data.serviceArea is string && data.serviceArea.size() <= 300 &&
+        data.serviceArea.matches('(?s).*\\S.*') &&
+        (!changed.hasAny(['coverageAreas']) || !('coverageAreas' in data)) &&
+        (!changed.hasAny(['serviceAreas']) || !('serviceAreas' in data)) &&
+        validContactLinks(data) &&
+        'updatedAt' in data && data.updatedAt == request.time;
     }
 
     // Validate /categories/{categoryId} document schema and field constraints
@@ -240,7 +373,8 @@ service cloud.firestore {
           'appointmentDate', 'timeSlot', 'address', 'serviceArea', 'district',
           'notes', 'description', 'photos', 'totalPrice', 'price',
           'technicianId', 'technicianName', 'cancellationReason', 'declinedReason',
-          'cancelledAt', 'cancelledBy', 'location', 'createdAt', 'updatedAt'
+          'cancelledAt', 'cancelledBy', 'confirmedAppointmentAt', 'confirmedAt', 'confirmedBy',
+          'location', 'createdAt', 'updatedAt'
         ]) &&
         hasRequiredFields(data, ['customerId', 'providerId', 'status']) &&
         data.customerId is string && data.customerId.size() >= 1 && data.customerId.size() <= 128 &&
@@ -273,9 +407,86 @@ service cloud.firestore {
         (!('declinedReason' in data) || (data.declinedReason is string && data.declinedReason.size() <= 300)) &&
         (!('cancelledAt' in data) || data.cancelledAt is timestamp || (data.cancelledAt is string && data.cancelledAt.size() <= 50)) &&
         (!('cancelledBy' in data) || (data.cancelledBy is string && data.cancelledBy.size() <= 128)) &&
+        (!('confirmedAppointmentAt' in data) || data.confirmedAppointmentAt == null || data.confirmedAppointmentAt is timestamp || (data.confirmedAppointmentAt is string && data.confirmedAppointmentAt.size() <= 50)) &&
+        (!('confirmedAt' in data) || data.confirmedAt == null || data.confirmedAt is timestamp || (data.confirmedAt is string && data.confirmedAt.size() <= 50)) &&
+        (!('confirmedBy' in data) || data.confirmedBy == null || (data.confirmedBy is string && data.confirmedBy.size() <= 128)) &&
         (!('location' in data) || data.location is latlng) &&
         (!('createdAt' in data) || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
         (!('updatedAt' in data) || data.updatedAt is timestamp || (data.updatedAt is string && data.updatedAt.size() <= 50));
+    }
+
+    // Validate /offerings/{offeringId} document schema and field constraints
+    // Supporting US OFFER-2 (SCRUM-77 / SCRUM-118)
+    function isValidOffering(data) {
+      return hasOnlyAllowedFields(data, [
+          'id', 'providerId', 'providerName', 'providerType', 'categoryId',
+          'categoryName', 'title', 'description', 'pricingMode', 'price',
+          'unit', 'isActive', 'createdAt', 'updatedAt'
+        ]) &&
+        hasRequiredFields(data, [
+          'id', 'providerId', 'categoryId', 'title', 'description',
+          'pricingMode', 'isActive'
+        ]) &&
+        data.id is string && data.id.size() >= 1 && data.id.size() <= 128 &&
+        data.providerId is string && data.providerId.size() >= 1 && data.providerId.size() <= 128 &&
+        data.categoryId is string && data.categoryId.size() >= 1 && data.categoryId.size() <= 50 &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 150 &&
+        data.description is string && data.description.size() >= 1 && data.description.size() <= 2000 &&
+        data.pricingMode is string && data.pricingMode in ['quote_required', 'quoteRequired', 'fixed'] &&
+        data.isActive is bool &&
+        (!('providerName' in data) || data.providerName == null || (data.providerName is string && data.providerName.size() <= 150)) &&
+        (!('providerType' in data) || data.providerType == null || (data.providerType is string && data.providerType in ['independent', 'company'])) &&
+        (!('categoryName' in data) || data.categoryName == null || (data.categoryName is string && data.categoryName.size() <= 100)) &&
+        (
+          (data.pricingMode in ['quote_required', 'quoteRequired']) ?
+            (!('price' in data) || data.price == null) :
+            (data.price is number && data.price >= 0)
+        ) &&
+        (!('unit' in data) || data.unit == null || (data.unit is string && data.unit.size() <= 50)) &&
+        (!('createdAt' in data) || data.createdAt == null || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
+        (!('updatedAt' in data) || data.updatedAt == null || data.updatedAt is timestamp || (data.updatedAt is string && data.updatedAt.size() <= 50));
+    }
+
+    // Validate bounded quote request photo list (max 5 valid URLs)
+    function isValidQuotePhotoList(photos) {
+      return photos is list &&
+        photos.size() <= 5 &&
+        (photos.size() < 1 || isValidUrl(photos[0])) &&
+        (photos.size() < 2 || isValidUrl(photos[1])) &&
+        (photos.size() < 3 || isValidUrl(photos[2])) &&
+        (photos.size() < 4 || isValidUrl(photos[3])) &&
+        (photos.size() < 5 || isValidUrl(photos[4]));
+    }
+
+    // Validate /quoteRequests/{quoteId} document schema and field constraints
+    // Supporting US QUOTE-1 (SCRUM-83)
+    function isValidQuoteRequest(data) {
+      return hasOnlyAllowedFields(data, [
+          'id', 'customerId', 'customerName', 'providerId', 'providerName',
+          'offeringId', 'offeringTitle', 'categoryId', 'categoryName',
+          'description', 'photos', 'status', 'quotedPrice', 'createdAt', 'updatedAt'
+        ]) &&
+        hasRequiredFields(data, [
+          'id', 'customerId', 'providerId', 'offeringId',
+          'offeringTitle', 'description', 'status'
+        ]) &&
+        data.id is string && data.id.size() >= 1 && data.id.size() <= 128 &&
+        data.customerId is string && data.customerId.size() >= 1 && data.customerId.size() <= 128 &&
+        data.providerId is string && data.providerId.size() >= 1 && data.providerId.size() <= 128 &&
+        data.offeringId is string && data.offeringId.size() >= 1 && data.offeringId.size() <= 128 &&
+        data.offeringTitle is string && data.offeringTitle.size() >= 1 && data.offeringTitle.size() <= 150 &&
+        data.offeringTitle.matches('(?s).*\\S.*') &&
+        (!('customerName' in data) || data.customerName == null || (data.customerName is string && data.customerName.size() <= 100)) &&
+        (!('providerName' in data) || data.providerName == null || (data.providerName is string && data.providerName.size() <= 150)) &&
+        (!('categoryId' in data) || data.categoryId == null || (data.categoryId is string && data.categoryId.size() <= 50)) &&
+        (!('categoryName' in data) || data.categoryName == null || (data.categoryName is string && data.categoryName.size() <= 100)) &&
+        data.description is string && data.description.size() >= 15 && data.description.size() <= 2000 &&
+        data.description.matches('(?s).*\\S.*') &&
+        (!('photos' in data) || isValidQuotePhotoList(data.photos)) &&
+        data.status is string && data.status in ['requested', 'quoted', 'approved', 'rejected'] &&
+        (!('quotedPrice' in data) || data.quotedPrice == null || (data.status != 'requested' && data.quotedPrice is number && data.quotedPrice >= 0)) &&
+        (!('createdAt' in data) || data.createdAt == null || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
+        (!('updatedAt' in data) || data.updatedAt == null || data.updatedAt is timestamp || (data.updatedAt is string && data.updatedAt.size() <= 50));
     }
 
     // ===============================================================
@@ -291,8 +502,8 @@ service cloud.firestore {
     // ===============================================================
 
     match /users/{userId} {
-      // Read: Any authenticated user can read basic user profile info
-      allow read: if isAuthenticated();
+      // User registration and account PII belong strictly to the owner and Platform Admins.
+      allow read: if isOwner(userId) || isAdmin();
 
       // Create: User themselves or platform admin.
       // Privilege escalation protection: non-admins cannot assign themselves the 'admin' role.
@@ -305,7 +516,8 @@ service cloud.firestore {
                        );
 
       // Update: User themselves or platform admin.
-      // Protect immutable identity fields and role hierarchy from self-escalation.
+      // Protect immutable identity fields, role, and status from self-escalation;
+      // suspended users cannot update their own user document.
       allow update: if isAuthenticated() &&
                        isValidUser(request.resource.data) &&
                        (isOwner(userId) || isAdmin()) &&
@@ -313,8 +525,9 @@ service cloud.firestore {
                        (
                          isAdmin() ||
                          (
+                           resource.data.status != 'suspended' &&
                            request.resource.data.role == resource.data.role &&
-                           (resource.data.status != 'suspended' || request.resource.data.status == 'suspended')
+                           request.resource.data.status == resource.data.status
                          )
                        );
 
@@ -337,24 +550,56 @@ service cloud.firestore {
       allow create: if (isOwner(providerId) || isAdmin()) &&
                        isValidProvider(request.resource.data) &&
                        request.resource.data.id == providerId &&
-                       (isAdmin() || request.resource.data.status in ['pending_verification', 'inactive']);
+                       (isAdmin() ||
+                         (request.resource.data.status in ['pending_verification', 'inactive'] &&
+                          request.resource.data.get('isVerified', false) == false));
 
       // Update: Provider themselves or platform admin.
       // Providers cannot self-verify from pending/suspended to active, and cannot forge ratings.
-      allow update: if (isOwner(providerId) || isAdmin()) &&
+      allow update: if (canEditCompanyProfile(providerId) && isValidCompanyProfileEdit()) ||
+                       (canEditIndependentProfile(providerId) && isValidIndependentProfileEdit()) ||
+                       ((isOwner(providerId) || isAdmin()) &&
                        isValidProvider(request.resource.data) &&
                        areImmutableFieldsUnchanged(['id', 'createdAt']) &&
                        (
                          isAdmin() ||
                          (
+                           !isCompanyProfile(resource.data) &&
+                           !isCompanyProfile(request.resource.data) &&
                            (
-                             request.resource.data.status == resource.data.status ||
-                             (resource.data.status == 'active' && request.resource.data.status == 'inactive') ||
-                             (resource.data.status == 'inactive' && request.resource.data.status == 'active')
+                             !exists(/databases/$(database)/documents/users/$(providerId)) ||
+                             get(/databases/$(database)/documents/users/$(providerId)).data.status != 'suspended'
                            ) &&
-                           areImmutableFieldsUnchanged(['rating', 'reviewCount'])
+                           (
+                             (
+                               !isIndependentProfile(resource.data) &&
+                               !isIndependentProfile(request.resource.data) &&
+                               resource.data.status != 'suspended' &&
+                               (
+                                 request.resource.data.status == resource.data.status ||
+                                 (resource.data.status == 'active' && request.resource.data.status == 'inactive') ||
+                                 (resource.data.status == 'inactive' && request.resource.data.status == 'active')
+                               )
+                             ) ||
+                             (
+                               isIndependentProfile(resource.data) &&
+                               isIndependentProfile(request.resource.data) &&
+                               request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']) &&
+                               (
+                                 !exists(/databases/$(database)/documents/users/$(providerId)) ||
+                                 get(/databases/$(database)/documents/users/$(providerId)).data.role in [
+                                   'independent_provider', 'independentProvider'
+                                 ]
+                               ) &&
+                               (
+                                 (resource.data.status == 'active' && request.resource.data.status == 'inactive') ||
+                                 (resource.data.status == 'inactive' && request.resource.data.status == 'active')
+                               )
+                             )
+                           ) &&
+                           areImmutableFieldsUnchanged(['rating', 'reviewCount', 'isVerified'])
                          )
-                       );
+                       ));
 
       // Delete: Provider themselves or platform admin
       allow delete: if isOwner(providerId) || isAdmin();
@@ -386,13 +631,166 @@ service cloud.firestore {
     // Collection 4: /bookings/{bookingId}
     // ===============================================================
 
+    function ownsBookingInbox(providerId) {
+      let account = get(/databases/$(database)/documents/users/$(providerId)).data;
+      return isOwner(providerId) && account != null &&
+        account.get('status', '') != 'suspended' &&
+        (account.role == 'independent_provider' ||
+          (account.role == 'company' && account.get('companyId', providerId) == providerId));
+    }
+
+    function isCompanyBookingTechnician(technicianId, providerId) {
+      let account = get(/databases/$(database)/documents/users/$(technicianId)).data;
+      return account != null && account.role in ['company_technician', 'companyTechnician'] &&
+        account.get('companyId', '') == providerId && account.get('status', '') != 'suspended';
+    }
+
+    function isAssignedBookingTechnician(booking) {
+      return booking.get('technicianId', '') == request.auth.uid &&
+        isCompanyBookingTechnician(request.auth.uid, booking.providerId);
+    }
+
+    function bookingPreview(data) {
+      return {
+        'serviceTitle': data.get('serviceType', data.get('categoryName', '')),
+        'description': data.get('description', data.get('notes', '')),
+        'appointmentDate': data.get('appointmentDate', null)
+      };
+    }
+
+    function inboxDocument(providerId, bookingId) {
+      return /databases/$(database)/documents/providers/$(providerId)/incomingBookingRequests/$(bookingId);
+    }
+
+    function declinedRequestDocument(providerId, bookingId) {
+      return /databases/$(database)/documents/providers/$(providerId)/declinedBookingRequests/$(bookingId);
+    }
+
+    function previewsMatchBooking(bookingId, booking) {
+      let preview = inboxDocument(booking.providerId, bookingId);
+      let archived = declinedRequestDocument(booking.providerId, bookingId);
+      return (booking.status == 'pending'
+        ? getAfter(preview).data == bookingPreview(booking)
+        : !existsAfter(preview)) &&
+        (booking.status == 'declined'
+          ? getAfter(archived).data == bookingPreview(booking)
+          : !existsAfter(archived));
+    }
+
+    function noProviderPreviews(providerId, bookingId) {
+      return !existsAfter(inboxDocument(providerId, bookingId)) &&
+        !existsAfter(declinedRequestDocument(providerId, bookingId));
+    }
+
+    // Firestore reads whole documents. Pending requests use a separate view
+    // whose fields must match an allowlisted projection of the private record.
+    match /providers/{providerId}/incomingBookingRequests/{bookingId} {
+      function bookingPath() {
+        return /databases/$(database)/documents/bookings/$(bookingId);
+      }
+
+      function canPublish() {
+        let booking = getAfter(bookingPath()).data;
+        return booking != null && booking.providerId == providerId &&
+          booking.status == 'pending' &&
+          (isOwner(booking.customerId) || isAdmin()) &&
+          request.resource.data == bookingPreview(booking);
+      }
+
+      function canRemove() {
+        let before = get(bookingPath()).data;
+        let after = getAfter(bookingPath()).data;
+        return before != null && before.providerId == providerId &&
+          (isOwner(before.customerId) || ownsBookingInbox(providerId) || isAdmin()) &&
+          (after == null || after.status != 'pending' || after.providerId != providerId);
+      }
+
+      allow read: if ownsBookingInbox(providerId);
+      allow create, update: if isAuthenticated() && canPublish();
+      allow delete: if isAuthenticated() && canRemove();
+    }
+
+    match /providers/{providerId}/declinedBookingRequests/{bookingId} {
+      function bookingPath() {
+        return /databases/$(database)/documents/bookings/$(bookingId);
+      }
+
+      function canArchive() {
+        let before = get(bookingPath()).data;
+        let after = getAfter(bookingPath()).data;
+        return after != null && after.providerId == providerId &&
+          after.status == 'declined' && request.resource.data == bookingPreview(after) &&
+          (isAdmin() || (ownsBookingInbox(providerId) && before != null &&
+            before.providerId == providerId && before.status == 'pending'));
+      }
+
+      function noLongerDeclinedHere() {
+        let after = getAfter(bookingPath()).data;
+        return after == null || after.status != 'declined' || after.providerId != providerId;
+      }
+
+      allow read: if ownsBookingInbox(providerId);
+      allow create, update: if isAuthenticated() && canArchive();
+      allow delete: if isAdmin() && noLongerDeclinedHere();
+    }
+
     match /bookings/{bookingId} {
-      // Read: Customer, target provider, assigned technician, or platform admin
+      function validConfirmation(before, after, changed) {
+        return !after.keys().hasAny(['technicianId', 'technicianName']) &&
+          changed.hasOnly(['status', 'updatedAt', 'technicianId', 'technicianName',
+            'confirmedAppointmentAt', 'confirmedAt', 'confirmedBy']) &&
+          after.get('confirmedAppointmentAt', null) != null &&
+          after.confirmedAppointmentAt == before.get('appointmentDate', null) &&
+          after.get('confirmedAt', null) == request.time &&
+          after.get('confirmedBy', '') == request.auth.uid;
+      }
+
+      function canDecideRequest(before, after, changed) {
+        return before.status == 'pending' && ownsBookingInbox(before.providerId) &&
+          ((after.status == 'confirmed' && validConfirmation(before, after, changed)) ||
+           (after.status == 'declined' && changed.hasOnly(['status', 'updatedAt', 'declinedReason'])));
+      }
+
+      function canAssignTechnician(before, after, changed) {
+        let provider = get(/databases/$(database)/documents/users/$(before.providerId)).data;
+        return before.status == 'confirmed' && after.status == 'assigned' &&
+          ownsBookingInbox(before.providerId) && provider.role == 'company' &&
+          changed.hasOnly(['status', 'updatedAt', 'technicianId', 'technicianName']) &&
+          ('technicianId' in after) && isCompanyBookingTechnician(after.technicianId, before.providerId);
+      }
+
+      function canProgressAcceptedBooking(before, after, changed) {
+        return (before.status == 'assigned' && after.status == 'confirmed' &&
+                ownsBookingInbox(before.providerId) && validConfirmation(before, after, changed)) ||
+           (changed.hasOnly(['status', 'updatedAt']) &&
+            (ownsBookingInbox(before.providerId) || isAssignedBookingTechnician(before)) &&
+             ((before.status in ['confirmed', 'assigned'] && after.status == 'in_progress') ||
+               (before.status == 'in_progress' && after.status == 'completed')));
+      }
+
+      function canCustomerUpdateBooking(before, after, changed) {
+        return isOwner(before.customerId) &&
+          ((before.status == 'pending' && after.status == 'pending' &&
+            !changed.hasAny(['technicianId', 'technicianName',
+              'confirmedAppointmentAt', 'confirmedAt', 'confirmedBy', 'declinedReason'])) ||
+           (before.status in ['pending', 'confirmed', 'assigned'] && after.status == 'cancelled' &&
+            changed.hasOnly(['status', 'updatedAt', 'cancelledAt', 'cancelledBy', 'cancellationReason'])));
+      }
+
+      function canUpdateBooking(before, after) {
+        let changed = after.diff(before).affectedKeys();
+        return canCustomerUpdateBooking(before, after, changed) ||
+          canDecideRequest(before, after, changed) ||
+          canAssignTechnician(before, after, changed) ||
+          canProgressAcceptedBooking(before, after, changed);
+      }
+
+      // Providers and technicians can read private details after acceptance.
       allow read: if isAuthenticated() &&
                      (
                        resource.data.customerId == request.auth.uid ||
-                       resource.data.providerId == request.auth.uid ||
-                       ('technicianId' in resource.data && resource.data.technicianId == request.auth.uid) ||
+                       (resource.data.status in ['confirmed', 'assigned', 'in_progress', 'completed'] &&
+                         (ownsBookingInbox(resource.data.providerId) || isAssignedBookingTechnician(resource.data))) ||
                        isAdmin()
                      );
 
@@ -401,10 +799,13 @@ service cloud.firestore {
       allow create: if isAuthenticated() &&
                        isValidBooking(request.resource.data) &&
                        (!('id' in request.resource.data) || request.resource.data.id == bookingId) &&
+                       previewsMatchBooking(bookingId, request.resource.data) &&
                        (
                          (
                            request.resource.data.customerId == request.auth.uid &&
-                           request.resource.data.status == 'pending'
+                           request.resource.data.status == 'pending' &&
+                           !request.resource.data.keys().hasAny(['technicianId', 'technicianName',
+                             'confirmedAppointmentAt', 'confirmedAt', 'confirmedBy', 'declinedReason'])
                          ) ||
                          isAdmin()
                        );
@@ -413,40 +814,141 @@ service cloud.firestore {
       // Enforces booking state machine integrity, customer cancellation rules, and immutability.
       allow update: if isAuthenticated() &&
                        isValidBooking(request.resource.data) &&
+                       previewsMatchBooking(bookingId, request.resource.data) &&
+                       (request.resource.data.providerId == resource.data.providerId ||
+                         noProviderPreviews(resource.data.providerId, bookingId)) &&
+                       (
+                         isAdmin() ||
+                         (areImmutableFieldsUnchanged(['customerId', 'providerId', 'createdAt']) &&
+                           canUpdateBooking(resource.data, request.resource.data))
+                       );
+
+      // Delete: Platform admin only
+      allow delete: if isAdmin() && noProviderPreviews(resource.data.providerId, bookingId);
+    }
+
+    // ===============================================================
+    // Collection 5: /offerings/{offeringId}
+    // Supporting US OFFER-2 (SCRUM-77 / SCRUM-118)
+    // ===============================================================
+
+    match /offerings/{offeringId} {
+      function isOfferingPublisher(providerId) {
+        return isAdmin() || (
+          isOfferingOwner(providerId) &&
+          // Provider profile must exist and have status == 'active'
+          exists(/databases/$(database)/documents/providers/$(providerId)) &&
+          get(/databases/$(database)/documents/providers/$(providerId)).data.status == 'active' &&
+          // Requesting user must have a provider or company role (or admin)
+          (
+            !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['independent_provider', 'company', 'admin']
+          )
+        );
+      }
+
+      function isFixedOfferingPublisher(data) {
+        let providerId = data.providerId;
+        let profile = get(/databases/$(database)/documents/providers/$(providerId)).data;
+        let account = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+        let storedType = profile.get('type', profile.get('providerType', 'independent'));
+        let profileType = storedType == 'independent_provider' ? 'independent' : storedType;
+        return profile.status == 'active' && profile.get('isVerified', true) == true &&
+          account.status != 'suspended' &&
+          (isOwner(providerId) ||
+            (request.auth.token.get('email_verified', false) == true &&
+              profile.get('email', '') != '' &&
+              profile.email == request.auth.token.get('email', ''))) &&
+          data.get('providerType', profileType) == profileType &&
+          ((profileType == 'independent' && account.role == 'independent_provider') ||
+            (profileType == 'company' && account.role == 'company' &&
+              account.get('companyId', providerId) == providerId));
+      }
+
+      function isValidFixedOffering(data) {
+        let price = data.price;
+        let cents = price * 100.0;
+        let categoryId = data.categoryId;
+        return price > 0 && cents - cents == 0 &&
+          int(cents + 0.5) / 100.0 == price &&
+          data.title.size() >= 3 && data.title.matches('(?s).*\\S.*') &&
+          data.description.size() >= 10 && data.description.matches('(?s).*\\S.*') &&
+          get(/databases/$(database)/documents/categories/$(categoryId)).data.isActive == true;
+      }
+
+      // Read: Active offerings are public; owners can read their own regardless of status; admins can read all
+      allow read: if resource.data.isActive == true ||
+                     isOfferingOwner(resource.data.providerId) ||
+                     isAdmin();
+
+      allow create: if isAuthenticated() &&
+                       isValidOffering(request.resource.data) &&
+                       request.resource.data.id == offeringId &&
+                       (request.resource.data.pricingMode == 'fixed'
+                         ? isFixedOfferingPublisher(request.resource.data) &&
+                           isValidFixedOffering(request.resource.data)
+                         : isOfferingPublisher(request.resource.data.providerId));
+
+      // Update: Provider (owner) or platform admin. Enforces immutable fields.
+      allow update: if isAuthenticated() &&
+                       isValidOffering(request.resource.data) &&
+                       areImmutableFieldsUnchanged(['id', 'providerId', 'createdAt']) &&
+                       (request.resource.data.pricingMode == 'fixed'
+                         ? isFixedOfferingPublisher(request.resource.data) &&
+                           isValidFixedOffering(request.resource.data)
+                         : resource.data.pricingMode == 'fixed'
+                           ? isFixedOfferingPublisher(resource.data)
+                           : isOfferingPublisher(resource.data.providerId));
+
+      // Delete: Provider (owner) or platform admin
+      allow delete: if (isOfferingOwner(resource.data.providerId) || isAdmin());
+    }
+
+    // ===============================================================
+    // Collection 6: /quoteRequests/{quoteId}
+    // Supporting US QUOTE-1 (SCRUM-83)
+    // ===============================================================
+
+    match /quoteRequests/{quoteId} {
+      // Read: Requesting homeowner, owning provider inbox, or platform admin
+      allow read: if isAuthenticated() &&
+                     (
+                       resource.data.customerId == request.auth.uid ||
+                       ownsBookingInbox(resource.data.providerId) ||
+                       isAdmin()
+                     );
+
+      // Create: Authenticated homeowner (or platform admin) requesting a quote
+      // for an active quote-required offering owned by an active provider.
+      allow create: if isAuthenticated() &&
+                       isValidQuoteRequest(request.resource.data) &&
+                       request.resource.data.id == quoteId &&
                        (
                          isAdmin() ||
                          (
-                           areImmutableFieldsUnchanged(['customerId', 'providerId', 'createdAt']) &&
+                           request.resource.data.customerId == request.auth.uid &&
+                           request.resource.data.status == 'requested' &&
+                           (!('quotedPrice' in request.resource.data) || request.resource.data.quotedPrice == null) &&
                            (
-                             // Customer: allowed to cancel pending/confirmed/assigned bookings, or edit while pending
+                             !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
                              (
-                               resource.data.customerId == request.auth.uid &&
-                               (
-                                 (
-                                   request.resource.data.status == 'cancelled' &&
-                                   resource.data.status in ['pending', 'confirmed', 'assigned']
-                                 ) ||
-                                 (
-                                   resource.data.status == 'pending' &&
-                                   request.resource.data.status == 'pending'
-                                 )
-                               )
-                             ) ||
-                             // Provider or assigned technician: progress status transitions
-                             // US-14 (SCRUM-45) AC: Cancelled bookings cannot be accepted, assigned, or started afterward.
-                             (
-                               (
-                                 resource.data.providerId == request.auth.uid ||
-                                 ('technicianId' in resource.data && resource.data.technicianId == request.auth.uid)
-                               ) &&
-                               !(resource.data.status in ['cancelled', 'completed', 'declined']) &&
-                               request.resource.data.status in [
-                                 'pending', 'confirmed', 'assigned', 'in_progress', 'completed', 'declined'
-                               ]
+                               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'homeowner' &&
+                               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status != 'suspended'
                              )
-                           )
+                           ) &&
+                           exists(/databases/$(database)/documents/providers/$(request.resource.data.providerId)) &&
+                           get(/databases/$(database)/documents/providers/$(request.resource.data.providerId)).data.status == 'active' &&
+                           exists(/databases/$(database)/documents/offerings/$(request.resource.data.offeringId)) &&
+                           get(/databases/$(database)/documents/offerings/$(request.resource.data.offeringId)).data.providerId == request.resource.data.providerId &&
+                           get(/databases/$(database)/documents/offerings/$(request.resource.data.offeringId)).data.isActive == true &&
+                           get(/databases/$(database)/documents/offerings/$(request.resource.data.offeringId)).data.pricingMode in ['quote_required', 'quoteRequired']
                          )
                        );
+
+      // Update: Platform admin only, preserving immutable identity and origin fields
+      allow update: if isAdmin() &&
+                       isValidQuoteRequest(request.resource.data) &&
+                       areImmutableFieldsUnchanged(['id', 'customerId', 'providerId', 'offeringId', 'createdAt']);
 
       // Delete: Platform admin only
       allow delete: if isAdmin();

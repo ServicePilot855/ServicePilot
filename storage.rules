@@ -11,8 +11,8 @@ rules_version = '2';
 //   - Write: only the customer whose UID is in the path. The booking
 //     document does not exist yet while photos upload, so the path is
 //     the only thing to check against.
-//   - Read: that customer, the provider the booking was sent to, the
-//     technician assigned to it, or an admin. Checked against the
+//   - Read: that customer or an admin, or the provider and assigned
+//     technician after acceptance. Checked against the
 //     Firestore booking (cross-service rules; the first deploy asks to
 //     grant Storage access to Firestore).
 //   - Files are never changed or deleted from the app.
@@ -30,11 +30,30 @@ service firebase.storage {
       return firestore.get(/databases/(default)/documents/bookings/$(bookingId)).data;
     }
 
+    function isBookingParticipant(job) {
+      let uid = request.auth.uid;
+      let account = firestore.get(/databases/(default)/documents/users/$(uid)).data;
+      return account != null && account.get('status', '') != 'suspended' &&
+        ((job.providerId == uid && (account.role == 'independent_provider' ||
+          (account.role == 'company' && account.get('companyId', uid) == uid))) ||
+         (job.get('technicianId', '') == uid &&
+          account.role in ['company_technician', 'companyTechnician'] &&
+          account.get('companyId', '') == job.providerId));
+    }
+
+    function canSeeJobPhoto(customerId, bookingId) {
+      let job = booking(bookingId);
+      return job != null && job.customerId == customerId &&
+        job.status in ['confirmed', 'assigned', 'in_progress', 'completed'] &&
+        isBookingParticipant(job);
+    }
+
     // Admin custom claims only (set with the Admin SDK). Unlike
     // firestore.rules, an email address containing "admin" is not enough.
     function isAdmin() {
       return isSignedIn() &&
-        (request.auth.token.admin == true || request.auth.token.role == 'admin');
+        (request.auth.token.get('admin', false) == true ||
+          request.auth.token.get('role', '') == 'admin');
     }
 
     match /bookings/{customerId}/{bookingId}/{fileName} {
@@ -46,9 +65,8 @@ service firebase.storage {
       allow read: if isSignedIn() &&
                      (
                        request.auth.uid == customerId ||
-                       booking(bookingId).providerId == request.auth.uid ||
-                       booking(bookingId).get('technicianId', '') == request.auth.uid ||
-                       isAdmin()
+                       isAdmin() ||
+                       canSeeJobPhoto(customerId, bookingId)
                      );
 
       allow update, delete: if false;

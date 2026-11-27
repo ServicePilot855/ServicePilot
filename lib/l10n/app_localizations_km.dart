@@ -397,13 +397,13 @@ class AppLocalizationsKm extends AppLocalizations {
   String get registerCompanyOwnerNameRequired => 'Owner full name is required';
 
   @override
-  String get registerCompanyNameLabel => 'Company Name';
+  String get registerCompanyNameLabel => 'ឈ្មោះក្រុមហ៊ុន';
 
   @override
-  String get registerCompanyNameHint => 'CoolAir Service Co.';
+  String get registerCompanyNameHint => 'ក្រុមហ៊ុនសេវាជួសជុល CoolAir';
 
   @override
-  String get registerCompanyNameRequired => 'Company name is required';
+  String get registerCompanyNameRequired => 'សូមបញ្ចូលឈ្មោះក្រុមហ៊ុន។';
 
   @override
   String get registerCompanyNameTooLong => 'Must be 150 characters or fewer';
@@ -722,6 +722,10 @@ class AppLocalizationsKm extends AppLocalizations {
       'For example: the bedroom AC blows warm air and drips water';
 
   @override
+  String get bookingProblemPrivacyHelper =>
+      'អ្នកផ្តល់សេវាអាចអានព័ត៌មាននេះមុនពេលទទួលយកសំណើ។ សូមកុំបញ្ចូលអាសយដ្ឋាន និងលេខទូរសព្ទរបស់អ្នក។';
+
+  @override
   String get bookingAddressLabel => 'Repair address';
 
   @override
@@ -917,7 +921,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get bookingSummaryService => 'Service';
 
   @override
-  String get bookingSummaryWhen => 'Date and time';
+  String get bookingSummaryWhen => 'កាលបរិច្ឆេទ និងម៉ោង';
 
   @override
   String get bookingSummaryAddress => 'Address';
@@ -927,6 +931,168 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get bookingSentBackHome => 'Back to home';
+
+  @override
+  String get bookingInboxTitle => 'សំណើកក់ចូល';
+
+  @override
+  String get bookingInboxDetailTitle => 'សំណើកក់សេវា';
+
+  @override
+  String get bookingInboxEmpty => 'អ្នកមិនមានសំណើកក់ដែលកំពុងរង់ចាំទេ។';
+
+  @override
+  String get bookingInboxUnavailable => 'សំណើកក់នេះមិនអាចបើកបានទេ។';
+
+  @override
+  String get bookingInboxPending => 'កំពុងរង់ចាំ';
+
+  @override
+  String get bookingInboxJobDetails => 'ព័ត៌មានលម្អិតអំពីការងារ';
+
+  @override
+  String get bookingInboxDateUnavailable => 'មិនមានព័ត៌មានអំពីម៉ោងណាត់ជួប';
+
+  @override
+  String get bookingInboxLoading => 'កំពុងផ្ទុកសំណើកក់';
+
+  @override
+  String get bookingInboxError =>
+      'មិនអាចផ្ទុកសំណើកក់បានទេ។ សូមពិនិត្យការភ្ជាប់អ៊ីនធឺណិត ហើយព្យាយាមម្តងទៀត។';
+
+  @override
+  String get bookingInboxRetry => 'ព្យាយាមម្តងទៀត';
+
+  @override
+  String get offeringCreateTitle => 'បន្ថែមសេវាកម្ម';
+
+  @override
+  String get offeringHeaderTitle => 'សេវាកម្មថ្មី';
+
+  @override
+  String get offeringCreateSubtitle =>
+      'ផ្សព្វផ្សាយសេវាកម្មថ្មីជាមួយតម្លៃកំណត់ ឬតម្លៃស្នើសុំសម្រង់តម្លៃ។';
+
+  @override
+  String get offeringCategoryLabel => 'ប្រភេទសេវាកម្ម';
+
+  @override
+  String get offeringCategoryHint => 'ជ្រើសរើសប្រភេទ';
+
+  @override
+  String get offeringCategoryRequired => 'សូមជ្រើសរើសប្រភេទសេវាកម្ម។';
+
+  @override
+  String get offeringCategoriesEmpty => 'មិនមានប្រភេទសេវាកម្មសកម្មទេ។';
+
+  @override
+  String get offeringCategoriesError =>
+      'មិនអាចផ្ទុកប្រភេទសេវាកម្មបានទេ។ សូមត្រឡប់ក្រោយ ហើយបើកទម្រង់ម្ដងទៀត។';
+
+  @override
+  String get offeringTitleLabel => 'ឈ្មោះសេវាកម្ម';
+
+  @override
+  String get offeringTitleHint => 'ឧ. ការផ្លាស់ប្តូរផ្ទាំងសៀគ្វីម៉ាស៊ីនត្រជាក់';
+
+  @override
+  String get offeringTitleRequired => 'សូមបញ្ចូលឈ្មោះសេវាកម្ម។';
+
+  @override
+  String get offeringTitleMinLength => 'ឈ្មោះត្រូវមានយ៉ាងតិច ៣ តួអក្សរ។';
+
+  @override
+  String get offeringDescLabel => 'ការពិពណ៌នា';
+
+  @override
+  String get offeringDescHint => 'ពន្យល់ពីទំហំការងារ ឬការធ្វើរោគវិនិច្ឆ័យ...';
+
+  @override
+  String get offeringDescRequired => 'សូមបញ្ចូលការពិពណ៌នា។';
+
+  @override
+  String get offeringDescMinLength => 'ការពិពណ៌នាត្រូវមានយ៉ាងតិច ១០ តួអក្សរ។';
+
+  @override
+  String get offeringPricingModeLabel => 'ទម្រង់កំណត់តម្លៃ';
+
+  @override
+  String get offeringModeQuote => 'ត្រូវការសម្រង់តម្លៃផ្ទាល់ខ្លួន';
+
+  @override
+  String get offeringModeQuoteDesc =>
+      'មិនដាក់ក្នុងកន្ត្រកផ្ទាល់ឡើយ។ អតិថិជនដាក់សំណើដើម្បីទទួលបានការប៉ាន់ស្មានតម្លៃ។';
+
+  @override
+  String get offeringNoticeQuoteMode =>
+      'ទម្រង់សម្រង់តម្លៃសកម្ម៖ ការទិញក្នុងតម្លៃថេរត្រូវបានបិទ។ អតិថិជននឹងត្រូវស្នើសុំផ្ញើព័ត៌មានលម្អិត និងរូបថតសម្រាប់ការវាយតម្លៃ។';
+
+  @override
+  String get offeringBadgeQuoteRequired => 'ត្រូវការសម្រង់តម្លៃ';
+
+  @override
+  String get offeringCtaRequestQuote => 'ស្នើសុំសម្រង់តម្លៃ';
+
+  @override
+  String get offeringCtaBookService => 'កក់សេវាកម្ម';
+
+  @override
+  String get offeringNoticeQuoteRequiredBooking =>
+      'អ្នកកំពុងស្នើសុំសម្រង់តម្លៃផ្ទាល់ខ្លួនសម្រាប់សេវាកម្មនេះ។ អ្នកនឹងមិនត្រូវបានគិតប្រាក់ជាមុនទេ។ អ្នកផ្តល់សេវានឹងពិនិត្យមើលការងារ និងផ្តល់ការប៉ាន់ស្មានតម្លៃជាផ្លូវការមុនពេលចាប់ផ្តើម។';
+
+  @override
+  String get offeringModeFixed => 'តម្លៃកំណត់ថេរ';
+
+  @override
+  String get offeringModeFixedDesc => 'តម្លៃថេរជាក់លាក់ជាមុន។';
+
+  @override
+  String get offeringPriceLabel => 'តម្លៃគោល (\$)';
+
+  @override
+  String get offeringPriceRequired => 'សូមបញ្ចូលតម្លៃគោលត្រឹមត្រូវ។';
+
+  @override
+  String get offeringPricePositive =>
+      'សូមបញ្ចូលតម្លៃធំជាងសូន្យ និងមានខ្ទង់ទសភាគយ៉ាងច្រើនពីរខ្ទង់។';
+
+  @override
+  String get offeringUnitLabel => 'ខ្នាតតម្លៃ (ជម្រើស)';
+
+  @override
+  String get offeringUnitHint => 'ឧ. ការងារ, ម៉ោង, គ្រឿង';
+
+  @override
+  String get offeringCreateButton => 'ផ្សព្វផ្សាយសេវាកម្ម';
+
+  @override
+  String get offeringSuccessSnackbar => 'សេវាកម្មត្រូវបានផ្សព្វផ្សាយដោយជោគជ័យ!';
+
+  @override
+  String get offeringPublishError =>
+      'មិនអាចផ្សព្វផ្សាយសេវាកម្មបានទេ។ សូមពិនិត្យការតភ្ជាប់ និងសិទ្ធិគណនីអ្នកផ្តល់សេវា រួចព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get offeringUnauthorized =>
+      'មានតែគណនីអ្នកផ្តល់សេវា និងក្រុមហ៊ុនប៉ុណ្ណោះដែលអាចផ្សព្វផ្សាយសេវាកម្មបាន។';
+
+  @override
+  String get offeringActiveRequired =>
+      'គណនីអ្នកផ្តល់សេវាត្រូវតែសកម្មដើម្បីផ្សព្វផ្សាយសេវាកម្ម។';
+
+  @override
+  String get offeringDashboardTitle => 'សេវាកម្មរបស់ខ្ញុំ';
+
+  @override
+  String get offeringAddButton => 'បន្ថែមសេវាកម្ម';
+
+  @override
+  String get offeringEmptyNotice =>
+      'អ្នកមិនទាន់បានផ្សព្វផ្សាយសេវាកម្មណាមួយនៅឡើយទេ។ ចុច \"+ បន្ថែមសេវាកម្ម\" ដើម្បីបន្ថែម។';
+
+  @override
+  String get offeringLoadError =>
+      'មិនអាចផ្ទុកសេវាកម្មបាននៅពេលនេះទេ។ សូមពិនិត្យការតភ្ជាប់អ៊ីនធឺណិត ហើយព្យាយាមម្តងទៀត។';
 
   @override
   String get adminDashboardTitle => 'ការគ្រប់គ្រងប្រព័ន្ធ';
@@ -984,4 +1150,429 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get adminViewCustomerProfileButton => 'មើលទម្រង់សម្រាប់អតិថិជន';
+
+  @override
+  String get companyProfileEdit => 'កែព័ត៌មានក្រុមហ៊ុន';
+
+  @override
+  String get companyProfileDescription => 'ការពិពណ៌នា (ស្រេចចិត្ត)';
+
+  @override
+  String get companyProfileDescriptionHint =>
+      'ជួសជុលប្រព័ន្ធទឹក និងអគ្គិសនីតាមផ្ទះ';
+
+  @override
+  String get companyProfileAreaHint => 'សែនសុខ ទួលគោក';
+
+  @override
+  String get companyProfileAreaRequired => 'សូមបញ្ចូលតំបន់ផ្តល់សេវា។';
+
+  @override
+  String get companyProfileContacts => 'តំណទំនាក់ទំនង';
+
+  @override
+  String get companyProfileOptionalContacts => 'តំណទំនាក់ទំនង (ស្រេចចិត្ត)';
+
+  @override
+  String get companyProfileTelegram => 'Telegram';
+
+  @override
+  String get companyProfileTelegramExample => 'https://t.me/coolair';
+
+  @override
+  String get companyProfileMessenger => 'Messenger';
+
+  @override
+  String get companyProfileMessengerExample => 'https://m.me/coolair';
+
+  @override
+  String companyProfileInvalidLink(String example) {
+    return 'សូមបញ្ចូលតំណដូចជា $example។';
+  }
+
+  @override
+  String companyProfileLengthError(int limit) {
+    return 'សូមប្រើអក្សរមិនលើសពី $limit តួ។';
+  }
+
+  @override
+  String get companyProfileUnavailable =>
+      'គណនីនេះមិនមានព័ត៌មានក្រុមហ៊ុនដែលអាចកែបានទេ។';
+
+  @override
+  String get companyProfileLoading => 'កំពុងផ្ទុកព័ត៌មានក្រុមហ៊ុន';
+
+  @override
+  String get companyProfileLoadError =>
+      'មិនអាចផ្ទុកព័ត៌មានក្រុមហ៊ុនរបស់អ្នកបានទេ។';
+
+  @override
+  String get companyProfileSaveError =>
+      'មិនអាចរក្សាទុកការកែប្រែបានទេ។ សូមព្យាយាមម្តងទៀត។';
+
+  @override
+  String get companyProfileSave => 'រក្សាទុកការកែប្រែ';
+
+  @override
+  String get companyProfileSaved => 'បានរក្សាទុកព័ត៌មានក្រុមហ៊ុនហើយ។';
+
+  @override
+  String get technicianProfileEdit => 'កែព័ត៌មានជាងជួសជុល';
+
+  @override
+  String get technicianProfileName => 'ឈ្មោះពេញ';
+
+  @override
+  String get technicianProfileNameHint => 'វីរៈ ចាន់';
+
+  @override
+  String get technicianProfileNameRequired => 'សូមបញ្ចូលឈ្មោះពេញរបស់អ្នក។';
+
+  @override
+  String get technicianProfileDescription => 'ប្រវត្តិរូបសង្ខេប (ស្រេចចិត្ត)';
+
+  @override
+  String get technicianProfileDescriptionHint =>
+      'ជាងម៉ាស៊ីនត្រជាក់ជំនាញដែលមានបទពិសោធន៍ជាង ៧ ឆ្នាំ';
+
+  @override
+  String get technicianProfileAreaHint => 'សែនសុខ ទួលគោក';
+
+  @override
+  String get technicianProfileAreaRequired => 'សូមបញ្ចូលតំបន់ផ្តល់សេវា។';
+
+  @override
+  String get technicianProfileContacts => 'តំណទំនាក់ទំនង';
+
+  @override
+  String get technicianProfileOptionalContacts => 'តំណទំនាក់ទំនង (ស្រេចចិត្ត)';
+
+  @override
+  String get technicianProfileTelegram => 'Telegram';
+
+  @override
+  String get technicianProfileTelegramExample => 'https://t.me/virakchan';
+
+  @override
+  String get technicianProfileMessenger => 'Messenger';
+
+  @override
+  String get technicianProfileMessengerExample => 'https://m.me/virakchan';
+
+  @override
+  String technicianProfileInvalidLink(String example) {
+    return 'សូមបញ្ចូលតំណដូចជា $example។';
+  }
+
+  @override
+  String technicianProfileLengthError(int limit) {
+    return 'សូមប្រើអក្សរមិនលើសពី $limit តួ។';
+  }
+
+  @override
+  String get technicianProfileUnavailable =>
+      'គណនីនេះមិនមានព័ត៌មានជាងដែលអាចកែបានទេ។';
+
+  @override
+  String get technicianProfileLoading => 'កំពុងផ្ទុកព័ត៌មានជាងជួសជុល';
+
+  @override
+  String get technicianProfileLoadError =>
+      'មិនអាចផ្ទុកព័ត៌មានជាងជួសជុលរបស់អ្នកបានទេ។';
+
+  @override
+  String get technicianProfileSaveError =>
+      'មិនអាចរក្សាទុកការកែប្រែបានទេ។ សូមព្យាយាមម្តងទៀត។';
+
+  @override
+  String get technicianProfileSave => 'រក្សាទុកការកែប្រែ';
+
+  @override
+  String get technicianProfileSaved => 'បានរក្សាទុកព័ត៌មានជាងជួសជុលហើយ។';
+
+  @override
+  String get providerOfferingsSection => 'សេវាកម្ម និងការផ្តល់ជូនដែលមាន';
+
+  @override
+  String get bookingConfirmedAppointmentLabel => 'ពេលវេលាណាត់ជួបដែលបានបញ្ជាក់';
+
+  @override
+  String get bookingPreferredAppointmentLabel =>
+      'កាលបរិច្ឆេទ និងពេលវេលាដែលចង់បាន';
+
+  @override
+  String get providerBookingsTitle => 'ការកក់ដែលបានទទួលយក';
+
+  @override
+  String get providerBookingsEmpty => 'អ្នកមិនទាន់មានការកក់ដែលបានទទួលយកទេ។';
+
+  @override
+  String get providerBookingsLoadError =>
+      'មិនអាចផ្ទុកសំណើកក់បានទេ។ សូមព្យាយាមម្តងទៀត។';
+
+  @override
+  String get providerBookingDetailTitle => 'ព័ត៌មានសំណើកក់';
+
+  @override
+  String get providerBookingConfirmButton => 'បញ្ជាក់ការណាត់ជួប';
+
+  @override
+  String get providerBookingConfirmSuccess =>
+      'បានបញ្ជាក់ការណាត់ជួប! អតិថិជនអាចមើលឃើញពេលវេលាដែលបានបញ្ជាក់ហើយ។';
+
+  @override
+  String get providerBookingNotAuthorized =>
+      'អ្នកមិនមានសិទ្ធិបញ្ជាក់ការកក់នេះទេ។';
+
+  @override
+  String get providerBookingIneligible =>
+      'ការកក់នេះមិនអាចបញ្ជាក់បានក្នុងស្ថានភាពបច្ចុប្បន្នទេ។';
+
+  @override
+  String get providerBookingReviewAction => 'ពិនិត្យ';
+
+  @override
+  String get providerBookingDeclineButton => 'បដិសេធសំណើ';
+
+  @override
+  String get providerBookingDeclineDialogTitle =>
+      'តើអ្នកចង់បដិសេធសំណើនេះមែនទេ?';
+
+  @override
+  String get providerBookingDeclineDialogBody =>
+      'អតិថិជននឹងឃើញសំណើនេះជា «បានបដិសេធ»។ បន្ទាប់ពីនេះ អ្នកនឹងមិនអាចបញ្ជាក់វាទៀតទេ។';
+
+  @override
+  String get providerBookingDeclineReasonLabel => 'មូលហេតុនៃការបដិសេធ';
+
+  @override
+  String get providerBookingDeclineReasonHint =>
+      'ឧទាហរណ៍ ៖ នៅក្រៅតំបន់សេវាកម្មរបស់យើងនៅថ្ងៃនោះ';
+
+  @override
+  String get providerBookingDeclineReasonRequired =>
+      'សូមបញ្ចូលមូលហេតុខ្លីៗ ដើម្បីឱ្យអតិថិជនអាចរៀបចំការងារផ្សេង។';
+
+  @override
+  String get providerBookingDeclineReasonTooLong =>
+      'សូមរក្សាមូលហេតុឱ្យក្រោម ៣០០ តួអក្សរ។';
+
+  @override
+  String get providerBookingDeclineKeep => 'រក្សាសំណើ';
+
+  @override
+  String get providerBookingDeclineConfirm => 'បញ្ជាក់ការបដិសេធ';
+
+  @override
+  String get providerBookingDeclineSuccess =>
+      'បានបដិសេធសំណើ។ អតិថិជនអាចឃើញការកក់នេះជា «បានបដិសេធ» នៅក្នុងប្រវត្តិរបស់ពួកគេ។';
+
+  @override
+  String get providerBookingDeclinedNotice =>
+      'អ្នកបានបដិសេធសំណើនេះ។ អតិថិជនអាចឃើញស្ថានភាព «បានបដិសេធ» នៅក្នុងប្រវត្តិការកក់របស់ពួកគេ។';
+
+  @override
+  String get providerDeclinedRequestsTitle => 'សំណើដែលបានបដិសេធ';
+
+  @override
+  String get providerDeclinedRequestsEmpty => 'អ្នកមិនមានសំណើដែលបានបដិសេធទេ។';
+
+  @override
+  String get providerBookingDeclineIneligible => 'សំណើនេះមិនអាចបដិសេធបានទៀតទេ។';
+
+  @override
+  String get providerBookingDeclineNotAuthorized =>
+      'អ្នកមិនមានសិទ្ធិបដិសេធសំណើនេះទេ។';
+
+  @override
+  String get cartAddButton => 'បន្ថែមទៅកន្ត្រក';
+
+  @override
+  String cartAddedSnackbar(String serviceTitle) {
+    return 'បានបន្ថែម $serviceTitle ទៅក្នុងកន្ត្រក។';
+  }
+
+  @override
+  String cartErrorDifferentProvider(String providerName) {
+    return 'កន្ត្រករបស់អ្នកមានសេវាកម្មពី $providerName រួចហើយ។ សូមសម្អាតកន្ត្រកមុនពេលបន្ថែមពីអ្នកផ្តល់សេវាផ្សេង។';
+  }
+
+  @override
+  String get cartErrorDifferentProviderGeneric =>
+      'កន្ត្រករបស់អ្នកមានសេវាកម្មពីអ្នកផ្តល់សេវាផ្សេងរួចហើយ។ សូមសម្អាតកន្ត្រកមុនពេលបន្ថែមសេវាកម្មនេះ។';
+
+  @override
+  String get cartErrorQuoteRequired =>
+      'សេវាកម្មដែលត្រូវការសម្រង់តម្លៃមិនអាចបន្ថែមទៅក្នុងកន្ត្រកបានទេ។ សូមប្រើ ស្នើសុំសម្រង់តម្លៃ ជំនួសវិញ។';
+
+  @override
+  String get cartErrorUnavailable =>
+      'សេវាកម្មនេះមិនអាចប្រើបាននាពេលបច្ចុប្បន្នទេ ហើយមិនអាចបន្ថែមទៅក្នុងកន្ត្រកបានទេ។';
+
+  @override
+  String cartBadgeLabel(int count) {
+    return 'កន្ត្រក ($count)';
+  }
+
+  @override
+  String cartActiveProviderNotice(int count, String providerName) {
+    return 'កន្ត្រកមានសេវាកម្មចំនួន $count ពី $providerName។';
+  }
+
+  @override
+  String get cartTitle => 'កន្ត្រក';
+
+  @override
+  String get cartHeading => 'ពិនិត្យកន្ត្រករបស់អ្នក';
+
+  @override
+  String cartItemCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'សេវាកម្មចំនួន $count',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cartProviderLabel => 'អ្នកផ្តល់សេវា';
+
+  @override
+  String get cartProviderUnknown => 'មិនមានឈ្មោះអ្នកផ្តល់សេវា';
+
+  @override
+  String cartItemQuantityPrice(int quantity, String price) {
+    return '$quantity × $price';
+  }
+
+  @override
+  String cartRemoveItem(String serviceTitle) {
+    return 'ដក $serviceTitle ចេញ';
+  }
+
+  @override
+  String get cartTotalLabel => 'សរុប';
+
+  @override
+  String cartTotalSemantics(String price) {
+    return 'សរុប $price';
+  }
+
+  @override
+  String get cartPaymentNote =>
+      'តម្លៃទាំងនេះជាតម្លៃថេររបស់អ្នកផ្តល់សេវា។ កម្មវិធីមិនយកការទូទាត់ទេ អ្នកបង់ប្រាក់ដោយផ្ទាល់ទៅអ្នកផ្តល់សេវាបន្ទាប់ពីការងាររួចរាល់។';
+
+  @override
+  String get cartEmptyTitle => 'កន្ត្រករបស់អ្នកទទេ';
+
+  @override
+  String get cartEmptyBody =>
+      'បន្ថែមសេវាកម្មតម្លៃថេរពីទំព័រអ្នកផ្តល់សេវា ហើយវានឹងបង្ហាញនៅទីនេះ។';
+
+  @override
+  String get cartBrowseServices => 'រកមើលសេវាកម្ម';
+
+  @override
+  String cartOpenSemantics(int count) {
+    return 'បើកកន្ត្រក សេវាកម្មចំនួន $count';
+  }
+
+  @override
+  String get quoteFormTitle => 'ស្នើសុំសម្រង់តម្លៃ';
+
+  @override
+  String get quoteFormHeading => 'ពិពណ៌នាអំពីការងារ';
+
+  @override
+  String quoteFormSubtitle(String provider) {
+    return '$provider នឹងពិនិត្យមើលព័ត៌មានលម្អិត និងរូបថតរបស់អ្នក រួចផ្ញើសម្រង់តម្លៃមកវិញ។';
+  }
+
+  @override
+  String get quoteSelectedOfferingLabel => 'សេវាកម្មដែលបានជ្រើស';
+
+  @override
+  String get quoteDescriptionHint =>
+      'ឧទាហរណ៍៖ បន្ទះម៉ាស៊ីនត្រជាក់ខាងក្រៅលោតកូដ E5 បន្ទាប់ពីដាច់ភ្លើង';
+
+  @override
+  String get quoteRequestFooterNote =>
+      'សំណើសម្រង់តម្លៃនេះដាច់ដោយឡែកពីកន្ត្រករបស់អ្នក។ អ្នកអាចកក់ម៉ោងបានបន្ទាប់ពីពិនិត្យ និងយល់ព្រមលើតម្លៃរបស់អ្នកផ្តល់សេវា។';
+
+  @override
+  String get quoteSubmit => 'ផ្ញើសំណើសម្រង់តម្លៃ';
+
+  @override
+  String get quoteErrorSaveFailed =>
+      'មិនអាចផ្ញើសំណើសម្រង់តម្លៃបានទេ។ សូមពិនិត្យការភ្ជាប់អ៊ីនធឺណិត ហើយព្យាយាមម្តងទៀត។';
+
+  @override
+  String get quoteOfferingUnavailable =>
+      'សេវាកម្មនេះមិនអាចស្នើសុំសម្រង់តម្លៃបានទេនាពេលបច្ចុប្បន្ន។';
+
+  @override
+  String get quoteOfferingNotFound => 'រកមិនឃើញសេវាកម្មនេះទេ។';
+
+  @override
+  String get quoteSentTitle => 'បានផ្ញើសំណើសម្រង់តម្លៃ';
+
+  @override
+  String quoteSentMessage(String provider) {
+    return '$provider នឹងពិនិត្យមើលសំណើរបស់អ្នក ហើយផ្ញើសម្រង់តម្លៃមកវិញ។ កន្ត្រករបស់អ្នកមិនត្រូវបានកែប្រែទេ។';
+  }
+
+  @override
+  String get quoteSentMessageGeneric =>
+      'អ្នកផ្តល់សេវានឹងពិនិត្យមើលសំណើរបស់អ្នក ហើយផ្ញើសម្រង់តម្លៃមកវិញ។';
+
+  @override
+  String get quoteStatusLabel => 'ស្ថានភាព';
+
+  @override
+  String get quoteStatusRequested => 'បានស្នើសុំ';
+
+  @override
+  String get quoteStatusQuoted => 'បានផ្ដល់តម្លៃ';
+
+  @override
+  String get quoteStatusApproved => 'បានអនុម័ត';
+
+  @override
+  String get quoteStatusRejected => 'បានបដិសេធ';
+
+  @override
+  String get quoteSummaryProvider => 'អ្នកផ្តល់សេវា';
+
+  @override
+  String get quoteSummaryDescription => 'ព័ត៌មានលម្អិតអំពីបញ្ហា';
+
+  @override
+  String get quoteSentViewStatus => 'មើលសំណើសម្រង់តម្លៃ';
+
+  @override
+  String get quoteDetailTitle => 'សំណើសម្រង់តម្លៃ';
+
+  @override
+  String get quoteDetailLoading => 'កំពុងផ្ទុកសំណើសម្រង់តម្លៃ';
+
+  @override
+  String get quoteDetailNotFound => 'រកមិនឃើញសំណើសម្រង់តម្លៃនេះទេ។';
+
+  @override
+  String quoteDetailWaitingMessage(String provider) {
+    return 'កំពុងរង់ចាំ $provider ពិនិត្យមើលព័ត៌មានលម្អិត និងផ្ញើសម្រង់តម្លៃមកវិញ។';
+  }
+
+  @override
+  String get discoveryHomeQuotes => 'សំណើសម្រង់តម្លៃរបស់ខ្ញុំ';
+
+  @override
+  String get discoveryNoQuotes => 'អ្នកមិនទាន់មានសំណើសម្រង់តម្លៃទេ។';
+
+  @override
+  String get discoveryQuotesError => 'មិនអាចផ្ទុកសំណើសម្រង់តម្លៃរបស់អ្នកបានទេ។';
+
+  @override
+  String get discoveryLoadingQuotes => 'កំពុងផ្ទុកសំណើសម្រង់តម្លៃរបស់អ្នក';
 }

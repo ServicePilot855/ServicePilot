@@ -731,6 +731,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'For example: the bedroom AC blows warm air and drips water';
 
   @override
+  String get bookingProblemPrivacyHelper =>
+      'The provider can read this before accepting. Leave out your address and phone number.';
+
+  @override
   String get bookingAddressLabel => 'Repair address';
 
   @override
@@ -938,6 +942,172 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bookingSentBackHome => 'Back to home';
 
   @override
+  String get bookingInboxTitle => 'Incoming requests';
+
+  @override
+  String get bookingInboxDetailTitle => 'Booking request';
+
+  @override
+  String get bookingInboxEmpty => 'You have no pending booking requests.';
+
+  @override
+  String get bookingInboxUnavailable => 'This booking request is unavailable.';
+
+  @override
+  String get bookingInboxPending => 'Pending';
+
+  @override
+  String get bookingInboxJobDetails => 'Job details';
+
+  @override
+  String get bookingInboxDateUnavailable => 'Appointment time unavailable';
+
+  @override
+  String get bookingInboxLoading => 'Loading booking requests';
+
+  @override
+  String get bookingInboxError =>
+      'Could not load booking requests. Check your connection and try again.';
+
+  @override
+  String get bookingInboxRetry => 'Try again';
+
+  @override
+  String get offeringCreateTitle => 'Add Service Offering';
+
+  @override
+  String get offeringHeaderTitle => 'New Service Offering';
+
+  @override
+  String get offeringCreateSubtitle =>
+      'Publish a new service offering with fixed or custom quote pricing.';
+
+  @override
+  String get offeringCategoryLabel => 'Service Category';
+
+  @override
+  String get offeringCategoryHint => 'Select category';
+
+  @override
+  String get offeringCategoryRequired => 'Please select a service category.';
+
+  @override
+  String get offeringCategoriesEmpty =>
+      'There are no active service categories.';
+
+  @override
+  String get offeringCategoriesError =>
+      'Couldn’t load service categories. Go back and reopen the form to try again.';
+
+  @override
+  String get offeringTitleLabel => 'Service Title';
+
+  @override
+  String get offeringTitleHint => 'e.g., Inverter Mainboard & PCB Replacement';
+
+  @override
+  String get offeringTitleRequired => 'Please enter a service title.';
+
+  @override
+  String get offeringTitleMinLength => 'Title must be at least 3 characters.';
+
+  @override
+  String get offeringDescLabel => 'Description';
+
+  @override
+  String get offeringDescHint =>
+      'Explain the scope, prerequisites, or diagnosis required...';
+
+  @override
+  String get offeringDescRequired => 'Please enter a description.';
+
+  @override
+  String get offeringDescMinLength =>
+      'Description must be at least 10 characters.';
+
+  @override
+  String get offeringPricingModeLabel => 'Pricing Mode';
+
+  @override
+  String get offeringModeQuote => 'Requires custom quote';
+
+  @override
+  String get offeringModeQuoteDesc =>
+      'Excluded from fixed cart checkout. Customers submit inquiry for custom on-site estimation.';
+
+  @override
+  String get offeringNoticeQuoteMode =>
+      'Quote Mode Active: Fixed price checkout is disabled. Homeowners will be guided to submit problem details and photos for quote intake.';
+
+  @override
+  String get offeringBadgeQuoteRequired => 'Quote Required';
+
+  @override
+  String get offeringCtaRequestQuote => 'Request a Quote';
+
+  @override
+  String get offeringCtaBookService => 'Book Service';
+
+  @override
+  String get offeringNoticeQuoteRequiredBooking =>
+      'You are requesting a custom quote for this service. You will not be charged upfront. The provider will review your scope and provide a formal price estimate before work begins.';
+
+  @override
+  String get offeringModeFixed => 'Fixed upfront price';
+
+  @override
+  String get offeringModeFixedDesc => 'Upfront transparent flat-rate pricing.';
+
+  @override
+  String get offeringPriceLabel => 'Base Price (\$)';
+
+  @override
+  String get offeringPriceRequired => 'Please enter a valid base price.';
+
+  @override
+  String get offeringPricePositive =>
+      'Enter an amount greater than zero with up to two decimal places.';
+
+  @override
+  String get offeringUnitLabel => 'Pricing Unit (Optional)';
+
+  @override
+  String get offeringUnitHint => 'e.g., job, hour, unit';
+
+  @override
+  String get offeringCreateButton => 'Publish Offering';
+
+  @override
+  String get offeringSuccessSnackbar =>
+      'Service offering published successfully!';
+
+  @override
+  String get offeringPublishError =>
+      'Couldn’t publish your offering. Check your connection and provider access, then try again.';
+
+  @override
+  String get offeringUnauthorized =>
+      'Only registered service providers and companies can publish offerings.';
+
+  @override
+  String get offeringActiveRequired =>
+      'Provider account must be active to publish service offerings.';
+
+  @override
+  String get offeringDashboardTitle => 'My Service Offerings';
+
+  @override
+  String get offeringAddButton => 'Add Offering';
+
+  @override
+  String get offeringEmptyNotice =>
+      'You have not published any service offerings yet. Tap \"+ Add Offering\" to add fixed-price or quote-required services.';
+
+  @override
+  String get offeringLoadError =>
+      'Unable to load service offerings right now. Please check your connection and try again.';
+
+  @override
   String get adminDashboardTitle => 'Platform Administration';
 
   @override
@@ -992,4 +1162,441 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminViewCustomerProfileButton => 'Preview customer profile';
+
+  @override
+  String get companyProfileEdit => 'Edit company profile';
+
+  @override
+  String get companyProfileDescription => 'Description (optional)';
+
+  @override
+  String get companyProfileDescriptionHint =>
+      'Home plumbing and electrical repairs';
+
+  @override
+  String get companyProfileAreaHint => 'Sen Sok, Tuol Kork';
+
+  @override
+  String get companyProfileAreaRequired => 'Enter a service area.';
+
+  @override
+  String get companyProfileContacts => 'Contact links';
+
+  @override
+  String get companyProfileOptionalContacts => 'Contact links (optional)';
+
+  @override
+  String get companyProfileTelegram => 'Telegram';
+
+  @override
+  String get companyProfileTelegramExample => 'https://t.me/coolair';
+
+  @override
+  String get companyProfileMessenger => 'Messenger';
+
+  @override
+  String get companyProfileMessengerExample => 'https://m.me/coolair';
+
+  @override
+  String companyProfileInvalidLink(String example) {
+    return 'Enter a link like $example.';
+  }
+
+  @override
+  String companyProfileLengthError(int limit) {
+    return 'Use $limit characters or fewer.';
+  }
+
+  @override
+  String get companyProfileUnavailable =>
+      'No editable company profile is linked to this account.';
+
+  @override
+  String get companyProfileLoading => 'Loading company profile';
+
+  @override
+  String get companyProfileLoadError => 'Could not load your company profile.';
+
+  @override
+  String get companyProfileSaveError =>
+      'Could not save your changes. Try again.';
+
+  @override
+  String get companyProfileSave => 'Save changes';
+
+  @override
+  String get companyProfileSaved => 'Company profile saved.';
+
+  @override
+  String get technicianProfileEdit => 'Edit technician profile';
+
+  @override
+  String get technicianProfileName => 'Full name';
+
+  @override
+  String get technicianProfileNameHint => 'Virak Chan';
+
+  @override
+  String get technicianProfileNameRequired => 'Enter your full name.';
+
+  @override
+  String get technicianProfileDescription => 'Bio / description (optional)';
+
+  @override
+  String get technicianProfileDescriptionHint =>
+      'Certified AC technician with 7+ years of experience';
+
+  @override
+  String get technicianProfileAreaHint => 'Sen Sok, Tuol Kork';
+
+  @override
+  String get technicianProfileAreaRequired => 'Enter a service area.';
+
+  @override
+  String get technicianProfileContacts => 'Contact links';
+
+  @override
+  String get technicianProfileOptionalContacts => 'Contact links (optional)';
+
+  @override
+  String get technicianProfileTelegram => 'Telegram';
+
+  @override
+  String get technicianProfileTelegramExample => 'https://t.me/virakchan';
+
+  @override
+  String get technicianProfileMessenger => 'Messenger';
+
+  @override
+  String get technicianProfileMessengerExample => 'https://m.me/virakchan';
+
+  @override
+  String technicianProfileInvalidLink(String example) {
+    return 'Enter a link like $example.';
+  }
+
+  @override
+  String technicianProfileLengthError(int limit) {
+    return 'Use $limit characters or fewer.';
+  }
+
+  @override
+  String get technicianProfileUnavailable =>
+      'No editable technician profile is linked to this account.';
+
+  @override
+  String get technicianProfileLoading => 'Loading technician profile';
+
+  @override
+  String get technicianProfileLoadError =>
+      'Could not load your technician profile.';
+
+  @override
+  String get technicianProfileSaveError =>
+      'Could not save your changes. Try again.';
+
+  @override
+  String get technicianProfileSave => 'Save changes';
+
+  @override
+  String get technicianProfileSaved => 'Technician profile saved.';
+
+  @override
+  String get providerOfferingsSection => 'Available Services & Offerings';
+
+  @override
+  String get bookingConfirmedAppointmentLabel => 'Confirmed Appointment';
+
+  @override
+  String get bookingPreferredAppointmentLabel => 'Preferred Date & Time';
+
+  @override
+  String get providerBookingsTitle => 'Accepted bookings';
+
+  @override
+  String get providerBookingsEmpty => 'You have no accepted bookings.';
+
+  @override
+  String get providerBookingsLoadError =>
+      'Unable to load booking requests right now. Please try again.';
+
+  @override
+  String get providerBookingDetailTitle => 'Booking Request';
+
+  @override
+  String get providerBookingConfirmButton => 'Confirm Appointment';
+
+  @override
+  String get providerBookingConfirmSuccess =>
+      'Appointment confirmed! The homeowner can now see the confirmed date and time.';
+
+  @override
+  String get providerBookingNotAuthorized =>
+      'You are not authorized to confirm this booking.';
+
+  @override
+  String get providerBookingIneligible =>
+      'This booking cannot be confirmed in its current state.';
+
+  @override
+  String get providerBookingReviewAction => 'Review';
+
+  @override
+  String get providerBookingDeclineButton => 'Decline Request';
+
+  @override
+  String get providerBookingDeclineDialogTitle => 'Decline this request?';
+
+  @override
+  String get providerBookingDeclineDialogBody =>
+      'The homeowner will see this request as Declined. You will not be able to confirm it afterwards.';
+
+  @override
+  String get providerBookingDeclineReasonLabel => 'Reason for declining';
+
+  @override
+  String get providerBookingDeclineReasonHint =>
+      'For example: outside our service area that day';
+
+  @override
+  String get providerBookingDeclineReasonRequired =>
+      'Add a short reason so the homeowner can make other arrangements.';
+
+  @override
+  String get providerBookingDeclineReasonTooLong =>
+      'Keep the reason under 300 characters.';
+
+  @override
+  String get providerBookingDeclineKeep => 'Keep Request';
+
+  @override
+  String get providerBookingDeclineConfirm => 'Confirm Decline';
+
+  @override
+  String get providerBookingDeclineSuccess =>
+      'Request declined. The homeowner can see this booking as Declined in their history.';
+
+  @override
+  String get providerBookingDeclinedNotice =>
+      'You declined this request. The homeowner can see it as Declined in their booking history.';
+
+  @override
+  String get providerDeclinedRequestsTitle => 'Declined requests';
+
+  @override
+  String get providerDeclinedRequestsEmpty => 'You have no declined requests.';
+
+  @override
+  String get providerBookingDeclineIneligible =>
+      'This request can no longer be declined.';
+
+  @override
+  String get providerBookingDeclineNotAuthorized =>
+      'You are not authorized to decline this request.';
+
+  @override
+  String get cartAddButton => 'Add to cart';
+
+  @override
+  String cartAddedSnackbar(String serviceTitle) {
+    return 'Added $serviceTitle to cart.';
+  }
+
+  @override
+  String cartErrorDifferentProvider(String providerName) {
+    return 'Your cart already has services from $providerName. Clear your cart before adding from another provider.';
+  }
+
+  @override
+  String get cartErrorDifferentProviderGeneric =>
+      'Your cart already has services from another provider. Clear your cart before adding this service.';
+
+  @override
+  String get cartErrorQuoteRequired =>
+      'Quote-required services cannot be added to the cart. Use Request a Quote instead.';
+
+  @override
+  String get cartErrorUnavailable =>
+      'This service is currently unavailable and cannot be added to the cart.';
+
+  @override
+  String cartBadgeLabel(int count) {
+    return 'Cart ($count)';
+  }
+
+  @override
+  String cartActiveProviderNotice(int count, String providerName) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count services',
+      one: '1 service',
+    );
+    return 'Cart has $_temp0 from $providerName.';
+  }
+
+  @override
+  String get cartTitle => 'Cart';
+
+  @override
+  String get cartHeading => 'Review your cart';
+
+  @override
+  String cartItemCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count services',
+      one: '1 service',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cartProviderLabel => 'Provider';
+
+  @override
+  String get cartProviderUnknown => 'Provider name unavailable';
+
+  @override
+  String cartItemQuantityPrice(int quantity, String price) {
+    return '$quantity × $price';
+  }
+
+  @override
+  String cartRemoveItem(String serviceTitle) {
+    return 'Remove $serviceTitle';
+  }
+
+  @override
+  String get cartTotalLabel => 'Total';
+
+  @override
+  String cartTotalSemantics(String price) {
+    return 'Total $price';
+  }
+
+  @override
+  String get cartPaymentNote =>
+      'These are the provider\'s fixed prices. No payment is taken in the app; you pay the provider directly after the job.';
+
+  @override
+  String get cartEmptyTitle => 'Your cart is empty';
+
+  @override
+  String get cartEmptyBody =>
+      'Add fixed-price services from a provider\'s page and they will appear here.';
+
+  @override
+  String get cartBrowseServices => 'Browse services';
+
+  @override
+  String cartOpenSemantics(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count services',
+      one: '1 service',
+    );
+    return 'Open cart, $_temp0';
+  }
+
+  @override
+  String get quoteFormTitle => 'Request a quote';
+
+  @override
+  String get quoteFormHeading => 'Describe the job';
+
+  @override
+  String quoteFormSubtitle(String provider) {
+    return '$provider will review your details and photos and send a price quote.';
+  }
+
+  @override
+  String get quoteSelectedOfferingLabel => 'Selected service';
+
+  @override
+  String get quoteDescriptionHint =>
+      'For example: the outdoor AC board clicks and shows an E5 error after a power surge';
+
+  @override
+  String get quoteRequestFooterNote =>
+      'This quote request stays separate from your cart. You can book a time after you review and approve the provider\'s price.';
+
+  @override
+  String get quoteSubmit => 'Send quote request';
+
+  @override
+  String get quoteErrorSaveFailed =>
+      'We couldn\'t send your quote request. Check your connection and try again.';
+
+  @override
+  String get quoteOfferingUnavailable =>
+      'This service isn\'t available for quote requests right now.';
+
+  @override
+  String get quoteOfferingNotFound =>
+      'We couldn\'t find this service offering.';
+
+  @override
+  String get quoteSentTitle => 'Quote request sent';
+
+  @override
+  String quoteSentMessage(String provider) {
+    return '$provider will review your request and send a price quote. Your cart was not changed.';
+  }
+
+  @override
+  String get quoteSentMessageGeneric =>
+      'The provider will review your request and send a price quote.';
+
+  @override
+  String get quoteStatusLabel => 'Status';
+
+  @override
+  String get quoteStatusRequested => 'Requested';
+
+  @override
+  String get quoteStatusQuoted => 'Quoted';
+
+  @override
+  String get quoteStatusApproved => 'Approved';
+
+  @override
+  String get quoteStatusRejected => 'Rejected';
+
+  @override
+  String get quoteSummaryProvider => 'Provider';
+
+  @override
+  String get quoteSummaryDescription => 'Problem details';
+
+  @override
+  String get quoteSentViewStatus => 'View quote request';
+
+  @override
+  String get quoteDetailTitle => 'Quote request';
+
+  @override
+  String get quoteDetailLoading => 'Loading quote request';
+
+  @override
+  String get quoteDetailNotFound => 'We couldn\'t find this quote request.';
+
+  @override
+  String quoteDetailWaitingMessage(String provider) {
+    return 'Waiting for $provider to review your details and send a price quote.';
+  }
+
+  @override
+  String get discoveryHomeQuotes => 'My quote requests';
+
+  @override
+  String get discoveryNoQuotes => 'You have no quote requests yet.';
+
+  @override
+  String get discoveryQuotesError => 'Couldn\'t load your quote requests.';
+
+  @override
+  String get discoveryLoadingQuotes => 'Loading your quote requests';
 }
