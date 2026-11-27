@@ -24,6 +24,7 @@ import 'package:service_pilot/features/bookings/screens/create_booking_screen.da
 import 'package:service_pilot/features/bookings/screens/incoming_booking_screen.dart';
 import 'package:service_pilot/features/bookings/screens/location_picker_screen.dart';
 import 'package:service_pilot/features/bookings/screens/provider_booking_detail_screen.dart';
+import 'package:service_pilot/features/cart/screens/cart_screen.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
 import 'package:service_pilot/features/providers/screens/company_profile_edit_screen.dart';
 import 'package:service_pilot/features/providers/screens/provider_detail_screen.dart';
@@ -73,6 +74,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           state.matchedLocation.startsWith('/bookings') ||
           state.matchedLocation.startsWith('/quotes') ||
           state.matchedLocation.startsWith('/offerings') ||
+          state.matchedLocation.startsWith(CartScreen.path) ||
           isGoingToBookingInbox ||
           isGoingToAdmin;
       final isGoingToLogin = state.matchedLocation == '/login';
@@ -87,6 +89,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (isAuthenticated &&
           isGoingToBookingInbox &&
           !authState.user.canViewBookingInbox) {
+        return authState.user.role.homeRoute;
+      }
+
+      // Only homeowners have a cart (CART-2 / SCRUM-81).
+      if (isAuthenticated &&
+          state.matchedLocation.startsWith(CartScreen.path) &&
+          !authState.user.isHomeowner) {
         return authState.user.role.homeRoute;
       }
 
@@ -202,6 +211,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             category: category,
           );
         },
+      ),
+      // ── Cart review (CART-2 / SCRUM-81) ───────────────────────────────
+      GoRoute(
+        path: CartScreen.path,
+        builder: (_, __) => const CartScreen(),
       ),
       // ── Provider Details & Profiles (US-11) ───────────────────────────
       GoRoute(

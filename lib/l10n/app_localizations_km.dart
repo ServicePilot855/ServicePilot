@@ -1420,6 +1420,65 @@ class AppLocalizationsKm extends AppLocalizations {
   }
 
   @override
+  String get cartTitle => 'កន្ត្រក';
+
+  @override
+  String get cartHeading => 'ពិនិត្យកន្ត្រករបស់អ្នក';
+
+  @override
+  String cartItemCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'សេវាកម្មចំនួន $count',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cartProviderLabel => 'អ្នកផ្តល់សេវា';
+
+  @override
+  String get cartProviderUnknown => 'មិនមានឈ្មោះអ្នកផ្តល់សេវា';
+
+  @override
+  String cartItemQuantityPrice(int quantity, String price) {
+    return '$quantity × $price';
+  }
+
+  @override
+  String cartRemoveItem(String serviceTitle) {
+    return 'ដក $serviceTitle ចេញ';
+  }
+
+  @override
+  String get cartTotalLabel => 'សរុប';
+
+  @override
+  String cartTotalSemantics(String price) {
+    return 'សរុប $price';
+  }
+
+  @override
+  String get cartPaymentNote =>
+      'តម្លៃទាំងនេះជាតម្លៃថេររបស់អ្នកផ្តល់សេវា។ កម្មវិធីមិនយកការទូទាត់ទេ អ្នកបង់ប្រាក់ដោយផ្ទាល់ទៅអ្នកផ្តល់សេវាបន្ទាប់ពីការងាររួចរាល់។';
+
+  @override
+  String get cartEmptyTitle => 'កន្ត្រករបស់អ្នកទទេ';
+
+  @override
+  String get cartEmptyBody =>
+      'បន្ថែមសេវាកម្មតម្លៃថេរពីទំព័រអ្នកផ្តល់សេវា ហើយវានឹងបង្ហាញនៅទីនេះ។';
+
+  @override
+  String get cartBrowseServices => 'រកមើលសេវាកម្ម';
+
+  @override
+  String cartOpenSemantics(int count) {
+    return 'បើកកន្ត្រក សេវាកម្មចំនួន $count';
+  }
+
+  @override
   String get quoteFormTitle => 'ស្នើសុំសម្រង់តម្លៃ';
 
   @override

@@ -1436,6 +1436,72 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get cartTitle => 'Cart';
+
+  @override
+  String get cartHeading => 'Review your cart';
+
+  @override
+  String cartItemCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count services',
+      one: '1 service',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cartProviderLabel => 'Provider';
+
+  @override
+  String get cartProviderUnknown => 'Provider name unavailable';
+
+  @override
+  String cartItemQuantityPrice(int quantity, String price) {
+    return '$quantity × $price';
+  }
+
+  @override
+  String cartRemoveItem(String serviceTitle) {
+    return 'Remove $serviceTitle';
+  }
+
+  @override
+  String get cartTotalLabel => 'Total';
+
+  @override
+  String cartTotalSemantics(String price) {
+    return 'Total $price';
+  }
+
+  @override
+  String get cartPaymentNote =>
+      'These are the provider\'s fixed prices. No payment is taken in the app; you pay the provider directly after the job.';
+
+  @override
+  String get cartEmptyTitle => 'Your cart is empty';
+
+  @override
+  String get cartEmptyBody =>
+      'Add fixed-price services from a provider\'s page and they will appear here.';
+
+  @override
+  String get cartBrowseServices => 'Browse services';
+
+  @override
+  String cartOpenSemantics(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count services',
+      one: '1 service',
+    );
+    return 'Open cart, $_temp0';
+  }
+
+  @override
   String get quoteFormTitle => 'Request a quote';
 
   @override

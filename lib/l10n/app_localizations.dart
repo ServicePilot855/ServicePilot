@@ -2594,6 +2594,90 @@ abstract class AppLocalizations {
   /// **'Cart has {count, plural, =1{1 service} other{{count} services}} from {providerName}.'**
   String cartActiveProviderNotice(int count, String providerName);
 
+  /// No description provided for @cartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cart'**
+  String get cartTitle;
+
+  /// No description provided for @cartHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Review your cart'**
+  String get cartHeading;
+
+  /// No description provided for @cartItemCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 service} other{{count} services}}'**
+  String cartItemCount(int count);
+
+  /// No description provided for @cartProviderLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider'**
+  String get cartProviderLabel;
+
+  /// No description provided for @cartProviderUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider name unavailable'**
+  String get cartProviderUnknown;
+
+  /// No description provided for @cartItemQuantityPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'{quantity} × {price}'**
+  String cartItemQuantityPrice(int quantity, String price);
+
+  /// No description provided for @cartRemoveItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {serviceTitle}'**
+  String cartRemoveItem(String serviceTitle);
+
+  /// No description provided for @cartTotalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get cartTotalLabel;
+
+  /// No description provided for @cartTotalSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Total {price}'**
+  String cartTotalSemantics(String price);
+
+  /// No description provided for @cartPaymentNote.
+  ///
+  /// In en, this message translates to:
+  /// **'These are the provider\'s fixed prices. No payment is taken in the app; you pay the provider directly after the job.'**
+  String get cartPaymentNote;
+
+  /// No description provided for @cartEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your cart is empty'**
+  String get cartEmptyTitle;
+
+  /// No description provided for @cartEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add fixed-price services from a provider\'s page and they will appear here.'**
+  String get cartEmptyBody;
+
+  /// No description provided for @cartBrowseServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse services'**
+  String get cartBrowseServices;
+
+  /// No description provided for @cartOpenSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Open cart, {count, plural, =1{1 service} other{{count} services}}'**
+  String cartOpenSemantics(int count);
+
   /// No description provided for @quoteFormTitle.
   ///
   /// In en, this message translates to:

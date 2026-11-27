@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:service_pilot/core/theme/app_theme.dart';
 import 'package:service_pilot/features/cart/models/cart_state.dart';
 import 'package:service_pilot/features/cart/providers/cart_provider.dart';
+import 'package:service_pilot/features/cart/screens/cart_screen.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
 import 'package:service_pilot/features/providers/providers/provider_provider.dart';
 import 'package:service_pilot/features/providers/widgets/provider_rating_summary.dart';
@@ -53,36 +54,28 @@ class ProviderDetailScreen extends ConsumerWidget {
         actions: [
           if (cart.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(right: 12),
+              padding: const EdgeInsets.only(right: 8),
               child: Center(
-                child: Container(
-                  key: const Key('provider_detail_cart_badge'),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primarySoft,
+                // Opens the cart review (CART-2 / SCRUM-81). The 48dp
+                // target is larger than the visible chip.
+                child: Semantics(
+                  button: true,
+                  label: l10n.cartOpenSemantics(cart.itemCount),
+                  excludeSemantics: true,
+                  child: InkWell(
+                    key: const Key('provider_detail_cart_badge'),
+                    onTap: () => context.push(CartScreen.path),
                     borderRadius: BorderRadius.circular(AppTheme.radiusChip),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.shopping_cart_outlined,
-                        size: 16,
-                        color: AppTheme.onPrimarySoft,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        l10n.cartBadgeLabel(cart.itemCount),
-                        style: AppTheme.text(
-                          size: 13,
-                          weight: FontWeight.w600,
-                          color: AppTheme.onPrimarySoft,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 48),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Center(
+                          widthFactor: 1,
+                          child: _CartChip(count: cart.itemCount),
                         ),
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -315,6 +308,43 @@ class _ProviderProfile extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// The visible "Cart (n)" chip in the provider page's top bar.
+class _CartChip extends StatelessWidget {
+  const _CartChip({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppTheme.primarySoft,
+        borderRadius: BorderRadius.circular(AppTheme.radiusChip),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.shopping_cart_outlined,
+            size: 16,
+            color: AppTheme.onPrimarySoft,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            context.l10n.cartBadgeLabel(count),
+            style: AppTheme.text(
+              size: 13,
+              weight: FontWeight.w600,
+              color: AppTheme.onPrimarySoft,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
