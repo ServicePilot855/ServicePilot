@@ -20,20 +20,11 @@ final quoteServiceProvider = Provider<IQuoteService>((ref) {
 
 /// Fetches quote requests created by the active customer.
 final customerQuoteRequestsProvider =
-    FutureProvider.autoDispose<List<QuoteRequestModel>>((ref) async {
+    FutureProvider.autoDispose.family<QuoteRequestPage, int>((ref, size) async {
   final service = ref.watch(quoteServiceProvider);
   final customerId = ref.watch(activeCustomerIdProvider);
-  return service.getCustomerQuoteRequests(customerId);
+  return service.getCustomerQuotePage(customerId, size);
 });
-
-/// Fetches quote requests addressed to [providerId].
-final providerQuoteRequestsProvider =
-    FutureProvider.autoDispose.family<List<QuoteRequestModel>, String>(
-  (ref, providerId) async {
-    final service = ref.watch(quoteServiceProvider);
-    return service.getProviderQuoteRequests(providerId);
-  },
-);
 
 String? _quoteInboxProviderId(Ref ref) {
   final user = ref.watch(currentUserProvider);
@@ -44,11 +35,11 @@ String? _quoteInboxProviderId(Ref ref) {
 
 /// Watches incoming requests for the signed-in provider's inbox.
 final liveProviderQuoteRequestsProvider =
-    StreamProvider.autoDispose<List<QuoteRequestModel>>((ref) {
+    StreamProvider.autoDispose.family<QuoteRequestPage, int>((ref, size) {
   final providerId = _quoteInboxProviderId(ref);
-  if (providerId == null) return Stream.value(const []);
+  if (providerId == null) return Stream.value(const QuoteRequestPage.empty());
   final service = ref.watch(quoteServiceProvider);
-  return service.watchProviderQuoteRequests(providerId);
+  return service.watchProviderQuotePage(providerId, size);
 });
 
 /// Watches one incoming request in the signed-in provider's inbox.
@@ -62,12 +53,14 @@ final liveProviderQuoteDetailProvider =
   },
 );
 
-/// Fetches a single quote request by ID.
+/// Confirms a saved quote request belongs to the active customer.
 final quoteDetailProvider =
     FutureProvider.autoDispose.family<QuoteRequestModel?, String>(
   (ref, quoteId) async {
     final service = ref.watch(quoteServiceProvider);
-    return service.getQuoteRequestById(quoteId);
+    final customerId = ref.watch(activeCustomerIdProvider);
+    final quote = await service.getQuoteRequestById(quoteId);
+    return quote?.isOwnedByCustomer(customerId) == true ? quote : null;
   },
 );
 

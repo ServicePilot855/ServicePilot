@@ -147,6 +147,44 @@ void main() {
       );
 
   group('SCRUM-88 / QUOTE-7: Independent provider quote decisions', () {
+    for (final role in [AppRole.homeowner, AppRole.independentProvider]) {
+      testWidgets(
+          '$role dashboard builds 20 quotes until older ones are requested', (
+        tester,
+      ) async {
+        final homeowner = role == AppRole.homeowner;
+        final user =
+            independentUser(id: homeowner ? 'customer-1' : 'prov-ind-1')
+                .copyWith(role: role);
+        final quotes = [
+          for (var i = 0; i < 25; i++)
+            _quote(
+                id: 'page-${i.toString().padLeft(2, '0')}',
+                providerId: 'prov-ind-1'),
+        ];
+        final prefix =
+            homeowner ? 'home_quote_page-' : 'provider_quote_card_page-';
+        final cards = find.byWidgetPredicate((widget) {
+          final key = widget.key;
+          return key is ValueKey<String> && key.value.startsWith(prefix);
+        });
+
+        await pumpApp(tester, path: role.homeRoute, user: user, quotes: quotes);
+        expect(cards, findsNWidgets(20));
+        expect(find.byKey(Key('${prefix}00')), findsNothing);
+        final more = find.text('Show older quote requests');
+        await tester.ensureVisible(more);
+        await tester.pumpAndSettle();
+        await tester.tap(more);
+        await tester.pumpAndSettle();
+
+        expect(cards, findsNWidgets(25));
+        expect(find.byKey(Key('${prefix}00')), findsOneWidget);
+        expect(more, findsNothing);
+        expect(tester.takeException(), isNull);
+      });
+    }
+
     testWidgets('an unavailable quote never shows a stale navigation copy', (
       tester,
     ) async {

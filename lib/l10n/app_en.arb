@@ -602,7 +602,6 @@
   "@quoteSentMessage": {
     "placeholders": {"provider": {"type": "String"}}
   },
-  "quoteSentMessageGeneric": "The provider will review your request and send a price quote.",
   "quoteStatusLabel": "Status",
   "quoteStatusRequested": "Requested",
   "quoteStatusQuoted": "Quoted",
@@ -614,6 +613,7 @@
   "quoteDetailTitle": "Quote request",
   "quoteDetailLoading": "Loading quote request",
   "quoteDetailNotFound": "We couldn't find this quote request.",
+  "quoteDetailLoadFailed": "Couldn't load this quote request. Try again.",
   "quoteDetailWaitingMessage": "Waiting for {provider} to review your details and send a price quote.",
   "@quoteDetailWaitingMessage": {
     "placeholders": {"provider": {"type": "String"}}
@@ -622,6 +622,7 @@
   "discoveryNoQuotes": "You have no quote requests yet.",
   "discoveryQuotesError": "Couldn't load your quote requests.",
   "discoveryLoadingQuotes": "Loading your quote requests",
+  "quoteLoadMore": "Show older quote requests",
   "providerQuotesTitle": "Quote requests",
   "providerQuotesEmpty": "No quote requests yet.",
   "providerQuotesLoadError": "Couldn't load quote requests. Please try again.",

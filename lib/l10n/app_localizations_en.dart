@@ -1547,10 +1547,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get quoteSentMessageGeneric =>
-      'The provider will review your request and send a price quote.';
-
-  @override
   String get quoteStatusLabel => 'Status';
 
   @override
@@ -1584,6 +1580,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quoteDetailNotFound => 'We couldn\'t find this quote request.';
 
   @override
+  String get quoteDetailLoadFailed =>
+      'Couldn\'t load this quote request. Try again.';
+
+  @override
   String quoteDetailWaitingMessage(String provider) {
     return 'Waiting for $provider to review your details and send a price quote.';
   }
@@ -1599,6 +1599,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get discoveryLoadingQuotes => 'Loading your quote requests';
+
+  @override
+  String get quoteLoadMore => 'Show older quote requests';
 
   @override
   String get providerQuotesTitle => 'Quote requests';

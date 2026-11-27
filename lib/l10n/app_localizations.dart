@@ -2750,12 +2750,6 @@ abstract class AppLocalizations {
   /// **'{provider} will review your request and send a price quote. Your cart was not changed.'**
   String quoteSentMessage(String provider);
 
-  /// No description provided for @quoteSentMessageGeneric.
-  ///
-  /// In en, this message translates to:
-  /// **'The provider will review your request and send a price quote.'**
-  String get quoteSentMessageGeneric;
-
   /// No description provided for @quoteStatusLabel.
   ///
   /// In en, this message translates to:
@@ -2822,6 +2816,12 @@ abstract class AppLocalizations {
   /// **'We couldn\'t find this quote request.'**
   String get quoteDetailNotFound;
 
+  /// No description provided for @quoteDetailLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load this quote request. Try again.'**
+  String get quoteDetailLoadFailed;
+
   /// No description provided for @quoteDetailWaitingMessage.
   ///
   /// In en, this message translates to:
@@ -2851,6 +2851,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Loading your quote requests'**
   String get discoveryLoadingQuotes;
+
+  /// No description provided for @quoteLoadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Show older quote requests'**
+  String get quoteLoadMore;
 
   /// No description provided for @providerQuotesTitle.
   ///

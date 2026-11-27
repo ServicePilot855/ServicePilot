@@ -1523,10 +1523,6 @@ class AppLocalizationsKm extends AppLocalizations {
   }
 
   @override
-  String get quoteSentMessageGeneric =>
-      'អ្នកផ្តល់សេវានឹងពិនិត្យមើលសំណើរបស់អ្នក ហើយផ្ញើសម្រង់តម្លៃមកវិញ។';
-
-  @override
   String get quoteStatusLabel => 'ស្ថានភាព';
 
   @override
@@ -1560,6 +1556,10 @@ class AppLocalizationsKm extends AppLocalizations {
   String get quoteDetailNotFound => 'រកមិនឃើញសំណើសម្រង់តម្លៃនេះទេ។';
 
   @override
+  String get quoteDetailLoadFailed =>
+      'មិនអាចផ្ទុកសំណើសម្រង់តម្លៃនេះបានទេ។ សូមព្យាយាមម្តងទៀត។';
+
+  @override
   String quoteDetailWaitingMessage(String provider) {
     return 'កំពុងរង់ចាំ $provider ពិនិត្យមើលព័ត៌មានលម្អិត និងផ្ញើសម្រង់តម្លៃមកវិញ។';
   }
@@ -1575,6 +1575,9 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get discoveryLoadingQuotes => 'កំពុងផ្ទុកសំណើសម្រង់តម្លៃរបស់អ្នក';
+
+  @override
+  String get quoteLoadMore => 'បង្ហាញសំណើសម្រង់តម្លៃចាស់ៗ';
 
   @override
   String get providerQuotesTitle => 'សំណើសម្រង់តម្លៃ';

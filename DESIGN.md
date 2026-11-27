@@ -311,6 +311,7 @@ Quote-required offerings follow a separate flow from fixed-price cart checkout a
 - Omit address, date/time, and checkout price controls; keep the cart untouched.
 - On submit, navigate to [Quote request confirmation](lib/features/quotes/screens/quote_request_confirmation_screen.dart) (`/quotes/:quoteId/sent`) with a `waiting` `SpStatusHero`, [`QuoteStatusBadge`](lib/features/quotes/widgets/quote_status_badge.dart) (**Requested**), and flat Hairline-separated summary rows. [Quote request detail](lib/features/quotes/screens/quote_request_detail_screen.dart) (`/quotes/:quoteId`) tracks the live status.
 - On the provider dashboard, use [Quote requests](lib/features/quotes/widgets/provider_quote_list.dart) to open an [owned request](lib/features/quotes/screens/provider_quote_detail_screen.dart) (`/provider/quotes/:quoteId`). Use `SpFlowPage`, `QuoteStatusBadge`, and flat summary rows for the service, description, and quote status. Place any submitted photos below the summary and show a localized notice for an unavailable photo.
+- The homeowner and provider dashboards show the latest 20 quote requests first. Use an outlined **Show older quote requests** button when more records are available. Keep provider decisions live as the list expands.
 
 ## Reviewing UI changes
 

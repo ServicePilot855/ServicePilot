@@ -183,6 +183,29 @@ for (const deniedToken of [otherCustomer.token, outsider.token, company.token, c
 await request(`${documents}/quoteRequests/${compQuoteId}`, { token: companyTech.token, status: 403 });
 await request(`${documents}/quoteRequests/${compQuoteId}`, { token: independent.token, status: 403 });
 
+// Confirm the ordered, limited dashboard queries can use the same ownership rules.
+async function dashboard(token, ownerField, ownerId, sortField = 'createdAt', status = 200) {
+  const owner = { fieldFilter: {
+    field: { fieldPath: ownerField }, op: 'EQUAL', value: { stringValue: ownerId },
+  } };
+  const field = { fieldPath: sortField };
+  const where = sortField === 'updatedAt' ? { compositeFilter: {
+    op: 'AND', filters: [owner, { unaryFilter: { field, op: 'IS_NOT_NULL' } }],
+  } } : owner;
+  return request(`${documents}:runQuery`, {
+    method: 'POST', token, status,
+    body: { structuredQuery: {
+      from: [{ collectionId: 'quoteRequests' }], where,
+      orderBy: [{ field, direction: 'DESCENDING' }], limit: 1,
+    } },
+  });
+}
+
+assert.equal((await dashboard(customer.token, 'customerId', customer.id)).filter(row => row.document).length, 1);
+assert.equal((await dashboard(independent.token, 'providerId', independent.id))[0].document.fields.id.stringValue, indepQuoteId);
+assert.equal((await dashboard(independent.token, 'providerId', independent.id, 'updatedAt')).filter(row => row.document).length, 0);
+await dashboard(company.token, 'providerId', independent.id, 'updatedAt', 403);
+
 // Provider query scoped to their own providerId succeeds; querying another providerId fails.
 function providerQuery(providerId, quoteId) {
   const equals = (fieldPath, value) => ({ fieldFilter: { field: { fieldPath }, op: 'EQUAL', value } });
@@ -270,5 +293,13 @@ for (const [label, token, overrides] of invalidCases) {
 await request(`${documents}/quoteRequests/${indepQuoteId}`, { method: 'DELETE', token: customer.token, status: 403 });
 await request(`${documents}/quoteRequests/${indepQuoteId}`, { method: 'DELETE', token: independent.token, status: 403 });
 await write(`quoteRequests/${indepQuoteId}`, quotePayload(indepQuoteId, { status: 'approved' }), customer.token, 403);
+
+await write(`quoteRequests/${indepQuoteId}`, quotePayload(indepQuoteId, {
+  status: 'approved', quotedPrice: 85,
+  updatedAt: { timestampValue: '2026-11-28T09:00:00Z' },
+}), 'owner');
+const recent = await dashboard(independent.token, 'providerId', independent.id, 'updatedAt');
+assert.deepEqual(quoteIds(recent), [indepQuoteId]);
+await dashboard(company.token, 'providerId', independent.id, 'updatedAt', 403);
 
 console.log('Quote request creation, provider association, and isolation rules passed.');
