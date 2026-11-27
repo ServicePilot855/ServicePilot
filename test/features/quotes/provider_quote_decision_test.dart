@@ -35,6 +35,7 @@ QuoteRequestModel _quote({
   String customerName = 'Sophea Meas',
   String offeringTitle = 'Central Inverter PCB Diagnosis',
   String description = 'Inverter board clicks repeatedly and blinks E5.',
+  List<String> photoUrls = const [],
   QuoteStatus status = QuoteStatus.approved,
   double? quotedPrice = 85.0,
 }) {
@@ -47,6 +48,7 @@ QuoteRequestModel _quote({
     offeringId: 'off-quote-1',
     offeringTitle: offeringTitle,
     description: description,
+    photoUrls: photoUrls,
     status: status,
     quotedPrice: quotedPrice,
     createdAt: DateTime(2026, 11, 27, 9, 0),
@@ -60,6 +62,7 @@ void main() {
     required String path,
     required UserModel user,
     required List<QuoteRequestModel> quotes,
+    Object? extra,
     Locale locale = const Locale('en'),
     double textScale = 1.0,
     double width = 360,
@@ -92,7 +95,7 @@ void main() {
     addTearDown(container.dispose);
     addTearDown(router.dispose);
 
-    router.go(path);
+    router.go(path, extra: extra);
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
@@ -144,6 +147,59 @@ void main() {
       );
 
   group('SCRUM-88 / QUOTE-7: Independent provider quote decisions', () {
+    testWidgets('an unavailable quote never shows a stale navigation copy', (
+      tester,
+    ) async {
+      final stale = _quote(id: 'q-removed', providerId: 'prov-ind-1');
+
+      await pumpApp(
+        tester,
+        path: '/provider/quotes/q-removed',
+        user: independentUser(),
+        quotes: [],
+        extra: stale,
+      );
+
+      expect(
+        find.byKey(const Key('provider_quote_inaccessible_notice')),
+        findsOneWidget,
+      );
+      expect(find.text(stale.description), findsNothing);
+    });
+
+    testWidgets('an owned incoming request shows its description and photo', (
+      tester,
+    ) async {
+      const photoUrl = 'https://res.cloudinary.com/demo/image/upload/photo.jpg';
+      final request = _quote(
+        id: 'q-new',
+        providerId: 'prov-ind-1',
+        status: QuoteStatus.requested,
+        quotedPrice: null,
+        photoUrls: [photoUrl],
+      );
+
+      await pumpApp(
+        tester,
+        path: AppRole.independentProvider.homeRoute,
+        user: independentUser(),
+        quotes: [request],
+        width: 320,
+        textScale: 1.3,
+      );
+
+      final card = find.byKey(const Key('provider_quote_card_q-new'));
+      await tester.ensureVisible(card);
+      await tester.tap(card);
+      await tester.pumpAndSettle();
+
+      expect(find.text(request.description), findsOneWidget);
+      final photo = tester.widget<Image>(find.byType(Image));
+      expect((photo.image as NetworkImage).url, photoUrl);
+      expect(photo.semanticLabel, isNotEmpty);
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets(
       'displays approved and rejected quote prices and decisions on home and detail',
       (tester) async {

@@ -5,8 +5,6 @@ import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/core/constants/app_roles.dart';
 import 'package:service_pilot/core/theme/app_theme.dart';
 import 'package:service_pilot/features/auth/models/user_model.dart';
-import 'package:service_pilot/features/providers/providers/provider_provider.dart';
-import 'package:service_pilot/features/quotes/models/quote_request_model.dart';
 import 'package:service_pilot/features/quotes/models/quote_status.dart';
 import 'package:service_pilot/features/quotes/providers/quote_provider.dart';
 import 'package:service_pilot/features/quotes/widgets/quote_status_badge.dart';
@@ -14,17 +12,14 @@ import 'package:service_pilot/l10n/l10n.dart';
 import 'package:service_pilot/shared/widgets/sp_button.dart';
 import 'package:service_pilot/shared/widgets/sp_layout.dart';
 
-/// Provider view for inspecting the quoted price and the homeowner's latest
-/// decision on an owned quote request (QUOTE-7 / SCRUM-88).
+/// Provider view of an incoming request and the homeowner's latest decision.
 class ProviderQuoteDetailScreen extends ConsumerWidget {
   const ProviderQuoteDetailScreen({
     super.key,
     required this.quoteId,
-    this.initialQuote,
   });
 
   final String quoteId;
-  final QuoteRequestModel? initialQuote;
 
   void _goBack(BuildContext context, UserModel? user) {
     if (context.canPop()) {
@@ -68,36 +63,27 @@ class ProviderQuoteDetailScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final user = ref.watch(currentUserProvider);
 
-    if (user == null || !user.canViewBookingInbox) {
-      return SpFlowPage(
-        title: l10n.providerQuoteDetailTitle,
-        onBack: () => _goBack(context, user),
-        bottom: SpSecondaryButton(
-          label: l10n.bookingSentBackHome,
-          onPressed: () => _goBack(context, user),
-        ),
-        children: [
-          SpNotice(
-            key: const Key('provider_quote_inaccessible_notice'),
-            icon: Icons.lock_outline_rounded,
-            message: l10n.providerQuoteNotFoundOrInaccessible,
-            tone: SpTone.neutral,
+    Widget unavailable() => SpFlowPage(
+          title: l10n.providerQuoteDetailTitle,
+          onBack: () => _goBack(context, user),
+          bottom: SpSecondaryButton(
+            label: l10n.bookingSentBackHome,
+            onPressed: () => _goBack(context, user),
           ),
-        ],
-      );
-    }
+          children: [
+            SpNotice(
+              key: const Key('provider_quote_inaccessible_notice'),
+              icon: Icons.lock_outline_rounded,
+              message: l10n.providerQuoteNotFoundOrInaccessible,
+              tone: SpTone.neutral,
+            ),
+          ],
+        );
 
-    final quoteAsync = ref.watch(liveQuoteDetailProvider(quoteId));
-    final resolvedProviderId = ref.watch(currentProviderIdProvider);
-    final providerId =
-        resolvedProviderId.isNotEmpty ? resolvedProviderId : user.id;
-    final fallback = initialQuote != null &&
-            initialQuote!.isAddressedToProvider(providerId)
-        ? initialQuote
-        : null;
-    final quote = quoteAsync.valueOrNull ?? fallback;
+    if (user == null || !user.canViewBookingInbox) return unavailable();
 
-    if (quoteAsync.isLoading && quote == null) {
+    final quoteAsync = ref.watch(liveProviderQuoteDetailProvider(quoteId));
+    if (quoteAsync.isLoading) {
       return Scaffold(
         backgroundColor: AppTheme.surface,
         body: Center(
@@ -109,43 +95,8 @@ class ProviderQuoteDetailScreen extends ConsumerWidget {
       );
     }
 
-    if (quoteAsync.hasError && quote == null) {
-      return SpFlowPage(
-        title: l10n.providerQuoteDetailTitle,
-        onBack: () => _goBack(context, user),
-        bottom: SpSecondaryButton(
-          label: l10n.bookingSentBackHome,
-          onPressed: () => _goBack(context, user),
-        ),
-        children: [
-          SpNotice(
-            key: const Key('provider_quote_inaccessible_notice'),
-            icon: Icons.lock_outline_rounded,
-            message: l10n.providerQuoteNotFoundOrInaccessible,
-            tone: SpTone.neutral,
-          ),
-        ],
-      );
-    }
-
-    if (quote == null || !quote.isAddressedToProvider(providerId)) {
-      return SpFlowPage(
-        title: l10n.providerQuoteDetailTitle,
-        onBack: () => _goBack(context, user),
-        bottom: SpSecondaryButton(
-          label: l10n.bookingSentBackHome,
-          onPressed: () => _goBack(context, user),
-        ),
-        children: [
-          SpNotice(
-            key: const Key('provider_quote_inaccessible_notice'),
-            icon: Icons.lock_outline_rounded,
-            message: l10n.providerQuoteNotFoundOrInaccessible,
-            tone: SpTone.neutral,
-          ),
-        ],
-      );
-    }
+    final quote = quoteAsync.asData?.value;
+    if (quote == null) return unavailable();
 
     final priceText = quote.quotedPrice != null
         ? '\$${quote.quotedPrice!.toStringAsFixed(2)}'
@@ -185,8 +136,7 @@ class ProviderQuoteDetailScreen extends ConsumerWidget {
           label: l10n.quoteStatusLabel,
           value: quote.status.localizedLabel(l10n),
         ),
-        if (quote.customerName != null &&
-            quote.customerName!.trim().isNotEmpty)
+        if (quote.customerName != null && quote.customerName!.trim().isNotEmpty)
           _DetailRow(
             label: l10n.providerQuoteCustomerLabel,
             value: quote.customerName!.trim(),
@@ -199,12 +149,52 @@ class ProviderQuoteDetailScreen extends ConsumerWidget {
           label: l10n.quoteSummaryDescription,
           value: quote.description,
         ),
-        if (quote.photoUrls.isNotEmpty)
+        if (quote.photoUrls.isNotEmpty) ...[
           _DetailRow(
             label: l10n.bookingSummaryPhotos,
             value: l10n.bookingPhotoCount(quote.photoUrls.length),
           ),
+          for (final (index, url) in quote.photoUrls.indexed)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: _RequestPhoto(url: url, number: index + 1),
+            ),
+        ],
       ],
+    );
+  }
+}
+
+class _RequestPhoto extends StatelessWidget {
+  const _RequestPhoto({required this.url, required this.number});
+
+  final String url;
+  final int number;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final unavailable = SpNotice(
+      icon: Icons.broken_image_outlined,
+      message: l10n.providerQuotePhotoUnavailable(number),
+      tone: SpTone.neutral,
+    );
+    final uri = Uri.tryParse(url);
+    if (uri == null ||
+        uri.scheme != 'https' ||
+        uri.host != 'res.cloudinary.com' ||
+        uri.hasPort ||
+        uri.userInfo.isNotEmpty) {
+      return unavailable;
+    }
+
+    return Image.network(
+      uri.toString(),
+      height: 200,
+      width: double.infinity,
+      fit: BoxFit.contain,
+      semanticLabel: l10n.providerQuotePhotoLabel(number),
+      errorBuilder: (_, __, ___) => unavailable,
     );
   }
 }
@@ -246,8 +236,9 @@ class _DetailRow extends StatelessWidget {
                 color: AppTheme.textPrimary,
                 height: 1.5,
               ).copyWith(
-                fontFeatures:
-                    tabularFigures ? const [FontFeature.tabularFigures()] : null,
+                fontFeatures: tabularFigures
+                    ? const [FontFeature.tabularFigures()]
+                    : null,
               ),
             ),
           ],

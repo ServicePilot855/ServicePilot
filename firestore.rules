@@ -906,28 +906,39 @@ service cloud.firestore {
 
     // ===============================================================
     // Collection 6: /quoteRequests/{quoteId}
-    // Supporting US QUOTE-1 (SCRUM-83)
+    // Supporting QUOTE-1 (SCRUM-83) and QUOTE-2 (SCRUM-84)
     // ===============================================================
 
     match /quoteRequests/{quoteId} {
-      // Read: Requesting homeowner, owning provider inbox, seeded provider owner, or platform admin
+      function ownsVerifiedQuoteInbox(providerId) {
+        let uid = request.auth.uid;
+        let account = get(/databases/$(database)/documents/users/$(uid)).data;
+        let profile = get(/databases/$(database)/documents/providers/$(providerId)).data;
+        return account != null && account.get('status', '') != 'suspended' &&
+          profile != null && profile.status in ['active', 'inactive'] &&
+          (
+            (isOwner(providerId) && profile.get('isVerified', false) == true) ||
+            // Seeded profiles use the legacy type field, which clients cannot set.
+            ('type' in profile &&
+              profile.get('isVerified', profile.status == 'active') == true &&
+              request.auth.token.get('email_verified', false) == true &&
+              profile.get('email', '') != '' &&
+              profile.email == request.auth.token.get('email', ''))
+          ) &&
+          (
+            (isIndependentProfile(profile) &&
+              account.role in ['independent_provider', 'independentProvider']) ||
+            (isCompanyProfile(profile) && account.role == 'company' &&
+              account.get('companyId', uid) == uid)
+          );
+      }
+
+      // Read: Requesting homeowner, addressed verified provider, or platform admin.
       allow read: if isAuthenticated() &&
                      (
                        resource.data.customerId == request.auth.uid ||
-                       ownsBookingInbox(resource.data.providerId) ||
-                       (
-                         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-                         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('status', '') != 'suspended' &&
-                         (
-                           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'independent_provider' ||
-                           (
-                             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'company' &&
-                             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('companyId', request.auth.uid) == request.auth.uid
-                           )
-                         ) &&
-                         isOfferingOwner(resource.data.providerId)
-                       ) ||
-                       isAdmin()
+                       isAdmin() ||
+                       ownsVerifiedQuoteInbox(resource.data.providerId)
                      );
 
       // Create: Authenticated homeowner (or platform admin) requesting a quote

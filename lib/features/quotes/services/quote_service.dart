@@ -34,6 +34,10 @@ abstract class IQuoteService {
   Future<List<QuoteRequestModel>> getProviderQuoteRequests(String providerId);
 
   Stream<List<QuoteRequestModel>> watchProviderQuoteRequests(String providerId);
+  Stream<QuoteRequestModel?> watchProviderQuoteRequest(
+    String providerId,
+    String quoteId,
+  );
 
   Future<QuoteRequestModel?> getQuoteRequestById(String quoteId);
 
@@ -107,6 +111,16 @@ class InMemoryQuoteService implements IQuoteService {
     await for (final _ in _changes.stream) {
       yield await getProviderQuoteRequests(providerId);
     }
+  }
+
+  @override
+  Stream<QuoteRequestModel?> watchProviderQuoteRequest(
+    String providerId,
+    String quoteId,
+  ) {
+    return watchQuoteRequestById(quoteId).map((quote) {
+      return quote?.isAddressedToProvider(providerId) == true ? quote : null;
+    });
   }
 
   @override

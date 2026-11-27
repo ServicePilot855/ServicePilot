@@ -625,7 +625,15 @@
   "providerQuotesTitle": "Quote requests",
   "providerQuotesEmpty": "No quote requests yet.",
   "providerQuotesLoadError": "Couldn't load quote requests. Please try again.",
-  "providerQuoteDetailTitle": "Quote decision",
+  "providerQuoteDetailTitle": "Quote request",
+  "providerQuotePhotoLabel": "Request photo {number}",
+  "@providerQuotePhotoLabel": {
+    "placeholders": { "number": { "type": "int" } }
+  },
+  "providerQuotePhotoUnavailable": "Photo {number} couldn't be loaded.",
+  "@providerQuotePhotoUnavailable": {
+    "placeholders": { "number": { "type": "int" } }
+  },
   "providerQuoteNotFoundOrInaccessible": "This quote request isn't available for your account.",
   "providerQuotePriceLabel": "Quoted price",
   "providerQuotePriceNotSet": "Not quoted yet",

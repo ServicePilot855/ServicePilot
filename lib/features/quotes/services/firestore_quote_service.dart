@@ -35,6 +35,9 @@ class FirestoreQuoteService implements IQuoteService {
   CollectionReference<Map<String, dynamic>> get _quoteRequests =>
       _firestore.collection(collectionName);
 
+  Query<Map<String, dynamic>> _providerRequests(String providerId) =>
+      _quoteRequests.where('providerId', isEqualTo: providerId);
+
   @override
   Future<QuoteRequestModel> createQuoteRequest(
     QuoteRequestInput request,
@@ -96,8 +99,7 @@ class FirestoreQuoteService implements IQuoteService {
   Future<List<QuoteRequestModel>> getProviderQuoteRequests(
     String providerId,
   ) async {
-    final snapshot = await _quoteRequests
-        .where('providerId', isEqualTo: providerId)
+    final snapshot = await _providerRequests(providerId)
         .get(const GetOptions(source: Source.server));
     final quotes = snapshot.docs
         .map((d) => QuoteRequestModel.fromFirestore(d.id, d.data()))
@@ -110,16 +112,36 @@ class FirestoreQuoteService implements IQuoteService {
   Stream<List<QuoteRequestModel>> watchProviderQuoteRequests(
     String providerId,
   ) {
-    return _quoteRequests
-        .where('providerId', isEqualTo: providerId)
-        .snapshots()
-        .map((snapshot) {
+    return _watchAuthorized(_providerRequests(providerId)).map((snapshot) {
       final quotes = snapshot.docs
           .map((d) => QuoteRequestModel.fromFirestore(d.id, d.data()))
           .toList()
         ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return List.unmodifiable(quotes);
     });
+  }
+
+  @override
+  Stream<QuoteRequestModel?> watchProviderQuoteRequest(
+    String providerId,
+    String quoteId,
+  ) {
+    final query = _providerRequests(providerId)
+        .where(FieldPath.documentId, isEqualTo: quoteId);
+    return _watchAuthorized(query).map((snapshot) {
+      if (snapshot.docs.isEmpty) return null;
+      final doc = snapshot.docs.single;
+      return QuoteRequestModel.fromFirestore(doc.id, doc.data());
+    });
+  }
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> _watchAuthorized(
+    Query<Map<String, dynamic>> query,
+  ) {
+    // A cached snapshot may predate the current account's authorization.
+    return query
+        .snapshots(includeMetadataChanges: true)
+        .where((snapshot) => !snapshot.metadata.isFromCache);
   }
 
   @override

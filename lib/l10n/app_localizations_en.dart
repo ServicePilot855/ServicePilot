@@ -1611,7 +1611,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Couldn\'t load quote requests. Please try again.';
 
   @override
-  String get providerQuoteDetailTitle => 'Quote decision';
+  String get providerQuoteDetailTitle => 'Quote request';
+
+  @override
+  String providerQuotePhotoLabel(int number) {
+    return 'Request photo $number';
+  }
+
+  @override
+  String providerQuotePhotoUnavailable(int number) {
+    return 'Photo $number couldn\'t be loaded.';
+  }
 
   @override
   String get providerQuoteNotFoundOrInaccessible =>

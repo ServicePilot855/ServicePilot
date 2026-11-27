@@ -313,17 +313,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           bookingId: state.pathParameters['bookingId']!,
         ),
       ),
-      // ── Provider Quote Decision (QUOTE-7 / SCRUM-88) ───────────────────
+      // ── Provider quote inbox detail ─────────────────────────────────────
       GoRoute(
         path: '/provider/quotes/:quoteId',
-        builder: (_, state) {
-          final quoteId = state.pathParameters['quoteId'] ?? '';
-          final quote = state.extra as QuoteRequestModel?;
-          return ProviderQuoteDetailScreen(
-            quoteId: quoteId,
-            initialQuote: quote,
-          );
-        },
+        builder: (_, state) => ProviderQuoteDetailScreen(
+          quoteId: state.pathParameters['quoteId']!,
+        ),
       ),
 
       // ── Booking History (US-15 / SCRUM-46) ────────────────────────────

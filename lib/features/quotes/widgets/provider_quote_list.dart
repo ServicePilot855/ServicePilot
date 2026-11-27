@@ -7,22 +7,18 @@ import 'package:service_pilot/features/quotes/models/quote_status.dart';
 import 'package:service_pilot/features/quotes/providers/quote_provider.dart';
 import 'package:service_pilot/features/quotes/widgets/quote_status_badge.dart';
 import 'package:service_pilot/l10n/l10n.dart';
+import 'package:service_pilot/shared/widgets/sp_button.dart';
 import 'package:service_pilot/shared/widgets/sp_layout.dart';
 
 /// Dashboard section displaying quote requests addressed to a provider and
 /// the homeowner's latest decision (QUOTE-7 / SCRUM-88).
 class ProviderQuoteList extends ConsumerWidget {
-  const ProviderQuoteList({
-    super.key,
-    required this.providerId,
-  });
-
-  final String providerId;
+  const ProviderQuoteList({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final quotesAsync = ref.watch(liveProviderQuoteRequestsProvider(providerId));
+    final quotesAsync = ref.watch(liveProviderQuoteRequestsProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -36,6 +32,7 @@ class ProviderQuoteList extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         quotesAsync.when(
+          skipLoadingOnRefresh: false,
           data: (quotes) {
             if (quotes.isEmpty) {
               return SpNotice(
@@ -61,20 +58,31 @@ class ProviderQuoteList extends ConsumerWidget {
               ),
             );
           },
-          loading: () => const Center(
+          loading: () => Center(
             child: Padding(
-              padding: EdgeInsets.all(16),
-              child: CircularProgressIndicator(color: AppTheme.primary),
+              padding: const EdgeInsets.all(16),
+              child: CircularProgressIndicator(
+                color: AppTheme.primary,
+                semanticsLabel: l10n.providerQuotesTitle,
+              ),
             ),
           ),
-          error: (err, _) {
-            debugPrint('[ProviderQuoteList] load error: $err');
-            return SpNotice(
-              icon: Icons.error_outline_rounded,
-              message: l10n.providerQuotesLoadError,
-              tone: SpTone.danger,
-            );
-          },
+          error: (_, __) => Column(
+            children: [
+              SpNotice(
+                icon: Icons.error_outline_rounded,
+                message: l10n.providerQuotesLoadError,
+                tone: SpTone.danger,
+              ),
+              const SizedBox(height: 12),
+              SpSecondaryButton(
+                label: l10n.bookingInboxRetry,
+                wrapLabel: true,
+                onPressed: () =>
+                    ref.invalidate(liveProviderQuoteRequestsProvider),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -114,7 +122,6 @@ class _ProviderQuoteCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppTheme.radiusCard),
         onTap: () => context.push(
           '/provider/quotes/${Uri.encodeComponent(quote.id)}',
-          extra: quote,
         ),
         child: Container(
           padding: const EdgeInsets.all(16),

@@ -1587,7 +1587,17 @@ class AppLocalizationsKm extends AppLocalizations {
       'មិនអាចផ្ទុកសំណើសម្រង់តម្លៃបានទេ។ សូមព្យាយាមម្តងទៀត។';
 
   @override
-  String get providerQuoteDetailTitle => 'ការសម្រេចចិត្តលើសម្រង់តម្លៃ';
+  String get providerQuoteDetailTitle => 'សំណើសម្រង់តម្លៃ';
+
+  @override
+  String providerQuotePhotoLabel(int number) {
+    return 'រូបថតទី $number នៃសំណើ';
+  }
+
+  @override
+  String providerQuotePhotoUnavailable(int number) {
+    return 'មិនអាចផ្ទុករូបថតទី $number បានទេ។';
+  }
 
   @override
   String get providerQuoteNotFoundOrInaccessible =>
