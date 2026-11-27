@@ -1575,4 +1575,46 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get discoveryLoadingQuotes => 'កំពុងផ្ទុកសំណើសម្រង់តម្លៃរបស់អ្នក';
+
+  @override
+  String get providerQuotesTitle => 'សំណើសម្រង់តម្លៃ';
+
+  @override
+  String get providerQuotesEmpty => 'មិនទាន់មានសំណើសម្រង់តម្លៃទេ។';
+
+  @override
+  String get providerQuotesLoadError =>
+      'មិនអាចផ្ទុកសំណើសម្រង់តម្លៃបានទេ។ សូមព្យាយាមម្តងទៀត។';
+
+  @override
+  String get providerQuoteDetailTitle => 'ការសម្រេចចិត្តលើសម្រង់តម្លៃ';
+
+  @override
+  String get providerQuoteNotFoundOrInaccessible =>
+      'សំណើសម្រង់តម្លៃនេះមិនអាចចូលមើលបានសម្រាប់គណនីរបស់អ្នកទេ។';
+
+  @override
+  String get providerQuotePriceLabel => 'តម្លៃដែលបានផ្ដល់';
+
+  @override
+  String get providerQuotePriceNotSet => 'មិនទាន់បានផ្ដល់តម្លៃ';
+
+  @override
+  String get providerQuoteCustomerLabel => 'ម្ចាស់ផ្ទះ';
+
+  @override
+  String get providerQuoteDecisionApproved =>
+      'ម្ចាស់ផ្ទះបានអនុម័តតម្លៃដែលអ្នកបានផ្ដល់។';
+
+  @override
+  String get providerQuoteDecisionRejected =>
+      'ម្ចាស់ផ្ទះបានបដិសេធតម្លៃដែលអ្នកបានផ្ដល់។';
+
+  @override
+  String get providerQuoteDecisionWaiting =>
+      'កំពុងរង់ចាំម្ចាស់ផ្ទះពិនិត្យតម្លៃដែលអ្នកបានផ្ដល់។';
+
+  @override
+  String get providerQuoteDecisionRequested =>
+      'មិនទាន់មានការផ្ដល់តម្លៃសម្រាប់សំណើនេះទេ។';
 }

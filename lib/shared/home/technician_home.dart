@@ -7,6 +7,7 @@ import 'package:service_pilot/features/bookings/screens/incoming_booking_screen.
 import 'package:service_pilot/features/bookings/widgets/provider_booking_list.dart';
 import 'package:service_pilot/features/providers/providers/provider_provider.dart';
 import 'package:service_pilot/features/providers/services/independent_profile_service.dart';
+import 'package:service_pilot/features/quotes/widgets/provider_quote_list.dart';
 import 'package:service_pilot/features/services/widgets/provider_offering_list.dart';
 import 'package:service_pilot/l10n/l10n.dart';
 import 'package:service_pilot/shared/widgets/coming_soon_home.dart';
@@ -56,6 +57,8 @@ class TechnicianHome extends ConsumerWidget {
         children: [
           if (user != null && user.canViewBookingInbox) ...[
             ProviderBookingList(providerId: user.id),
+            const SizedBox(height: 24),
+            ProviderQuoteList(providerId: providerId),
             const SizedBox(height: 24),
           ],
           ProviderOfferingList(

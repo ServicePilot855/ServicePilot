@@ -107,6 +107,22 @@ class FirestoreQuoteService implements IQuoteService {
   }
 
   @override
+  Stream<List<QuoteRequestModel>> watchProviderQuoteRequests(
+    String providerId,
+  ) {
+    return _quoteRequests
+        .where('providerId', isEqualTo: providerId)
+        .snapshots()
+        .map((snapshot) {
+      final quotes = snapshot.docs
+          .map((d) => QuoteRequestModel.fromFirestore(d.id, d.data()))
+          .toList()
+        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return List.unmodifiable(quotes);
+    });
+  }
+
+  @override
   Future<QuoteRequestModel?> getQuoteRequestById(String quoteId) async {
     final doc = await _quoteRequests.doc(quoteId).get();
     final data = doc.data();
