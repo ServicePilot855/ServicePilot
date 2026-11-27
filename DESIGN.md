@@ -302,6 +302,15 @@ The cart holds fixed-price services from one provider. [Cart review](lib/feature
 - An empty cart shows an `SpStatusHero` and an outlined **Browse services** button.
 - Only homeowners can open `/cart`.
 
+## Quote requests
+
+Quote-required offerings follow a separate flow from fixed-price cart checkout and booking scheduling.
+
+- [Quote request form](lib/features/quotes/screens/create_quote_request_screen.dart) at `/providers/:providerId/quote?offeringId=...` is a white `SpFlowPage` opened from **Request a Quote** on a quote-required offering card.
+- Show a `waiting` `SpNotice` explaining that no upfront charge applies, a summary block naming the selected offering and its **Quote Required** badge, and the shared [`ProblemDescriptionField`](lib/features/bookings/widgets/problem_photo_controls.dart) and [`ProblemPhotoStrip`](lib/features/bookings/widgets/problem_photo_controls.dart).
+- Omit address, date/time, and checkout price controls; keep the cart untouched.
+- On submit, navigate to [Quote request confirmation](lib/features/quotes/screens/quote_request_confirmation_screen.dart) (`/quotes/:quoteId/sent`) with a `waiting` `SpStatusHero`, [`QuoteStatusBadge`](lib/features/quotes/widgets/quote_status_badge.dart) (**Requested**), and flat Hairline-separated summary rows. [Quote request detail](lib/features/quotes/screens/quote_request_detail_screen.dart) (`/quotes/:quoteId`) tracks the live status.
+
 ## Reviewing UI changes
 
 1. Start from the closest implemented screen. Reuse its `AppTheme` tokens and shared widgets. If a new pattern is needed, document it here with the same change and check any other screens that use the affected theme or component.
