@@ -549,5 +549,45 @@
       "count": {"type": "int"},
       "providerName": {"type": "String"}
     }
-  }
+  },
+
+  "@_QUOTES": {},
+  "quoteFormTitle": "Request a quote",
+  "quoteFormHeading": "Describe the job",
+  "quoteFormSubtitle": "{provider} will review your details and photos and send a price quote.",
+  "@quoteFormSubtitle": {
+    "placeholders": {"provider": {"type": "String"}}
+  },
+  "quoteSelectedOfferingLabel": "Selected service",
+  "quoteDescriptionHint": "For example: the outdoor AC board clicks and shows an E5 error after a power surge",
+  "quoteRequestFooterNote": "This quote request stays separate from your cart. You can book a time after you review and approve the provider's price.",
+  "quoteSubmit": "Send quote request",
+  "quoteErrorSaveFailed": "We couldn't send your quote request. Check your connection and try again.",
+  "quoteOfferingUnavailable": "This service isn't available for quote requests right now.",
+  "quoteOfferingNotFound": "We couldn't find this service offering.",
+  "quoteSentTitle": "Quote request sent",
+  "quoteSentMessage": "{provider} will review your request and send a price quote. Your cart was not changed.",
+  "@quoteSentMessage": {
+    "placeholders": {"provider": {"type": "String"}}
+  },
+  "quoteSentMessageGeneric": "The provider will review your request and send a price quote.",
+  "quoteStatusLabel": "Status",
+  "quoteStatusRequested": "Requested",
+  "quoteStatusQuoted": "Quoted",
+  "quoteStatusApproved": "Approved",
+  "quoteStatusRejected": "Rejected",
+  "quoteSummaryProvider": "Provider",
+  "quoteSummaryDescription": "Problem details",
+  "quoteSentViewStatus": "View quote request",
+  "quoteDetailTitle": "Quote request",
+  "quoteDetailLoading": "Loading quote request",
+  "quoteDetailNotFound": "We couldn't find this quote request.",
+  "quoteDetailWaitingMessage": "Waiting for {provider} to review your details and send a price quote.",
+  "@quoteDetailWaitingMessage": {
+    "placeholders": {"provider": {"type": "String"}}
+  },
+  "discoveryHomeQuotes": "My quote requests",
+  "discoveryNoQuotes": "You have no quote requests yet.",
+  "discoveryQuotesError": "Couldn't load your quote requests.",
+  "discoveryLoadingQuotes": "Loading your quote requests"
 }

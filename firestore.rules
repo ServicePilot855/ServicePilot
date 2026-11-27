@@ -110,6 +110,25 @@ rules_version = '2';
 //   - createdAt: timestamp | string (optional, immutable)
 //   - updatedAt: timestamp | string (optional)
 //
+// Collection: quoteRequests
+// Document ID: {quoteId}
+// Fields:
+//   - id: string (required, 1-128 chars, immutable) - Unique quote request identifier
+//   - customerId: string (required, 1-128 chars, immutable) - Homeowner UID
+//   - customerName: string | null (optional, max 100 chars) - Denormalized customer name
+//   - providerId: string (required, 1-128 chars, immutable) - Provider UID
+//   - providerName: string | null (optional, max 150 chars) - Denormalized provider name
+//   - offeringId: string (required, 1-128 chars, immutable) - Associated offering ID
+//   - offeringTitle: string (required, 1-150 chars, non-whitespace) - Offering title
+//   - categoryId: string | null (optional, max 50 chars) - Service category ID
+//   - categoryName: string | null (optional, max 100 chars) - Service category name
+//   - description: string (required, 15-2000 chars, non-whitespace) - Customer quote request description
+//   - photos: list of strings (optional, max 5 items, valid URLs) - Reference photo URLs
+//   - status: string (required) - One of ['requested', 'quoted', 'approved', 'rejected']
+//   - quotedPrice: number | null (optional, >= 0; forbidden when status == 'requested') - Quoted price
+//   - createdAt: timestamp | string | null (optional, immutable)
+//   - updatedAt: timestamp | string | null (optional)
+//
 // ===============================================================
 
 service cloud.firestore {
@@ -424,6 +443,48 @@ service cloud.firestore {
             (data.price is number && data.price >= 0)
         ) &&
         (!('unit' in data) || data.unit == null || (data.unit is string && data.unit.size() <= 50)) &&
+        (!('createdAt' in data) || data.createdAt == null || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
+        (!('updatedAt' in data) || data.updatedAt == null || data.updatedAt is timestamp || (data.updatedAt is string && data.updatedAt.size() <= 50));
+    }
+
+    // Validate bounded quote request photo list (max 5 valid URLs)
+    function isValidQuotePhotoList(photos) {
+      return photos is list &&
+        photos.size() <= 5 &&
+        (photos.size() < 1 || isValidUrl(photos[0])) &&
+        (photos.size() < 2 || isValidUrl(photos[1])) &&
+        (photos.size() < 3 || isValidUrl(photos[2])) &&
+        (photos.size() < 4 || isValidUrl(photos[3])) &&
+        (photos.size() < 5 || isValidUrl(photos[4]));
+    }
+
+    // Validate /quoteRequests/{quoteId} document schema and field constraints
+    // Supporting US QUOTE-1 (SCRUM-83)
+    function isValidQuoteRequest(data) {
+      return hasOnlyAllowedFields(data, [
+          'id', 'customerId', 'customerName', 'providerId', 'providerName',
+          'offeringId', 'offeringTitle', 'categoryId', 'categoryName',
+          'description', 'photos', 'status', 'quotedPrice', 'createdAt', 'updatedAt'
+        ]) &&
+        hasRequiredFields(data, [
+          'id', 'customerId', 'providerId', 'offeringId',
+          'offeringTitle', 'description', 'status'
+        ]) &&
+        data.id is string && data.id.size() >= 1 && data.id.size() <= 128 &&
+        data.customerId is string && data.customerId.size() >= 1 && data.customerId.size() <= 128 &&
+        data.providerId is string && data.providerId.size() >= 1 && data.providerId.size() <= 128 &&
+        data.offeringId is string && data.offeringId.size() >= 1 && data.offeringId.size() <= 128 &&
+        data.offeringTitle is string && data.offeringTitle.size() >= 1 && data.offeringTitle.size() <= 150 &&
+        data.offeringTitle.matches('(?s).*\\S.*') &&
+        (!('customerName' in data) || data.customerName == null || (data.customerName is string && data.customerName.size() <= 100)) &&
+        (!('providerName' in data) || data.providerName == null || (data.providerName is string && data.providerName.size() <= 150)) &&
+        (!('categoryId' in data) || data.categoryId == null || (data.categoryId is string && data.categoryId.size() <= 50)) &&
+        (!('categoryName' in data) || data.categoryName == null || (data.categoryName is string && data.categoryName.size() <= 100)) &&
+        data.description is string && data.description.size() >= 15 && data.description.size() <= 2000 &&
+        data.description.matches('(?s).*\\S.*') &&
+        (!('photos' in data) || isValidQuotePhotoList(data.photos)) &&
+        data.status is string && data.status in ['requested', 'quoted', 'approved', 'rejected'] &&
+        (!('quotedPrice' in data) || data.quotedPrice == null || (data.status != 'requested' && data.quotedPrice is number && data.quotedPrice >= 0)) &&
         (!('createdAt' in data) || data.createdAt == null || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
         (!('updatedAt' in data) || data.updatedAt == null || data.updatedAt is timestamp || (data.updatedAt is string && data.updatedAt.size() <= 50));
     }
@@ -841,6 +902,56 @@ service cloud.firestore {
 
       // Delete: Provider (owner) or platform admin
       allow delete: if (isOfferingOwner(resource.data.providerId) || isAdmin());
+    }
+
+    // ===============================================================
+    // Collection 6: /quoteRequests/{quoteId}
+    // Supporting US QUOTE-1 (SCRUM-83)
+    // ===============================================================
+
+    match /quoteRequests/{quoteId} {
+      // Read: Requesting homeowner, owning provider inbox, or platform admin
+      allow read: if isAuthenticated() &&
+                     (
+                       resource.data.customerId == request.auth.uid ||
+                       ownsBookingInbox(resource.data.providerId) ||
+                       isAdmin()
+                     );
+
+      // Create: Authenticated homeowner (or platform admin) requesting a quote
+      // for an active quote-required offering owned by an active provider.
+      allow create: if isAuthenticated() &&
+                       isValidQuoteRequest(request.resource.data) &&
+                       request.resource.data.id == quoteId &&
+                       (
+                         isAdmin() ||
+                         (
+                           request.resource.data.customerId == request.auth.uid &&
+                           request.resource.data.status == 'requested' &&
+                           (!('quotedPrice' in request.resource.data) || request.resource.data.quotedPrice == null) &&
+                           (
+                             !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+                             (
+                               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'homeowner' &&
+                               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status != 'suspended'
+                             )
+                           ) &&
+                           exists(/databases/$(database)/documents/providers/$(request.resource.data.providerId)) &&
+                           get(/databases/$(database)/documents/providers/$(request.resource.data.providerId)).data.status == 'active' &&
+                           exists(/databases/$(database)/documents/offerings/$(request.resource.data.offeringId)) &&
+                           get(/databases/$(database)/documents/offerings/$(request.resource.data.offeringId)).data.providerId == request.resource.data.providerId &&
+                           get(/databases/$(database)/documents/offerings/$(request.resource.data.offeringId)).data.isActive == true &&
+                           get(/databases/$(database)/documents/offerings/$(request.resource.data.offeringId)).data.pricingMode in ['quote_required', 'quoteRequired']
+                         )
+                       );
+
+      // Update: Platform admin only, preserving immutable identity and origin fields
+      allow update: if isAdmin() &&
+                       isValidQuoteRequest(request.resource.data) &&
+                       areImmutableFieldsUnchanged(['id', 'customerId', 'providerId', 'offeringId', 'createdAt']);
+
+      // Delete: Platform admin only
+      allow delete: if isAdmin();
     }
   }
 }

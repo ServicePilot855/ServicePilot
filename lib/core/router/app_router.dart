@@ -29,7 +29,12 @@ import 'package:service_pilot/features/providers/screens/company_profile_edit_sc
 import 'package:service_pilot/features/providers/screens/provider_detail_screen.dart';
 import 'package:service_pilot/features/providers/screens/provider_list_screen.dart';
 import 'package:service_pilot/features/providers/screens/technician_profile_edit_screen.dart';
+import 'package:service_pilot/features/quotes/models/quote_request_model.dart';
+import 'package:service_pilot/features/quotes/screens/create_quote_request_screen.dart';
+import 'package:service_pilot/features/quotes/screens/quote_request_confirmation_screen.dart';
+import 'package:service_pilot/features/quotes/screens/quote_request_detail_screen.dart';
 import 'package:service_pilot/features/services/models/category_model.dart';
+import 'package:service_pilot/features/services/models/offering_model.dart';
 import 'package:service_pilot/features/services/screens/categories_screen.dart';
 import 'package:service_pilot/features/services/screens/create_offering_screen.dart';
 import 'package:service_pilot/shared/home/customer_home.dart';
@@ -66,6 +71,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           state.matchedLocation.startsWith('/categories') ||
           state.matchedLocation.startsWith('/providers') ||
           state.matchedLocation.startsWith('/bookings') ||
+          state.matchedLocation.startsWith('/quotes') ||
           state.matchedLocation.startsWith('/offerings') ||
           isGoingToBookingInbox ||
           isGoingToAdmin;
@@ -206,6 +212,45 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return ProviderDetailScreen(
             providerId: providerId,
             initialProvider: provider,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/providers/:providerId/quote',
+        builder: (_, state) {
+          final providerId = state.pathParameters['providerId'] ?? '';
+          final offeringId = state.uri.queryParameters['offeringId'] ?? '';
+          final extra = state.extra;
+          final args = extra is QuoteRequestRouteArgs ? extra : null;
+          return CreateQuoteRequestScreen(
+            providerId: providerId,
+            offeringId: offeringId,
+            initialProvider:
+                args?.provider ?? (extra is ProviderModel ? extra : null),
+            initialOffering:
+                args?.offering ?? (extra is OfferingModel ? extra : null),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/quotes/:quoteId/sent',
+        builder: (_, state) {
+          final quoteId = state.pathParameters['quoteId'] ?? '';
+          final quote = state.extra as QuoteRequestModel?;
+          return QuoteRequestConfirmationScreen(
+            quoteId: quoteId,
+            quote: quote,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/quotes/:quoteId',
+        builder: (_, state) {
+          final quoteId = state.pathParameters['quoteId'] ?? '';
+          final quote = state.extra as QuoteRequestModel?;
+          return QuoteRequestDetailScreen(
+            quoteId: quoteId,
+            initialQuote: quote,
           );
         },
       ),

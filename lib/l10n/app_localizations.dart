@@ -2593,6 +2593,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cart has {count, plural, =1{1 service} other{{count} services}} from {providerName}.'**
   String cartActiveProviderNotice(int count, String providerName);
+
+  /// No description provided for @quoteFormTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Request a quote'**
+  String get quoteFormTitle;
+
+  /// No description provided for @quoteFormHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe the job'**
+  String get quoteFormHeading;
+
+  /// No description provided for @quoteFormSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{provider} will review your details and photos and send a price quote.'**
+  String quoteFormSubtitle(String provider);
+
+  /// No description provided for @quoteSelectedOfferingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected service'**
+  String get quoteSelectedOfferingLabel;
+
+  /// No description provided for @quoteDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For example: the outdoor AC board clicks and shows an E5 error after a power surge'**
+  String get quoteDescriptionHint;
+
+  /// No description provided for @quoteRequestFooterNote.
+  ///
+  /// In en, this message translates to:
+  /// **'This quote request stays separate from your cart. You can book a time after you review and approve the provider\'s price.'**
+  String get quoteRequestFooterNote;
+
+  /// No description provided for @quoteSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Send quote request'**
+  String get quoteSubmit;
+
+  /// No description provided for @quoteErrorSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t send your quote request. Check your connection and try again.'**
+  String get quoteErrorSaveFailed;
+
+  /// No description provided for @quoteOfferingUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This service isn\'t available for quote requests right now.'**
+  String get quoteOfferingUnavailable;
+
+  /// No description provided for @quoteOfferingNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t find this service offering.'**
+  String get quoteOfferingNotFound;
+
+  /// No description provided for @quoteSentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote request sent'**
+  String get quoteSentTitle;
+
+  /// No description provided for @quoteSentMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{provider} will review your request and send a price quote. Your cart was not changed.'**
+  String quoteSentMessage(String provider);
+
+  /// No description provided for @quoteSentMessageGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'The provider will review your request and send a price quote.'**
+  String get quoteSentMessageGeneric;
+
+  /// No description provided for @quoteStatusLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get quoteStatusLabel;
+
+  /// No description provided for @quoteStatusRequested.
+  ///
+  /// In en, this message translates to:
+  /// **'Requested'**
+  String get quoteStatusRequested;
+
+  /// No description provided for @quoteStatusQuoted.
+  ///
+  /// In en, this message translates to:
+  /// **'Quoted'**
+  String get quoteStatusQuoted;
+
+  /// No description provided for @quoteStatusApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get quoteStatusApproved;
+
+  /// No description provided for @quoteStatusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get quoteStatusRejected;
+
+  /// No description provided for @quoteSummaryProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider'**
+  String get quoteSummaryProvider;
+
+  /// No description provided for @quoteSummaryDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Problem details'**
+  String get quoteSummaryDescription;
+
+  /// No description provided for @quoteSentViewStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'View quote request'**
+  String get quoteSentViewStatus;
+
+  /// No description provided for @quoteDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote request'**
+  String get quoteDetailTitle;
+
+  /// No description provided for @quoteDetailLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading quote request'**
+  String get quoteDetailLoading;
+
+  /// No description provided for @quoteDetailNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t find this quote request.'**
+  String get quoteDetailNotFound;
+
+  /// No description provided for @quoteDetailWaitingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for {provider} to review your details and send a price quote.'**
+  String quoteDetailWaitingMessage(String provider);
+
+  /// No description provided for @discoveryHomeQuotes.
+  ///
+  /// In en, this message translates to:
+  /// **'My quote requests'**
+  String get discoveryHomeQuotes;
+
+  /// No description provided for @discoveryNoQuotes.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no quote requests yet.'**
+  String get discoveryNoQuotes;
+
+  /// No description provided for @discoveryQuotesError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your quote requests.'**
+  String get discoveryQuotesError;
+
+  /// No description provided for @discoveryLoadingQuotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading your quote requests'**
+  String get discoveryLoadingQuotes;
 }
 
 class _AppLocalizationsDelegate
