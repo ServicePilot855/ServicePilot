@@ -118,8 +118,34 @@ class _FakePhotoSource implements IPhotoSource {
 
 class _FailingQuoteService extends InMemoryQuoteService {
   @override
-  Future<QuoteRequestModel> createQuoteRequest(QuoteRequestInput request) {
+  Future<QuoteRequestModel> createQuoteRequest(
+    QuoteRequestInput request, {
+    bool retry = false,
+  }) {
     throw const QuoteSubmissionException('Network error');
+  }
+}
+
+class _RecordingFailedQuoteService extends _FailingQuoteService {
+  final attempts = <(String?, bool)>[];
+
+  @override
+  Future<QuoteRequestModel> createQuoteRequest(
+    QuoteRequestInput request, {
+    bool retry = false,
+  }) {
+    attempts.add((request.submissionId, retry));
+    return super.createQuoteRequest(request, retry: retry);
+  }
+}
+
+class _TemporarilyUnavailableQuoteService extends InMemoryQuoteService {
+  int reads = 0;
+
+  @override
+  Future<QuoteRequestModel?> getQuoteRequestById(String quoteId) async {
+    if (reads++ == 0) throw StateError('Network unavailable');
+    return super.getQuoteRequestById(quoteId);
   }
 }
 
@@ -242,6 +268,63 @@ void main() {
   }
 
   group('SCRUM-83 / QUOTE-1: Separate Quote Request Flow', () {
+    testWidgets('a missing confirmation shows an unavailable request', (
+      tester,
+    ) async {
+      await tester
+          .pumpWidget(buildApp(initialLocation: '/quotes/missing/sent'));
+      await tester.pumpAndSettle();
+
+      expect(
+          find.text('We couldn\'t find this quote request.'), findsOneWidget);
+      expect(find.byKey(const Key('quote_request_sent_hero')), findsNothing);
+      expect(find.byKey(const Key('quote_view_status_button')), findsNothing);
+    });
+
+    testWidgets('a failed confirmation lookup can be retried', (tester) async {
+      final service = _TemporarilyUnavailableQuoteService();
+      final saved = await service.createQuoteRequest(QuoteRequestInput(
+        customerId: _homeowner.id,
+        providerId: _provider.id,
+        providerName: _provider.displayName,
+        offering: _quoteOffering,
+        description: 'The outdoor unit clicks and shows an error.',
+      ));
+      await tester.pumpWidget(buildApp(
+        initialLocation: '/quotes/${saved.id}/sent',
+        customQuoteService: service,
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('quote_request_sent_hero')), findsNothing);
+      await tapVisible(tester, find.text('Try again'));
+      expect(find.byKey(const Key('quote_request_sent_hero')), findsOneWidget);
+    });
+
+    testWidgets('an unchanged submission keeps its ID across retries', (
+      tester,
+    ) async {
+      final service = _RecordingFailedQuoteService();
+      await tester.pumpWidget(buildApp(customQuoteService: service));
+      await tester.pumpAndSettle();
+      final field = find.byKey(const Key('quote_description_field'));
+      final submit = find.byKey(const Key('quote_submit_button'));
+      await tester.enterText(
+          field, 'The outdoor unit clicks and shows an error.');
+      await tapVisible(tester, submit);
+      await tester.pump(const Duration(seconds: 5));
+      await tapVisible(tester, submit);
+      await tester.pump(const Duration(seconds: 5));
+      await tester.enterText(field, 'The outdoor unit is now leaking water.');
+      await tapVisible(tester, submit);
+
+      final firstId = service.attempts.first.$1;
+      expect(firstId, isNotEmpty);
+      expect(service.attempts.take(2), [(firstId, false), (firstId, true)]);
+      expect(service.attempts.last.$1, isNot(firstId));
+      expect(service.attempts.last.$2, isFalse);
+    });
+
     testWidgets(
         'SCRUM-134: shows selected quote-required offering and validates description',
         (tester) async {

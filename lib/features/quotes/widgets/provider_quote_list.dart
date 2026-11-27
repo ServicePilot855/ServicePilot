@@ -5,6 +5,7 @@ import 'package:service_pilot/core/theme/app_theme.dart';
 import 'package:service_pilot/features/quotes/models/quote_request_model.dart';
 import 'package:service_pilot/features/quotes/models/quote_status.dart';
 import 'package:service_pilot/features/quotes/providers/quote_provider.dart';
+import 'package:service_pilot/features/quotes/services/quote_service.dart';
 import 'package:service_pilot/features/quotes/widgets/quote_status_badge.dart';
 import 'package:service_pilot/l10n/l10n.dart';
 import 'package:service_pilot/shared/widgets/sp_button.dart';
@@ -12,13 +13,21 @@ import 'package:service_pilot/shared/widgets/sp_layout.dart';
 
 /// Dashboard section displaying quote requests addressed to a provider and
 /// the homeowner's latest decision (QUOTE-7 / SCRUM-88).
-class ProviderQuoteList extends ConsumerWidget {
+class ProviderQuoteList extends ConsumerStatefulWidget {
   const ProviderQuoteList({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProviderQuoteList> createState() => _ProviderQuoteListState();
+}
+
+class _ProviderQuoteListState extends ConsumerState<ProviderQuoteList> {
+  int _quoteLimit = quotePageSize;
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final quotesAsync = ref.watch(liveProviderQuoteRequestsProvider);
+    final quotes = liveProviderQuoteRequestsProvider(_quoteLimit);
+    final quotesAsync = ref.watch(quotes);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -33,8 +42,8 @@ class ProviderQuoteList extends ConsumerWidget {
         const SizedBox(height: 12),
         quotesAsync.when(
           skipLoadingOnRefresh: false,
-          data: (quotes) {
-            if (quotes.isEmpty) {
+          data: (page) {
+            if (page.quotes.isEmpty) {
               return SpNotice(
                 icon: Icons.request_quote_outlined,
                 message: l10n.providerQuotesEmpty,
@@ -42,20 +51,21 @@ class ProviderQuoteList extends ConsumerWidget {
               );
             }
 
-            final sorted = List<QuoteRequestModel>.from(quotes)
-              ..sort(
-                (a, b) => (b.updatedAt ?? b.createdAt)
-                    .compareTo(a.updatedAt ?? a.createdAt),
-              );
-
-            return ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: sorted.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) => _ProviderQuoteCard(
-                quote: sorted[index],
-              ),
+            return Column(
+              children: [
+                for (final quote in page.quotes)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _ProviderQuoteCard(quote: quote),
+                  ),
+                if (page.hasMore)
+                  SpSecondaryButton(
+                    label: l10n.quoteLoadMore,
+                    wrapLabel: true,
+                    onPressed: () =>
+                        setState(() => _quoteLimit += quotePageSize),
+                  ),
+              ],
             );
           },
           loading: () => Center(
@@ -78,8 +88,7 @@ class ProviderQuoteList extends ConsumerWidget {
               SpSecondaryButton(
                 label: l10n.bookingInboxRetry,
                 wrapLabel: true,
-                onPressed: () =>
-                    ref.invalidate(liveProviderQuoteRequestsProvider),
+                onPressed: () => ref.invalidate(quotes),
               ),
             ],
           ),

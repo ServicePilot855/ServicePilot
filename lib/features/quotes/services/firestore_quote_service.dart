@@ -20,6 +20,7 @@ class FirestoreQuoteService implements IQuoteService {
 
   final FirebaseFirestore? _injectedFirestore;
   final IBookingPhotoUploader? _injectedUploader;
+  final _pendingWrites = <(String, String), Future<QuoteRequestModel>>{};
 
   static const String collectionName = 'quoteRequests';
   static const Duration writeTimeout = Duration(seconds: 15);
@@ -39,15 +40,27 @@ class FirestoreQuoteService implements IQuoteService {
       _quoteRequests.where('providerId', isEqualTo: providerId);
 
   @override
+  String newQuoteRequestId() => _quoteRequests.doc().id;
+
+  @override
   Future<QuoteRequestModel> createQuoteRequest(
-    QuoteRequestInput request,
-  ) async {
+    QuoteRequestInput request, {
+    bool retry = false,
+  }) async {
     final errors = QuoteRequestValidator.validate(request);
     if (errors.isNotEmpty) {
       throw InvalidQuoteRequestException(errors);
     }
 
-    final doc = _quoteRequests.doc();
+    final doc = _quoteRequests.doc(request.submissionId);
+    final key = (request.customerId, doc.id);
+    final pending = _pendingWrites[key];
+    if (pending != null) return _guard(() => pending);
+
+    if (retry) {
+      final saved = await _findSavedSubmission(doc.id, request);
+      if (saved != null) return saved;
+    }
 
     // Upload photos before persisting so failed uploads never leave an orphan request.
     final photoUrls = request.photos.isEmpty
@@ -77,8 +90,45 @@ class FirestoreQuoteService implements IQuoteService {
       createdAt: DateTime.now(),
     );
 
-    await _guard(() => doc.set(quote.toFirestore()));
-    return quote;
+    final existingWrite = _pendingWrites[key];
+    if (existingWrite != null) return _guard(() => existingWrite);
+
+    // Keep waiting on the same write if the client stops waiting for its result.
+    final write =
+        doc.set(quote.toFirestore()).then((_) => quote).whenComplete(() {
+      _pendingWrites.remove(key);
+    });
+    _pendingWrites[key] = write;
+    try {
+      return await _guard(() => write);
+    } on QuoteSubmissionException {
+      if (retry && !_pendingWrites.containsKey(key)) {
+        final saved = await _findSavedSubmission(doc.id, request);
+        if (saved != null) return saved;
+      }
+      rethrow;
+    }
+  }
+
+  Future<QuoteRequestModel?> _findSavedSubmission(
+    String quoteId,
+    QuoteRequestInput request,
+  ) async {
+    try {
+      final saved = await getQuoteRequestById(quoteId).timeout(writeTimeout);
+      if (saved != null && !matchesQuoteSubmission(saved, request)) {
+        throw const QuoteSubmissionException(
+            'Quote request ID is already in use.');
+      }
+      return saved;
+    } on FirebaseException catch (error) {
+      throw QuoteSubmissionException(
+        error.message ?? 'Could not check quote request status.',
+      );
+    } on TimeoutException {
+      throw const QuoteSubmissionException(
+          'Could not check quote request status.');
+    }
   }
 
   @override
@@ -106,6 +156,72 @@ class FirestoreQuoteService implements IQuoteService {
         .toList()
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return List.unmodifiable(quotes);
+  }
+
+  @override
+  Future<QuoteRequestPage> getCustomerQuotePage(
+      String customerId, int size) async {
+    final snapshot = await _quoteRequests
+        .where('customerId', isEqualTo: customerId)
+        .orderBy('createdAt', descending: true)
+        .limit(size + 1)
+        .get();
+    return QuoteRequestPage(_decodeQuotes(snapshot), size);
+  }
+
+  @override
+  Stream<QuoteRequestPage> watchProviderQuotePage(String providerId, int size) {
+    // Creation covers requests without an update. The update feed keeps old
+    // requests with recent decisions in the same bounded window.
+    final queries = {
+      'createdAt': _providerRequests(providerId),
+      'updatedAt':
+          _providerRequests(providerId).where('updatedAt', isNull: false),
+    };
+    return Stream.multi((controller) {
+      final feeds = <String, List<QuoteRequestModel>>{};
+      final subscriptions = [
+        for (final entry in queries.entries)
+          _watchAuthorized(entry.value
+                  .orderBy(entry.key, descending: true)
+                  .limit(size + 1))
+              .map(_decodeQuotes)
+              .listen((quotes) {
+            feeds[entry.key] = quotes;
+            final created = feeds['createdAt'];
+            final updated = feeds['updatedAt'];
+            if (created == null || updated == null) return;
+
+            final byId = {for (final quote in created) quote.id: quote};
+            for (final quote in updated) {
+              final previous = byId[quote.id];
+              final previousUpdate = previous?.updatedAt;
+              final update = quote.updatedAt;
+              if (previous == null ||
+                  previousUpdate == null ||
+                  (update != null && !update.isBefore(previousUpdate))) {
+                byId[quote.id] = quote;
+              }
+            }
+            final ordered = byId.values.toList()..sort(compareQuoteActivity);
+            controller.add(QuoteRequestPage(ordered, size));
+          }, onError: (Object error, StackTrace stack) {
+            feeds.remove(entry.key);
+            controller.addError(error, stack);
+          }),
+      ];
+      controller.onCancel = () async {
+        await Future.wait(
+            subscriptions.map((subscription) => subscription.cancel()));
+      };
+    });
+  }
+
+  List<QuoteRequestModel> _decodeQuotes(
+      QuerySnapshot<Map<String, dynamic>> snapshot) {
+    return snapshot.docs
+        .map((doc) => QuoteRequestModel.fromFirestore(doc.id, doc.data()))
+        .toList();
   }
 
   @override
@@ -146,10 +262,18 @@ class FirestoreQuoteService implements IQuoteService {
 
   @override
   Future<QuoteRequestModel?> getQuoteRequestById(String quoteId) async {
-    final doc = await _quoteRequests.doc(quoteId).get();
-    final data = doc.data();
-    if (!doc.exists || data == null) return null;
-    return QuoteRequestModel.fromFirestore(doc.id, data);
+    try {
+      final doc = await _quoteRequests.doc(quoteId).get(
+            const GetOptions(source: Source.server),
+          );
+      final data = doc.data();
+      if (data == null || doc.metadata.hasPendingWrites) return null;
+      return QuoteRequestModel.fromFirestore(doc.id, data);
+    } on FirebaseException catch (error) {
+      // The quote read rules also deny reads of documents that do not exist.
+      if (error.code == 'permission-denied') return null;
+      rethrow;
+    }
   }
 
   @override

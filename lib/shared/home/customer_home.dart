@@ -7,12 +7,14 @@ import 'package:service_pilot/features/bookings/models/booking_model.dart';
 import 'package:service_pilot/features/bookings/providers/booking_provider.dart';
 import 'package:service_pilot/features/quotes/models/quote_request_model.dart';
 import 'package:service_pilot/features/quotes/providers/quote_provider.dart';
+import 'package:service_pilot/features/quotes/services/quote_service.dart';
 import 'package:service_pilot/features/quotes/widgets/quote_status_badge.dart';
 import 'package:service_pilot/features/services/models/category_model.dart';
 import 'package:service_pilot/features/services/providers/category_provider.dart';
 import 'package:service_pilot/features/services/widgets/category_card.dart';
 import 'package:service_pilot/l10n/l10n.dart';
 import 'package:service_pilot/shared/widgets/sp_brand.dart';
+import 'package:service_pilot/shared/widgets/sp_button.dart';
 import 'package:service_pilot/shared/widgets/sp_layout.dart';
 import 'package:service_pilot/shared/widgets/status_badge.dart';
 
@@ -20,8 +22,15 @@ import 'package:service_pilot/shared/widgets/status_badge.dart';
 ///
 /// Features service categories discovery (US-09 / SCRUM-41) and direct
 /// navigation to provider selection.
-class CustomerHome extends ConsumerWidget {
+class CustomerHome extends ConsumerStatefulWidget {
   const CustomerHome({super.key});
+
+  @override
+  ConsumerState<CustomerHome> createState() => _CustomerHomeState();
+}
+
+class _CustomerHomeState extends ConsumerState<CustomerHome> {
+  int _quoteLimit = quotePageSize;
 
   void _onCategorySelected(
     BuildContext context,
@@ -33,14 +42,15 @@ class CustomerHome extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
     final user = ref.watch(authProvider.notifier).currentUser;
     final name = user?.fullName ?? l10n.homeFallbackName;
     final firstName = name.trim().split(RegExp(r'\s+')).first;
     final categoriesAsync = ref.watch(categoriesListProvider);
     final bookingsAsync = ref.watch(customerBookingsProvider);
-    final quotesAsync = ref.watch(customerQuoteRequestsProvider);
+    final quotes = customerQuoteRequestsProvider(_quoteLimit);
+    final quotesAsync = ref.watch(quotes);
 
     return Scaffold(
       backgroundColor: AppTheme.browseBackground,
@@ -256,8 +266,8 @@ class CustomerHome extends ConsumerWidget {
                 ),
                 const SizedBox(height: 10),
                 quotesAsync.when(
-                  data: (quotes) {
-                    if (quotes.isEmpty) {
+                  data: (page) {
+                    if (page.quotes.isEmpty) {
                       return SpNotice(
                         icon: Icons.request_quote_outlined,
                         message: l10n.discoveryNoQuotes,
@@ -265,19 +275,27 @@ class CustomerHome extends ConsumerWidget {
                       );
                     }
                     return Column(
-                      children: quotes.map((quote) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _CustomerQuoteCard(
-                            key: Key('home_quote_${quote.id}'),
-                            quote: quote,
-                            onTap: () => context.push(
-                              '/quotes/${Uri.encodeComponent(quote.id)}',
-                              extra: quote,
+                      children: [
+                        for (final quote in page.quotes)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _CustomerQuoteCard(
+                              key: Key('home_quote_${quote.id}'),
+                              quote: quote,
+                              onTap: () => context.push(
+                                '/quotes/${Uri.encodeComponent(quote.id)}',
+                                extra: quote,
+                              ),
                             ),
                           ),
-                        );
-                      }).toList(),
+                        if (page.hasMore)
+                          SpSecondaryButton(
+                            label: l10n.quoteLoadMore,
+                            wrapLabel: true,
+                            onPressed: () =>
+                                setState(() => _quoteLimit += quotePageSize),
+                          ),
+                      ],
                     );
                   },
                   loading: () => Center(
@@ -288,10 +306,20 @@ class CustomerHome extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  error: (_, __) => SpNotice(
-                    icon: Icons.error_outline_rounded,
-                    message: l10n.discoveryQuotesError,
-                    tone: SpTone.danger,
+                  error: (_, __) => Column(
+                    children: [
+                      SpNotice(
+                        icon: Icons.error_outline_rounded,
+                        message: l10n.discoveryQuotesError,
+                        tone: SpTone.danger,
+                      ),
+                      const SizedBox(height: 12),
+                      SpSecondaryButton(
+                        label: l10n.bookingInboxRetry,
+                        wrapLabel: true,
+                        onPressed: () => ref.invalidate(quotes),
+                      ),
+                    ],
                   ),
                 ),
               ],

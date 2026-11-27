@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -181,6 +182,7 @@ class _QuoteRequestFormState extends ConsumerState<_QuoteRequestForm> {
   final _formKey = GlobalKey<FormState>();
   final _descriptionController = TextEditingController();
   final List<BookingPhoto> _photos = [];
+  QuoteRequestInput? _lastSubmission;
   bool _attempted = false;
   bool _submitting = false;
 
@@ -202,6 +204,7 @@ class _QuoteRequestFormState extends ConsumerState<_QuoteRequestForm> {
   }
 
   Future<void> _submit() async {
+    if (_submitting) return;
     setState(() => _attempted = true);
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
@@ -209,19 +212,32 @@ class _QuoteRequestFormState extends ConsumerState<_QuoteRequestForm> {
     final l10n = context.l10n;
     try {
       final user = ref.read(currentUserProvider);
-      final input = QuoteRequestInput(
-        customerId: ref.read(activeCustomerIdProvider),
-        customerName: user?.fullName,
-        providerId: widget.provider.id,
-        providerName: widget.provider.displayName,
-        offering: widget.offering,
-        description: _descriptionController.text,
-        photos: List.unmodifiable(_photos),
-      );
-      final quote =
-          await ref.read(quoteServiceProvider).createQuoteRequest(input);
-      ref.invalidate(customerQuoteRequestsProvider);
+      final customerId = ref.read(activeCustomerIdProvider);
+      final service = ref.read(quoteServiceProvider);
+      final description = _descriptionController.text.trim();
+      final previous = _lastSubmission;
+      final retry = previous != null &&
+          previous.customerId == customerId &&
+          previous.offering.id == widget.offering.id &&
+          previous.providerId == widget.provider.id &&
+          previous.description == description &&
+          listEquals(previous.photos, _photos);
+      final input = retry
+          ? previous
+          : QuoteRequestInput(
+              submissionId: service.newQuoteRequestId(),
+              customerId: customerId,
+              customerName: user?.fullName,
+              providerId: widget.provider.id,
+              providerName: widget.provider.displayName,
+              offering: widget.offering,
+              description: description,
+              photos: List.unmodifiable(_photos),
+            );
+      _lastSubmission = input;
+      final quote = await service.createQuoteRequest(input, retry: retry);
       if (!mounted) return;
+      ref.invalidate(customerQuoteRequestsProvider);
       context.go('/quotes/${Uri.encodeComponent(quote.id)}/sent', extra: quote);
     } on InvalidQuoteRequestException {
       _formKey.currentState?.validate();

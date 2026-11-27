@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:service_pilot/core/theme/app_theme.dart';
+import 'package:service_pilot/features/bookings/providers/booking_provider.dart';
 import 'package:service_pilot/features/quotes/models/quote_request_model.dart';
 import 'package:service_pilot/features/quotes/models/quote_status.dart';
 import 'package:service_pilot/features/quotes/providers/quote_provider.dart';
@@ -24,36 +25,80 @@ class QuoteRequestConfirmationScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final customerId = ref.watch(activeCustomerIdProvider);
     final known = quote;
-    if (known != null) return _Content(quote: known, quoteId: quoteId);
+    if (known != null &&
+        known.id == quoteId &&
+        known.isOwnedByCustomer(customerId)) {
+      return _Content(quote: known);
+    }
 
-    return ref.watch(quoteDetailProvider(quoteId)).when(
-          data: (loaded) => _Content(quote: loaded, quoteId: quoteId),
-          loading: () => const Scaffold(
+    final request = quoteDetailProvider(quoteId);
+    return ref.watch(request).when(
+          skipLoadingOnRefresh: false,
+          data: (loaded) => loaded == null
+              ? _Unavailable(message: l10n.quoteDetailNotFound)
+              : _Content(quote: loaded),
+          loading: () => Scaffold(
             backgroundColor: AppTheme.surface,
             body: Center(
-              child: CircularProgressIndicator(color: AppTheme.primary),
+              child: CircularProgressIndicator(
+                color: AppTheme.primary,
+                semanticsLabel: l10n.quoteDetailLoading,
+              ),
             ),
           ),
-          error: (_, __) => _Content(quote: null, quoteId: quoteId),
+          error: (_, __) => _Unavailable(
+            message: l10n.quoteDetailLoadFailed,
+            onRetry: () => ref.invalidate(request),
+          ),
         );
   }
 }
 
-class _Content extends StatelessWidget {
-  const _Content({
-    required this.quote,
-    required this.quoteId,
-  });
+class _Unavailable extends StatelessWidget {
+  const _Unavailable({required this.message, this.onRetry});
 
-  final QuoteRequestModel? quote;
-  final String quoteId;
+  final String message;
+  final VoidCallback? onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return SpFlowPage(
+      title: l10n.quoteDetailTitle,
+      onBack: () => context.go('/home/customer'),
+      bottom: SpSecondaryButton(
+        label: l10n.bookingSentBackHome,
+        onPressed: () => context.go('/home/customer'),
+      ),
+      children: [
+        SpNotice(
+          icon: onRetry == null
+              ? Icons.search_off_rounded
+              : Icons.error_outline_rounded,
+          message: message,
+          tone: onRetry == null ? SpTone.neutral : SpTone.danger,
+        ),
+        if (onRetry != null) ...[
+          const SizedBox(height: 12),
+          SpSecondaryButton(label: l10n.bookingInboxRetry, onPressed: onRetry),
+        ],
+      ],
+    );
+  }
+}
+
+class _Content extends StatelessWidget {
+  const _Content({required this.quote});
+
+  final QuoteRequestModel quote;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final q = quote;
-    final id = q?.id ?? quoteId;
 
     return SpFlowPage(
       bottom: Column(
@@ -63,7 +108,7 @@ class _Content extends StatelessWidget {
             key: const Key('quote_view_status_button'),
             label: l10n.quoteSentViewStatus,
             onPressed: () => context.go(
-              '/quotes/${Uri.encodeComponent(id)}',
+              '/quotes/${Uri.encodeComponent(q.id)}',
               extra: q,
             ),
           ),
@@ -81,41 +126,37 @@ class _Content extends StatelessWidget {
           key: const Key('quote_request_sent_hero'),
           icon: Icons.request_quote_rounded,
           title: l10n.quoteSentTitle,
-          message: q == null
-              ? l10n.quoteSentMessageGeneric
-              : l10n.quoteSentMessage(q.providerName),
+          message: l10n.quoteSentMessage(q.providerName),
           tone: SpTone.waiting,
         ),
-        if (q != null) ...[
-          const SizedBox(height: 20),
-          QuoteStatusBadge(
-            key: const Key('quote_confirmation_status_badge'),
-            status: q.status,
-          ),
-          const SizedBox(height: 24),
-          const Divider(height: 1),
+        const SizedBox(height: 20),
+        QuoteStatusBadge(
+          key: const Key('quote_confirmation_status_badge'),
+          status: q.status,
+        ),
+        const SizedBox(height: 24),
+        const Divider(height: 1),
+        _SummaryRow(
+          label: l10n.bookingSummaryService,
+          value: q.offeringTitle,
+        ),
+        _SummaryRow(
+          label: l10n.quoteSummaryProvider,
+          value: q.providerName,
+        ),
+        _SummaryRow(
+          label: l10n.quoteStatusLabel,
+          value: q.status.localizedLabel(l10n),
+        ),
+        _SummaryRow(
+          label: l10n.quoteSummaryDescription,
+          value: q.description,
+        ),
+        if (q.photoUrls.isNotEmpty)
           _SummaryRow(
-            label: l10n.bookingSummaryService,
-            value: q.offeringTitle,
+            label: l10n.bookingSummaryPhotos,
+            value: l10n.bookingPhotoCount(q.photoUrls.length),
           ),
-          _SummaryRow(
-            label: l10n.quoteSummaryProvider,
-            value: q.providerName,
-          ),
-          _SummaryRow(
-            label: l10n.quoteStatusLabel,
-            value: q.status.localizedLabel(l10n),
-          ),
-          _SummaryRow(
-            label: l10n.quoteSummaryDescription,
-            value: q.description,
-          ),
-          if (q.photoUrls.isNotEmpty)
-            _SummaryRow(
-              label: l10n.bookingSummaryPhotos,
-              value: l10n.bookingPhotoCount(q.photoUrls.length),
-            ),
-        ],
       ],
     );
   }

@@ -5,6 +5,7 @@ import 'package:service_pilot/features/services/models/offering_model.dart';
 /// quote-required service offering (QUOTE-1 / SCRUM-83).
 class QuoteRequestInput {
   const QuoteRequestInput({
+    this.submissionId,
     required this.customerId,
     this.customerName,
     required this.providerId,
@@ -14,6 +15,7 @@ class QuoteRequestInput {
     this.photos = const [],
   });
 
+  final String? submissionId;
   final String customerId;
   final String? customerName;
   final String providerId;

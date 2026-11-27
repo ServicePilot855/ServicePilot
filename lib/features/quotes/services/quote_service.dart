@@ -25,13 +25,46 @@ class QuoteSubmissionException implements Exception {
   String toString() => 'QuoteSubmissionException: $message';
 }
 
+const quotePageSize = 20;
+
+class QuoteRequestPage {
+  const QuoteRequestPage.empty()
+      : quotes = const [],
+        hasMore = false;
+
+  QuoteRequestPage(List<QuoteRequestModel> candidates, int size)
+      : quotes = List.unmodifiable(candidates.take(size)),
+        hasMore = candidates.length > size;
+
+  final List<QuoteRequestModel> quotes;
+  final bool hasMore;
+}
+
+int compareQuoteActivity(QuoteRequestModel a, QuoteRequestModel b) {
+  final byDate = _quoteActivityAt(b).compareTo(_quoteActivityAt(a));
+  return byDate == 0 ? b.id.compareTo(a.id) : byDate;
+}
+
+DateTime _quoteActivityAt(QuoteRequestModel quote) {
+  final updated = quote.updatedAt;
+  return updated != null && updated.isAfter(quote.createdAt)
+      ? updated
+      : quote.createdAt;
+}
+
 /// Contract for submitting and reading separate quote requests (QUOTE-1).
 abstract class IQuoteService {
-  Future<QuoteRequestModel> createQuoteRequest(QuoteRequestInput request);
+  String newQuoteRequestId();
+  Future<QuoteRequestModel> createQuoteRequest(
+    QuoteRequestInput request, {
+    bool retry = false,
+  });
 
   Future<List<QuoteRequestModel>> getCustomerQuoteRequests(String customerId);
 
   Future<List<QuoteRequestModel>> getProviderQuoteRequests(String providerId);
+  Future<QuoteRequestPage> getCustomerQuotePage(String customerId, int size);
+  Stream<QuoteRequestPage> watchProviderQuotePage(String providerId, int size);
 
   Stream<List<QuoteRequestModel>> watchProviderQuoteRequests(String providerId);
   Stream<QuoteRequestModel?> watchProviderQuoteRequest(
@@ -54,13 +87,24 @@ class InMemoryQuoteService implements IQuoteService {
   int _nextId = 1;
 
   @override
-  Future<QuoteRequestModel> createQuoteRequest(QuoteRequestInput request) async {
+  String newQuoteRequestId() => 'qr-${_nextId++}';
+
+  @override
+  Future<QuoteRequestModel> createQuoteRequest(
+    QuoteRequestInput request, {
+    bool retry = false,
+  }) async {
     final errors = QuoteRequestValidator.validate(request);
     if (errors.isNotEmpty) {
       throw InvalidQuoteRequestException(errors);
     }
 
-    final id = 'qr-${_nextId++}';
+    final id = request.submissionId ?? newQuoteRequestId();
+    for (final existing in _quotes.where((quote) => quote.id == id)) {
+      if (retry && matchesQuoteSubmission(existing, request)) return existing;
+      throw const QuoteSubmissionException(
+          'Quote request ID is already in use.');
+    }
     final quote = QuoteRequestModel(
       id: id,
       customerId: request.customerId,
@@ -104,6 +148,26 @@ class InMemoryQuoteService implements IQuoteService {
   }
 
   @override
+  Future<QuoteRequestPage> getCustomerQuotePage(
+      String customerId, int size) async {
+    final quotes =
+        _quotes.where((q) => q.isOwnedByCustomer(customerId)).toList()
+          ..sort((a, b) {
+            final byDate = b.createdAt.compareTo(a.createdAt);
+            return byDate == 0 ? b.id.compareTo(a.id) : byDate;
+          });
+    return QuoteRequestPage(quotes, size);
+  }
+
+  @override
+  Stream<QuoteRequestPage> watchProviderQuotePage(String providerId, int size) {
+    return watchProviderQuoteRequests(providerId).map((quotes) {
+      final ordered = quotes.toList()..sort(compareQuoteActivity);
+      return QuoteRequestPage(ordered, size);
+    });
+  }
+
+  @override
   Stream<List<QuoteRequestModel>> watchProviderQuoteRequests(
     String providerId,
   ) async* {
@@ -139,3 +203,9 @@ class InMemoryQuoteService implements IQuoteService {
     }
   }
 }
+
+bool matchesQuoteSubmission(QuoteRequestModel quote, QuoteRequestInput input) =>
+    quote.isOwnedByCustomer(input.customerId) &&
+    quote.providerId == input.providerId &&
+    quote.offeringId == input.offering.id &&
+    quote.description == input.description.trim();
