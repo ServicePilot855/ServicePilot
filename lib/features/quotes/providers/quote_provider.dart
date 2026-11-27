@@ -33,6 +33,15 @@ final providerQuoteRequestsProvider =
   },
 );
 
+/// Watches live quote requests addressed to [providerId].
+final liveProviderQuoteRequestsProvider =
+    StreamProvider.autoDispose.family<List<QuoteRequestModel>, String>(
+  (ref, providerId) {
+    final service = ref.watch(quoteServiceProvider);
+    return service.watchProviderQuoteRequests(providerId);
+  },
+);
+
 /// Fetches a single quote request by ID.
 final quoteDetailProvider =
     FutureProvider.autoDispose.family<QuoteRequestModel?, String>(

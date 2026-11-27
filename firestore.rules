@@ -910,11 +910,23 @@ service cloud.firestore {
     // ===============================================================
 
     match /quoteRequests/{quoteId} {
-      // Read: Requesting homeowner, owning provider inbox, or platform admin
+      // Read: Requesting homeowner, owning provider inbox, seeded provider owner, or platform admin
       allow read: if isAuthenticated() &&
                      (
                        resource.data.customerId == request.auth.uid ||
                        ownsBookingInbox(resource.data.providerId) ||
+                       (
+                         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('status', '') != 'suspended' &&
+                         (
+                           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'independent_provider' ||
+                           (
+                             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'company' &&
+                             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('companyId', request.auth.uid) == request.auth.uid
+                           )
+                         ) &&
+                         isOfferingOwner(resource.data.providerId)
+                       ) ||
                        isAdmin()
                      );
 

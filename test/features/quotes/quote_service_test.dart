@@ -216,5 +216,47 @@ void main() {
       expect(uploader.uploads, isEmpty);
       expect((await firestore.collection('quoteRequests').get()).docs, isEmpty);
     });
+
+    test('streams owned quote decisions and prices only for the target provider',
+        () async {
+      await firestore.collection('quoteRequests').doc('q-approved').set({
+        'id': 'q-approved',
+        'customerId': 'customer-1',
+        'customerName': 'Sophea Meas',
+        'providerId': 'prov-dara-ac',
+        'providerName': 'Dara Chhum',
+        'offeringId': 'off-quote-1',
+        'offeringTitle': 'Central Inverter PCB Diagnosis',
+        'description': 'Inverter board clicks repeatedly and blinks E5.',
+        'status': 'approved',
+        'quotedPrice': 85.0,
+        'createdAt': DateTime(2026, 11, 27, 9, 0).toIso8601String(),
+      });
+      await firestore.collection('quoteRequests').doc('q-other').set({
+        'id': 'q-other',
+        'customerId': 'customer-2',
+        'providerId': 'other-provider',
+        'providerName': 'Other Provider',
+        'offeringId': 'off-quote-2',
+        'offeringTitle': 'Other AC Service',
+        'description': 'Other provider quote request description.',
+        'status': 'rejected',
+        'quotedPrice': 120.0,
+        'createdAt': DateTime(2026, 11, 27, 10, 0).toIso8601String(),
+      });
+
+      final owned = await service.watchProviderQuoteRequests('prov-dara-ac').first;
+      expect(owned, hasLength(1));
+      expect(owned.single.id, 'q-approved');
+      expect(owned.single.status, QuoteStatus.approved);
+      expect(owned.single.quotedPrice, 85.0);
+
+      final other =
+          await service.watchProviderQuoteRequests('other-provider').first;
+      expect(other, hasLength(1));
+      expect(other.single.id, 'q-other');
+      expect(other.single.status, QuoteStatus.rejected);
+      expect(other.single.quotedPrice, 120.0);
+    });
   });
 }

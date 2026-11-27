@@ -2851,6 +2851,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Loading your quote requests'**
   String get discoveryLoadingQuotes;
+
+  /// No description provided for @providerQuotesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote requests'**
+  String get providerQuotesTitle;
+
+  /// No description provided for @providerQuotesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No quote requests yet.'**
+  String get providerQuotesEmpty;
+
+  /// No description provided for @providerQuotesLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load quote requests. Please try again.'**
+  String get providerQuotesLoadError;
+
+  /// No description provided for @providerQuoteDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote decision'**
+  String get providerQuoteDetailTitle;
+
+  /// No description provided for @providerQuoteNotFoundOrInaccessible.
+  ///
+  /// In en, this message translates to:
+  /// **'This quote request isn\'t available for your account.'**
+  String get providerQuoteNotFoundOrInaccessible;
+
+  /// No description provided for @providerQuotePriceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Quoted price'**
+  String get providerQuotePriceLabel;
+
+  /// No description provided for @providerQuotePriceNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not quoted yet'**
+  String get providerQuotePriceNotSet;
+
+  /// No description provided for @providerQuoteCustomerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Homeowner'**
+  String get providerQuoteCustomerLabel;
+
+  /// No description provided for @providerQuoteDecisionApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'The homeowner approved your quoted price.'**
+  String get providerQuoteDecisionApproved;
+
+  /// No description provided for @providerQuoteDecisionRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'The homeowner declined your quoted price.'**
+  String get providerQuoteDecisionRejected;
+
+  /// No description provided for @providerQuoteDecisionWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the homeowner to review your quoted price.'**
+  String get providerQuoteDecisionWaiting;
+
+  /// No description provided for @providerQuoteDecisionRequested.
+  ///
+  /// In en, this message translates to:
+  /// **'No price has been quoted for this request yet.'**
+  String get providerQuoteDecisionRequested;
 }
 
 class _AppLocalizationsDelegate

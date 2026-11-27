@@ -1599,4 +1599,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get discoveryLoadingQuotes => 'Loading your quote requests';
+
+  @override
+  String get providerQuotesTitle => 'Quote requests';
+
+  @override
+  String get providerQuotesEmpty => 'No quote requests yet.';
+
+  @override
+  String get providerQuotesLoadError =>
+      'Couldn\'t load quote requests. Please try again.';
+
+  @override
+  String get providerQuoteDetailTitle => 'Quote decision';
+
+  @override
+  String get providerQuoteNotFoundOrInaccessible =>
+      'This quote request isn\'t available for your account.';
+
+  @override
+  String get providerQuotePriceLabel => 'Quoted price';
+
+  @override
+  String get providerQuotePriceNotSet => 'Not quoted yet';
+
+  @override
+  String get providerQuoteCustomerLabel => 'Homeowner';
+
+  @override
+  String get providerQuoteDecisionApproved =>
+      'The homeowner approved your quoted price.';
+
+  @override
+  String get providerQuoteDecisionRejected =>
+      'The homeowner declined your quoted price.';
+
+  @override
+  String get providerQuoteDecisionWaiting =>
+      'Waiting for the homeowner to review your quoted price.';
+
+  @override
+  String get providerQuoteDecisionRequested =>
+      'No price has been quoted for this request yet.';
 }

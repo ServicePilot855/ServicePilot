@@ -32,6 +32,7 @@ import 'package:service_pilot/features/providers/screens/provider_list_screen.da
 import 'package:service_pilot/features/providers/screens/technician_profile_edit_screen.dart';
 import 'package:service_pilot/features/quotes/models/quote_request_model.dart';
 import 'package:service_pilot/features/quotes/screens/create_quote_request_screen.dart';
+import 'package:service_pilot/features/quotes/screens/provider_quote_detail_screen.dart';
 import 'package:service_pilot/features/quotes/screens/quote_request_confirmation_screen.dart';
 import 'package:service_pilot/features/quotes/screens/quote_request_detail_screen.dart';
 import 'package:service_pilot/features/services/models/category_model.dart';
@@ -67,7 +68,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           state.matchedLocation.startsWith('/admin');
       final isGoingToBookingInbox =
           state.matchedLocation.startsWith(IncomingBookingScreen.path) ||
-          state.matchedLocation.startsWith('/provider/bookings');
+          state.matchedLocation.startsWith('/provider/bookings') ||
+          state.matchedLocation.startsWith('/provider/quotes');
       final isGoingToHome = state.matchedLocation.startsWith('/home') ||
           state.matchedLocation.startsWith('/categories') ||
           state.matchedLocation.startsWith('/providers') ||
@@ -310,6 +312,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, state) => ProviderBookingDetailScreen(
           bookingId: state.pathParameters['bookingId']!,
         ),
+      ),
+      // ── Provider Quote Decision (QUOTE-7 / SCRUM-88) ───────────────────
+      GoRoute(
+        path: '/provider/quotes/:quoteId',
+        builder: (_, state) {
+          final quoteId = state.pathParameters['quoteId'] ?? '';
+          final quote = state.extra as QuoteRequestModel?;
+          return ProviderQuoteDetailScreen(
+            quoteId: quoteId,
+            initialQuote: quote,
+          );
+        },
       ),
 
       // ── Booking History (US-15 / SCRUM-46) ────────────────────────────

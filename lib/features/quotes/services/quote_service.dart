@@ -33,6 +33,8 @@ abstract class IQuoteService {
 
   Future<List<QuoteRequestModel>> getProviderQuoteRequests(String providerId);
 
+  Stream<List<QuoteRequestModel>> watchProviderQuoteRequests(String providerId);
+
   Future<QuoteRequestModel?> getQuoteRequestById(String quoteId);
 
   Stream<QuoteRequestModel?> watchQuoteRequestById(String quoteId);
@@ -95,6 +97,16 @@ class InMemoryQuoteService implements IQuoteService {
     return List.unmodifiable(
       _quotes.where((q) => q.isAddressedToProvider(providerId)),
     );
+  }
+
+  @override
+  Stream<List<QuoteRequestModel>> watchProviderQuoteRequests(
+    String providerId,
+  ) async* {
+    yield await getProviderQuoteRequests(providerId);
+    await for (final _ in _changes.stream) {
+      yield await getProviderQuoteRequests(providerId);
+    }
   }
 
   @override
