@@ -310,6 +310,7 @@ Quote-required offerings follow a separate flow from fixed-price cart checkout a
 - Show a `waiting` `SpNotice` explaining that no upfront charge applies, a summary block naming the selected offering and its **Quote Required** badge, and the shared [`ProblemDescriptionField`](lib/features/bookings/widgets/problem_photo_controls.dart) and [`ProblemPhotoStrip`](lib/features/bookings/widgets/problem_photo_controls.dart).
 - Omit address, date/time, and checkout price controls; keep the cart untouched.
 - On submit, navigate to [Quote request confirmation](lib/features/quotes/screens/quote_request_confirmation_screen.dart) (`/quotes/:quoteId/sent`) with a `waiting` `SpStatusHero`, [`QuoteStatusBadge`](lib/features/quotes/widgets/quote_status_badge.dart) (**Requested**), and flat Hairline-separated summary rows. [Quote request detail](lib/features/quotes/screens/quote_request_detail_screen.dart) (`/quotes/:quoteId`) tracks the live status.
+- On the provider dashboard, use [Quote requests](lib/features/quotes/widgets/provider_quote_list.dart) to open an [owned request](lib/features/quotes/screens/provider_quote_detail_screen.dart) (`/provider/quotes/:quoteId`). Use `SpFlowPage`, `QuoteStatusBadge`, and flat summary rows for the service, description, and quote status. Place any submitted photos below the summary and show a localized notice for an unavailable photo.
 
 ## Reviewing UI changes
 

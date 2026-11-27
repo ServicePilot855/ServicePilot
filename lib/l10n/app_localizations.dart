@@ -2873,8 +2873,20 @@ abstract class AppLocalizations {
   /// No description provided for @providerQuoteDetailTitle.
   ///
   /// In en, this message translates to:
-  /// **'Quote decision'**
+  /// **'Quote request'**
   String get providerQuoteDetailTitle;
+
+  /// No description provided for @providerQuotePhotoLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Request photo {number}'**
+  String providerQuotePhotoLabel(int number);
+
+  /// No description provided for @providerQuotePhotoUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo {number} couldn\'t be loaded.'**
+  String providerQuotePhotoUnavailable(int number);
 
   /// No description provided for @providerQuoteNotFoundOrInaccessible.
   ///

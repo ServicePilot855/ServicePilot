@@ -257,6 +257,17 @@ void main() {
       expect(other.single.id, 'q-other');
       expect(other.single.status, QuoteStatus.rejected);
       expect(other.single.quotedPrice, 120.0);
+
+      final detail = await service
+          .watchProviderQuoteRequest('prov-dara-ac', 'q-approved')
+          .first;
+      expect(detail?.id, 'q-approved');
+      expect(
+        await service
+            .watchProviderQuoteRequest('prov-dara-ac', 'q-other')
+            .first,
+        isNull,
+      );
     });
   });
 }

@@ -58,7 +58,7 @@ class TechnicianHome extends ConsumerWidget {
           if (user != null && user.canViewBookingInbox) ...[
             ProviderBookingList(providerId: user.id),
             const SizedBox(height: 24),
-            ProviderQuoteList(providerId: providerId),
+            const ProviderQuoteList(),
             const SizedBox(height: 24),
           ],
           ProviderOfferingList(

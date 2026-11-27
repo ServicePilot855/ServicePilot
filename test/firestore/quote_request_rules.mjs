@@ -42,12 +42,20 @@ const write = (path, data, token, status = 200) => request(`${documents}/${path}
   status,
 });
 
-async function account(role, { status = 'active', companyId } = {}) {
+async function account(role, { status = 'active', companyId, emailVerified = false } = {}) {
+  const email = `${crypto.randomUUID()}@example.test`;
+  const password = crypto.randomUUID();
+  const authApi = `http://${auth}/identitytoolkit.googleapis.com/v1`;
+  if (emailVerified) {
+    await request(`${authApi}/projects/${project}/accounts`, {
+      method: 'POST', token: 'owner', body: { email, password, emailVerified },
+    });
+  }
   const { localId: id, idToken: token } = await request(
-    `http://${auth}/identitytoolkit.googleapis.com/v1/accounts:signUp?key=fake-key`,
+    `${authApi}/accounts:${emailVerified ? 'signInWithPassword' : 'signUp'}?key=fake-key`,
     {
       method: 'POST',
-      body: { email: `${crypto.randomUUID()}@example.test`, password: crypto.randomUUID(), returnSecureToken: true },
+      body: { email, password, returnSecureToken: true },
     },
   );
   await write(`users/${id}`, {
@@ -60,17 +68,21 @@ async function account(role, { status = 'active', companyId } = {}) {
     ...(role === 'company' && { companyId: companyId ?? id }),
     ...(role === 'company_technician' && { companyId }),
   }, 'owner');
-  return { id, token };
+  return { id, token, email };
 }
 
-const [customer, otherCustomer, suspendedCustomer, independent, company, outsider, pendingProvider] = await Promise.all([
+const [customer, otherCustomer, suspendedCustomer, independent, company, outsider, pendingProvider, unverifiedProvider, missingApproval, wrongCompany] = await Promise.all([
   account('homeowner'),
   account('homeowner'),
   account('homeowner', { status: 'suspended' }),
   account('independent_provider'),
-  account('company'),
+  // Admin approval updates the provider profile, while the signup account can remain pending.
+  account('company', { status: 'pending_verification' }),
   account('independent_provider'),
   account('independent_provider', { status: 'pending_verification' }),
+  account('independent_provider'),
+  account('independent_provider'),
+  account('company', { companyId: 'another-company' }),
 ]);
 const companyTech = await account('company_technician', { companyId: company.id });
 
@@ -80,13 +92,16 @@ for (const [prov, providerType, status] of [
   [company, 'company', 'active'],
   [outsider, 'independent', 'active'],
   [pendingProvider, 'independent', 'pending_verification'],
+  [unverifiedProvider, 'independent', 'active'],
+  [missingApproval, 'independent', 'active'],
+  [wrongCompany, 'company', 'active'],
 ]) {
   await write(`providers/${prov.id}`, {
     id: prov.id,
     name: `Provider ${prov.id.slice(0, 5)}`,
     providerType,
     status,
-    isVerified: status === 'active',
+    ...(prov !== missingApproval && { isVerified: status === 'active' && prov !== unverifiedProvider }),
   }, 'owner');
 }
 
@@ -169,25 +184,59 @@ await request(`${documents}/quoteRequests/${compQuoteId}`, { token: companyTech.
 await request(`${documents}/quoteRequests/${compQuoteId}`, { token: independent.token, status: 403 });
 
 // Provider query scoped to their own providerId succeeds; querying another providerId fails.
-const providerQuery = (providerId) => ({
-  structuredQuery: {
-    from: [{ collectionId: 'quoteRequests' }],
-    where: {
-      fieldFilter: {
-        field: { fieldPath: 'providerId' },
-        op: 'EQUAL',
-        value: { stringValue: providerId },
-      },
+function providerQuery(providerId, quoteId) {
+  const equals = (fieldPath, value) => ({ fieldFilter: { field: { fieldPath }, op: 'EQUAL', value } });
+  const providerFilter = equals('providerId', { stringValue: providerId });
+  return {
+    structuredQuery: {
+      from: [{ collectionId: 'quoteRequests' }],
+      where: quoteId ? {
+        compositeFilter: {
+          op: 'AND',
+          filters: [providerFilter, equals('__name__', { referenceValue: `${prefix}/quoteRequests/${quoteId}` })],
+        },
+      } : providerFilter,
     },
-  },
+  };
+}
+
+const queryQuotes = (provider, providerId, quoteId, status = 200) => request(`${documents}:runQuery`, {
+  method: 'POST', token: provider.token, body: providerQuery(providerId, quoteId), status,
 });
-const indepList = await request(`${documents}:runQuery`, {
-  method: 'POST', token: independent.token, body: providerQuery(independent.id), status: 200,
-});
-assert.equal(indepList.filter(r => r.document).length, 1);
-await request(`${documents}:runQuery`, {
-  method: 'POST', token: outsider.token, body: providerQuery(independent.id), status: 403,
-});
+const quoteIds = (results) => results.flatMap(r => r.document ? [r.document.fields.id.stringValue] : []);
+
+for (const [provider, ownQuoteId, otherProvider] of [
+  [independent, indepQuoteId, company],
+  [company, compQuoteId, independent],
+]) {
+  assert.deepEqual(quoteIds(await queryQuotes(provider, provider.id)), [ownQuoteId]);
+  assert.deepEqual(quoteIds(await queryQuotes(provider, provider.id, ownQuoteId)), [ownQuoteId]);
+  await queryQuotes(provider, otherProvider.id, undefined, 403);
+}
+await queryQuotes(independent, independent.id, compQuoteId, 403);
+await queryQuotes(outsider, independent.id, undefined, 403);
+assert.deepEqual(quoteIds(await queryQuotes(outsider, outsider.id)), []);
+
+for (const provider of [pendingProvider, unverifiedProvider, missingApproval, wrongCompany]) {
+  const id = crypto.randomUUID();
+  await write(`quoteRequests/${id}`, quotePayload(id, { providerId: provider.id }), 'owner');
+  await request(`${documents}/quoteRequests/${id}`, { token: provider.token, status: 403 });
+  await queryQuotes(provider, provider.id, undefined, 403);
+}
+
+// Seeded provider IDs differ from account IDs and require a verified email match.
+const verifiedSeedOwner = await account('independent_provider', { emailVerified: true });
+for (const [provider, status] of [[verifiedSeedOwner, 200], [outsider, 403]]) {
+  const providerId = `seed-${provider.id}`;
+  const id = crypto.randomUUID();
+  await write(`providers/${providerId}`, {
+    id: providerId, email: provider.email, type: 'independent', status: 'active',
+  }, 'owner');
+  await write(`quoteRequests/${id}`, quotePayload(id, { providerId }), 'owner');
+  await request(`${documents}/quoteRequests/${id}`, { token: provider.token, status });
+  const result = await queryQuotes(provider, providerId, undefined, status);
+  if (status === 200) assert.deepEqual(quoteIds(result), [id]);
+}
 
 // 3. Invalid creations must all be rejected (403).
 const invalidCases = [
