@@ -33,6 +33,7 @@ import 'package:service_pilot/features/providers/screens/technician_profile_edit
 import 'package:service_pilot/features/quotes/models/quote_request_model.dart';
 import 'package:service_pilot/features/quotes/screens/create_quote_request_screen.dart';
 import 'package:service_pilot/features/quotes/screens/provider_quote_detail_screen.dart';
+import 'package:service_pilot/features/quotes/screens/quote_booking_screen.dart';
 import 'package:service_pilot/features/quotes/screens/quote_request_confirmation_screen.dart';
 import 'package:service_pilot/features/quotes/screens/quote_request_detail_screen.dart';
 import 'package:service_pilot/features/services/models/category_model.dart';
@@ -258,6 +259,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             quote: quote,
           );
         },
+      ),
+      // ── Book a time with an approved quote (QUOTE-5 / SCRUM-87) ───────
+      GoRoute(
+        path: '/quotes/:quoteId/book',
+        builder: (_, state) => QuoteBookingScreen(
+          quoteId: state.pathParameters['quoteId'] ?? '',
+          initialQuote: state.extra as QuoteRequestModel?,
+        ),
       ),
       GoRoute(
         path: '/quotes/:quoteId',

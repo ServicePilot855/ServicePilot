@@ -1654,4 +1654,102 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get providerQuoteDecisionRequested =>
       'No price has been quoted for this request yet.';
+
+  @override
+  String get providerQuotePriceSection => 'Your price';
+
+  @override
+  String get providerQuotePriceInputLabel => 'Price (USD)';
+
+  @override
+  String get providerQuotePriceInputHint => '45.00';
+
+  @override
+  String get providerQuotePriceInputHelper =>
+      'The homeowner sees this amount and approves it before booking a time.';
+
+  @override
+  String get providerQuotePriceRequired => 'Enter the price for this job.';
+
+  @override
+  String get providerQuoteSendPrice => 'Send quote';
+
+  @override
+  String get providerQuoteErrorAlreadyPriced =>
+      'This request already has a price.';
+
+  @override
+  String get providerQuoteErrorNotAllowed =>
+      'You can\'t price this request from this account.';
+
+  @override
+  String get providerQuoteErrorSaveFailed =>
+      'We couldn\'t send your price. Check your connection and try again.';
+
+  @override
+  String quoteDetailReviewMessage(String provider, String price) {
+    return '$provider quoted $price. Approve it to book a time.';
+  }
+
+  @override
+  String quoteApproveButton(String price) {
+    return 'Approve $price';
+  }
+
+  @override
+  String get quoteApprovedPriceLabel => 'Approved price';
+
+  @override
+  String quoteApprovedMessage(String price, String provider) {
+    return 'You approved $price. Book a time with $provider.';
+  }
+
+  @override
+  String get quoteApproveErrorChanged =>
+      'This quote has changed. Check its latest status.';
+
+  @override
+  String get quoteApproveErrorFailed =>
+      'We couldn\'t approve this quote. Check your connection and try again.';
+
+  @override
+  String get quoteBookButton => 'Book a time';
+
+  @override
+  String get quoteViewBooking => 'View booking';
+
+  @override
+  String get quoteBookedMessage =>
+      'You booked a time for this quote. Track it on the booking status page.';
+
+  @override
+  String get quoteBookingTitle => 'Book a time';
+
+  @override
+  String get quoteBookingHeading => 'Choose a time';
+
+  @override
+  String quoteBookingSubtitle(String service, String provider) {
+    return '$service with $provider';
+  }
+
+  @override
+  String quoteBookingPriceNote(String price) {
+    return 'Your approved price of $price is saved with this request. No payment is taken in the app.';
+  }
+
+  @override
+  String get quoteBookingSubmit => 'Send booking request';
+
+  @override
+  String get quoteBookingNotApproved =>
+      'Approve the quoted price before you book a time.';
+
+  @override
+  String get quoteBookingAlreadyBooked =>
+      'You already booked a time for this quote.';
+
+  @override
+  String get quoteBookingUnavailable =>
+      'This quote can\'t be booked from your account.';
 }

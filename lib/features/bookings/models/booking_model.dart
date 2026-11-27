@@ -39,6 +39,10 @@ class BookingModel {
   /// Download links of the problem photos the customer attached.
   final List<String> photoUrls;
 
+  /// The approved quote this booking was created from (QUOTE-5 / SCRUM-87).
+  /// [totalPrice] then holds the quote's approved amount.
+  final String? quoteId;
+
   const BookingModel({
     required this.id,
     required this.customerId,
@@ -65,7 +69,11 @@ class BookingModel {
     this.latitude,
     this.longitude,
     this.photoUrls = const [],
+    this.quoteId,
   });
+
+  /// Whether this booking was created from an approved quote.
+  bool get isFromQuote => quoteId != null && quoteId!.isNotEmpty;
 
   /// Whether the customer pinned the address on the map.
   bool get hasLocation => latitude != null && longitude != null;
@@ -101,8 +109,7 @@ class BookingModel {
   /// Whether the provider may decline this request (BOOK-3 / SCRUM-105):
   /// only an owned `Pending` request can be declined.
   bool canBeDeclinedBy(String targetProviderId) =>
-      isOwnedByProvider(targetProviderId) &&
-      status == BookingStatus.pending;
+      isOwnedByProvider(targetProviderId) && status == BookingStatus.pending;
 
   factory BookingModel.fromJson(Map<String, dynamic> json) {
     return BookingModel(
@@ -111,8 +118,7 @@ class BookingModel {
       providerId: json['providerId'] as String,
       providerName: json['providerName'] as String? ?? 'Service Provider',
       serviceCategory: json['serviceCategory'] as String? ?? 'General Repair',
-      serviceTitle:
-          json['serviceTitle'] as String? ??
+      serviceTitle: json['serviceTitle'] as String? ??
           json['serviceCategory'] as String? ??
           'Repair Service',
       description: json['description'] as String? ?? '',
@@ -143,10 +149,10 @@ class BookingModel {
       declinedReason: json['declinedReason'] as String?,
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
-      photoUrls: (json['photoUrls'] as List<dynamic>?)
-              ?.whereType<String>()
-              .toList() ??
-          const [],
+      photoUrls:
+          (json['photoUrls'] as List<dynamic>?)?.whereType<String>().toList() ??
+              const [],
+      quoteId: json['quoteId'] as String?,
     );
   }
 
@@ -180,6 +186,7 @@ class BookingModel {
       if (latitude != null) 'latitude': latitude,
       if (longitude != null) 'longitude': longitude,
       if (photoUrls.isNotEmpty) 'photoUrls': photoUrls,
+      if (isFromQuote) 'quoteId': quoteId,
     };
   }
 
@@ -218,6 +225,7 @@ class BookingModel {
       if (declinedReason != null) 'declinedReason': declinedReason,
       if (hasLocation) 'location': GeoPoint(latitude!, longitude!),
       if (photoUrls.isNotEmpty) 'photos': photoUrls,
+      if (isFromQuote) 'quoteId': quoteId,
     };
   }
 
@@ -255,10 +263,10 @@ class BookingModel {
       declinedReason: data['declinedReason'] as String?,
       latitude: (data['location'] as GeoPoint?)?.latitude,
       longitude: (data['location'] as GeoPoint?)?.longitude,
-      photoUrls: (data['photos'] as List<dynamic>?)
-              ?.whereType<String>()
-              .toList() ??
-          const [],
+      photoUrls:
+          (data['photos'] as List<dynamic>?)?.whereType<String>().toList() ??
+              const [],
+      quoteId: data['quoteId'] as String?,
     );
   }
 
@@ -296,6 +304,7 @@ class BookingModel {
     double? latitude,
     double? longitude,
     List<String>? photoUrls,
+    String? quoteId,
   }) {
     return BookingModel(
       id: id ?? this.id,
@@ -324,12 +333,12 @@ class BookingModel {
           confirmedAppointmentAt ?? this.confirmedAppointmentAt,
       confirmedAt: confirmedAt ?? this.confirmedAt,
       confirmedBy: confirmedBy ?? this.confirmedBy,
-      declinedReason: clearDeclinedReason
-          ? null
-          : declinedReason ?? this.declinedReason,
+      declinedReason:
+          clearDeclinedReason ? null : declinedReason ?? this.declinedReason,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       photoUrls: photoUrls ?? this.photoUrls,
+      quoteId: quoteId ?? this.quoteId,
     );
   }
 

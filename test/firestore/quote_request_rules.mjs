@@ -303,3 +303,122 @@ assert.deepEqual(quoteIds(recent), [indepQuoteId]);
 await dashboard(company.token, 'providerId', independent.id, 'updatedAt', 403);
 
 console.log('Quote request creation, provider association, and isolation rules passed.');
+
+// 5. QUOTE-3 / QUOTE-4 / QUOTE-5 (SCRUM-85, SCRUM-86, SCRUM-87): price, approval and booking.
+const commit = (token, writes, status = 200) => request(`${documents}:commit`, {
+  method: 'POST', token, body: { writes }, status,
+});
+// Updates only the given fields; `now` fields are set to the server's request time.
+const patch = (path, data, now = []) => ({
+  update: { name: `${prefix}/${path}`, fields: fields(data) },
+  updateMask: { fieldPaths: Object.keys(data) },
+  updateTransforms: now.map(fieldPath => ({ fieldPath, setToServerValue: 'REQUEST_TIME' })),
+  currentDocument: { exists: true },
+});
+const readQuote = async id => (await request(`${documents}/quoteRequests/${id}`, { token: 'owner' })).fields;
+const sendPrice = (id, token, price, status = 200, now = ['quotedAt', 'updatedAt']) =>
+  commit(token, [patch(`quoteRequests/${id}`, { status: 'quoted', quotedPrice: price }, now)], status);
+const approve = (id, token, price, status = 200) =>
+  commit(token, [patch(`quoteRequests/${id}`, { status: 'approved', approvedPrice: price },
+    ['approvedAt', 'updatedAt'])], status);
+
+const pricedId = crypto.randomUUID();
+await write(`quoteRequests/${pricedId}`, quotePayload(pricedId), customer.token);
+
+// QUOTE-3: only the addressed provider prices a Requested record, with a valid amount.
+await sendPrice(pricedId, outsider.token, 85, 403);
+await sendPrice(pricedId, company.token, 85, 403);
+await sendPrice(pricedId, customer.token, 85, 403);
+await sendPrice(pricedId, independent.token, 0, 403);
+await sendPrice(pricedId, independent.token, -5, 403);
+await commit(independent.token, [patch(`quoteRequests/${pricedId}`, {
+  status: 'quoted', quotedPrice: 85, quotedAt: { timestampValue: '2026-11-28T09:00:00Z' },
+}, ['updatedAt'])], 403);
+await commit(independent.token, [patch(`quoteRequests/${pricedId}`, {
+  status: 'quoted', quotedPrice: 85, description: 'Provider rewrote the homeowner details.',
+}, ['quotedAt', 'updatedAt'])], 403);
+assert.equal((await readQuote(pricedId)).status.stringValue, 'requested');
+await sendPrice(pricedId, independent.token, 85);
+assert.equal((await readQuote(pricedId)).status.stringValue, 'quoted');
+// A Quoted record cannot be priced again.
+await sendPrice(pricedId, independent.token, 99, 403);
+
+// A company administrator prices requests for its company; its technicians cannot.
+const companyPricedId = crypto.randomUUID();
+await write(`quoteRequests/${companyPricedId}`, quotePayload(companyPricedId, {
+  providerId: company.id, providerName: 'FixCo', offeringId: quoteOfferingComp,
+  offeringTitle: 'Sewer Line Assessment', photos: [],
+}), customer.token);
+await sendPrice(companyPricedId, companyTech.token, 120, 403);
+await sendPrice(companyPricedId, company.token, 120);
+
+// QUOTE-4: only the requesting homeowner approves, and only at the quoted amount.
+await approve(pricedId, otherCustomer.token, 85, 403);
+await approve(pricedId, independent.token, 85, 403);
+await approve(pricedId, customer.token, 60, 403);
+const unpricedId = crypto.randomUUID();
+await write(`quoteRequests/${unpricedId}`, quotePayload(unpricedId), customer.token);
+await approve(unpricedId, customer.token, 85, 403);
+await approve(pricedId, customer.token, 85);
+const approvedQuote = await readQuote(pricedId);
+assert.equal(approvedQuote.status.stringValue, 'approved');
+assert.equal(Number(approvedQuote.approvedPrice.doubleValue ?? approvedQuote.approvedPrice.integerValue), 85);
+
+// QUOTE-5: a Pending booking keeps the approved price and links to the quote and provider.
+const appointmentDate = { timestampValue: '2026-12-05T02:00:00Z' };
+const quoteJob = {
+  ...fields({ serviceTitle: 'Inverter PCB Diagnosis',
+    description: 'Outdoor inverter board clicks and displays E5 error.' }),
+  appointmentDate,
+};
+function quoteBooking(bookingId, quoteId, overrides = {}) {
+  return {
+    ...fields({
+      id: bookingId, customerId: customer.id, providerId: independent.id, status: 'pending',
+      serviceType: 'Inverter PCB Diagnosis',
+      description: 'Outdoor inverter board clicks and displays E5 error.',
+      address: 'House 12, Street 271, Toul Kork', totalPrice: 85, quoteId,
+      ...overrides,
+    }),
+    appointmentDate,
+  };
+}
+const bookQuote = (token, quoteId, { bookingId = crypto.randomUUID(), booking = {}, link = true,
+  linkTo, status = 200 } = {}) => {
+  const data = quoteBooking(bookingId, quoteId, booking);
+  const providerId = data.providerId.stringValue;
+  const writes = [
+    { update: { name: `${prefix}/bookings/${bookingId}`, fields: data } },
+    { update: { name: `${prefix}/providers/${providerId}/incomingBookingRequests/${bookingId}`, fields: quoteJob } },
+  ];
+  if (link) writes.push(patch(`quoteRequests/${quoteId}`, { bookingId: linkTo ?? bookingId }, ['updatedAt']));
+  return commit(token, writes, status).then(() => bookingId);
+};
+
+// An unapproved quote cannot enter the booking flow.
+const quotedOnlyId = crypto.randomUUID();
+await write(`quoteRequests/${quotedOnlyId}`, quotePayload(quotedOnlyId, { status: 'quoted', quotedPrice: 85 }), 'owner');
+await bookQuote(customer.token, quotedOnlyId, { status: 403 });
+await bookQuote(customer.token, unpricedId, { status: 403 });
+// The price, provider, owner and quote link must all match the approved quote.
+await bookQuote(customer.token, pricedId, { booking: { totalPrice: 40 }, status: 403 });
+await bookQuote(otherCustomer.token, pricedId, { booking: { customerId: otherCustomer.id }, status: 403 });
+await bookQuote(customer.token, pricedId, { link: false, status: 403 });
+await bookQuote(customer.token, pricedId, { linkTo: 'some-other-booking', status: 403 });
+// The quote cannot be linked without the matching booking in the same write.
+await commit(customer.token, [patch(`quoteRequests/${pricedId}`, { bookingId: crypto.randomUUID() }, ['updatedAt'])], 403);
+assert.equal((await readQuote(pricedId)).bookingId, undefined);
+
+const quoteBookingId = await bookQuote(customer.token, pricedId);
+assert.equal((await readQuote(pricedId)).bookingId.stringValue, quoteBookingId);
+const savedBooking = (await request(`${documents}/bookings/${quoteBookingId}`, { token: customer.token })).fields;
+assert.equal(savedBooking.status.stringValue, 'pending');
+assert.equal(savedBooking.quoteId.stringValue, pricedId);
+
+// A quote is booked once, and the booking's quote link and price stay fixed.
+await bookQuote(customer.token, pricedId, { status: 403 });
+await commit(customer.token, [patch(`bookings/${quoteBookingId}`, { totalPrice: 10 })], 403);
+await commit(customer.token, [patch(`bookings/${quoteBookingId}`, { quoteId: quotedOnlyId })], 403);
+
+console.log('Quote price, approval and approved-quote booking rules passed.');
+

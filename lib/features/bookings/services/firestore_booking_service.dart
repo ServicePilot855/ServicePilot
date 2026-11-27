@@ -6,8 +6,10 @@ import 'package:service_pilot/core/constants/booking_status.dart';
 import 'package:service_pilot/features/bookings/models/booking_model.dart';
 import 'package:service_pilot/features/bookings/models/booking_request.dart';
 import 'package:service_pilot/features/bookings/models/incoming_booking_request.dart';
+import 'package:service_pilot/features/bookings/models/quote_booking_request.dart';
 import 'package:service_pilot/features/bookings/services/booking_photo_uploader.dart';
 import 'package:service_pilot/features/bookings/services/booking_service.dart';
+import 'package:service_pilot/features/quotes/models/quote_request_model.dart';
 
 /// Cloud Firestore implementation of [IBookingService], backed by the
 /// `bookings` collection.
@@ -105,6 +107,55 @@ class FirestoreBookingService implements IBookingService {
       return batch.commit();
     });
     return booking;
+  }
+
+  @override
+  Future<BookingModel> createQuoteBooking(
+    QuoteBookingRequest request,
+  ) async {
+    final errors = request.validate();
+    if (errors.isNotEmpty) {
+      throw InvalidBookingRequestException(errors);
+    }
+
+    final quoteRef =
+        _firestore.collection('quoteRequests').doc(request.quoteId);
+    final doc = _bookings.doc();
+
+    // One transaction re-reads the quote, so it cannot be booked twice or
+    // after it stops being Approved. The rules check the same link.
+    return _guard(() => _firestore.runTransaction((transaction) async {
+          final snapshot = await transaction.get(quoteRef);
+          final data = snapshot.data();
+          final quote = snapshot.exists && data != null
+              ? QuoteRequestModel.fromFirestore(snapshot.id, data)
+              : null;
+          final block = quoteBookingBlock(quote, request.customerId);
+          if (block != null) {
+            throw QuoteNotBookableException(
+              request.quoteId,
+              block,
+              bookingId: quote?.bookingId,
+            );
+          }
+
+          final booking = bookingFromApprovedQuote(
+            bookingId: doc.id,
+            quote: quote!,
+            request: request,
+            now: DateTime.now(),
+          );
+          transaction.set(doc, booking.toFirestore());
+          transaction.set(
+            _inbox(booking.providerId).doc(doc.id),
+            IncomingBookingRequest.fromBooking(booking).toFirestore(),
+          );
+          transaction.update(quoteRef, {
+            'bookingId': doc.id,
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+          return booking;
+        }));
   }
 
   @override
