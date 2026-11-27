@@ -24,10 +24,10 @@ class FirestoreProviderService implements IProviderService {
   FirestoreProviderService({
     FirebaseFirestore? firestore,
     List<ProviderModel>? initialProviders,
-  }) : _injectedFirestore = firestore,
-       _localProviders = List<ProviderModel>.from(
-         initialProviders ?? seedProviders,
-       );
+  })  : _injectedFirestore = firestore,
+        _localProviders = List<ProviderModel>.from(
+          initialProviders ?? seedProviders,
+        );
 
   FirebaseFirestore get _firestore =>
       _injectedFirestore ?? FirebaseFirestore.instance;
@@ -92,13 +92,9 @@ class FirestoreProviderService implements IProviderService {
           p.specialties.any((s) => s.toLowerCase().contains(clean));
       final matchArea =
           p.coverageAreas.any((a) => a.toLowerCase().contains(clean)) ||
-          p.serviceArea.toLowerCase().contains(clean);
+              p.serviceArea.toLowerCase().contains(clean);
 
-      return matchName ||
-          matchDesc ||
-          matchBio ||
-          matchSpecialty ||
-          matchArea;
+      return matchName || matchDesc || matchBio || matchSpecialty || matchArea;
     }).toList();
   }
 

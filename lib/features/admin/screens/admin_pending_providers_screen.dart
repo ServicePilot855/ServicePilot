@@ -114,7 +114,8 @@ class AdminPendingProvidersScreen extends ConsumerWidget {
                   itemBuilder: (context, index) {
                     if (index == 0) {
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: AppTheme.spacingSm),
+                        padding:
+                            const EdgeInsets.only(bottom: AppTheme.spacingSm),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
