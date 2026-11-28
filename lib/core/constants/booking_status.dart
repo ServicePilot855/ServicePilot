@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:service_pilot/l10n/app_localizations.dart';
 import 'package:service_pilot/shared/widgets/sp_layout.dart';
 
 /// Repair booking lifecycle status values in ServicePilot.
@@ -22,7 +23,16 @@ extension BookingStatusExtension on BookingStatus {
     BookingStatus.completed,
   };
 
+  /// Active provider jobs displayed in BOOK-4 (SCRUM-89).
+  static const activeProviderStatuses = {
+    BookingStatus.confirmed,
+    BookingStatus.assigned,
+    BookingStatus.inProgress,
+  };
+
   bool get exposesAcceptedDetails => acceptedStatuses.contains(this);
+
+  bool get isActiveProviderWork => activeProviderStatuses.contains(this);
 
   /// Serialized database string value.
   String get value {
@@ -61,6 +71,26 @@ extension BookingStatusExtension on BookingStatus {
         return 'Cancelled';
       case BookingStatus.declined:
         return 'Declined';
+    }
+  }
+
+  /// Localized display label for UI badges and summaries.
+  String localizedLabel(AppLocalizations l10n) {
+    switch (this) {
+      case BookingStatus.pending:
+        return l10n.bookingStatusPending;
+      case BookingStatus.assigned:
+        return l10n.bookingStatusAssigned;
+      case BookingStatus.confirmed:
+        return l10n.bookingStatusConfirmed;
+      case BookingStatus.inProgress:
+        return l10n.bookingStatusInProgress;
+      case BookingStatus.completed:
+        return l10n.bookingStatusCompleted;
+      case BookingStatus.cancelled:
+        return l10n.bookingStatusCancelled;
+      case BookingStatus.declined:
+        return l10n.bookingStatusDeclined;
     }
   }
 

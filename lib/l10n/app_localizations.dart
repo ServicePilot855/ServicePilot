@@ -3097,6 +3097,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This quote can\'t be booked from your account.'**
   String get quoteBookingUnavailable;
+
+  /// No description provided for @providerActiveBookingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Current appointments & jobs'**
+  String get providerActiveBookingsTitle;
+
+  /// No description provided for @providerActiveBookingsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no active appointments or jobs right now.'**
+  String get providerActiveBookingsEmpty;
+
+  /// No description provided for @providerAssignedTechnicianLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned technician'**
+  String get providerAssignedTechnicianLabel;
+
+  /// No description provided for @providerBookingTechnicianValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned to {name}'**
+  String providerBookingTechnicianValue(String name);
+
+  /// No description provided for @providerBookingAddressLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Service address'**
+  String get providerBookingAddressLabel;
+
+  /// No description provided for @providerBookingDescriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Problem description'**
+  String get providerBookingDescriptionLabel;
+
+  /// No description provided for @providerBookingEstimatedFeeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated fee'**
+  String get providerBookingEstimatedFeeLabel;
+
+  /// No description provided for @bookingStatusConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get bookingStatusConfirmed;
+
+  /// No description provided for @bookingStatusAssigned.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned'**
+  String get bookingStatusAssigned;
+
+  /// No description provided for @bookingStatusInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'In Progress'**
+  String get bookingStatusInProgress;
+
+  /// No description provided for @bookingStatusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get bookingStatusCompleted;
+
+  /// No description provided for @bookingStatusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get bookingStatusCancelled;
+
+  /// No description provided for @bookingStatusDeclined.
+  ///
+  /// In en, this message translates to:
+  /// **'Declined'**
+  String get bookingStatusDeclined;
+
+  /// No description provided for @bookingStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get bookingStatusPending;
 }
 
 class _AppLocalizationsDelegate

@@ -10,6 +10,7 @@ import 'package:service_pilot/features/bookings/models/booking_model.dart';
 import 'package:service_pilot/features/bookings/models/incoming_booking_request.dart';
 import 'package:service_pilot/features/bookings/providers/booking_provider.dart';
 import 'package:service_pilot/features/bookings/services/booking_service.dart';
+import 'package:service_pilot/features/bookings/widgets/booking_status_stepper.dart';
 import 'package:service_pilot/features/bookings/widgets/decline_booking_dialog.dart';
 import 'package:service_pilot/l10n/l10n.dart';
 import 'package:service_pilot/shared/widgets/sp_button.dart';
@@ -66,6 +67,8 @@ class _ProviderBookingDetailScreenState
       ref.invalidate(liveBookingDetailProvider(widget.bookingId));
       ref.invalidate(providerBookingsProvider(providerId));
       ref.invalidate(liveProviderBookingsProvider(providerId));
+      ref.invalidate(providerActiveBookingsProvider(providerId));
+      ref.invalidate(liveProviderActiveBookingsProvider(providerId));
 
       setState(() {
         _isConfirming = false;
@@ -476,23 +479,38 @@ class _ProviderBookingDetailScreenState
                   const SizedBox(height: 12),
                   _InfoRow(
                     icon: Icons.location_on_outlined,
-                    label: 'Service Address',
+                    label: l10n.providerBookingAddressLabel,
                     value: booking.address,
                   ),
+                  if (booking.assignedTechnicianName != null &&
+                      booking.assignedTechnicianName!.trim().isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    _InfoRow(
+                      key: const Key('provider_assigned_technician_row'),
+                      icon: Icons.person_pin_rounded,
+                      label: l10n.providerAssignedTechnicianLabel,
+                      value: booking.assignedTechnicianName!.trim(),
+                    ),
+                  ],
                   const SizedBox(height: 12),
                   _InfoRow(
                     icon: Icons.description_outlined,
-                    label: 'Problem Description',
+                    label: l10n.providerBookingDescriptionLabel,
                     value: booking.description,
                   ),
                   const SizedBox(height: 12),
                   _InfoRow(
                     icon: Icons.payments_outlined,
-                    label: 'Estimated Fee',
+                    label: l10n.providerBookingEstimatedFeeLabel,
                     value: '\$${booking.totalPrice.toStringAsFixed(2)}',
                   ),
                 ],
               ),
+            ),
+            const SizedBox(height: 16),
+            BookingStatusStepper(
+              key: const Key('provider_booking_status_stepper'),
+              booking: booking,
             ),
             const SizedBox(height: 24),
             if (!isOwned)
@@ -512,7 +530,7 @@ class _ProviderBookingDetailScreenState
                     : () => _confirmBooking(
                         booking.preferredDateTime, activeProviderId),
               )
-            else if (booking.status != BookingStatus.confirmed)
+            else if (!booking.status.exposesAcceptedDetails)
               SpNotice(
                 key: const Key('provider_booking_ineligible_notice'),
                 icon: Icons.info_outline_rounded,
