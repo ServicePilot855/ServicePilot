@@ -4,9 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/core/constants/app_roles.dart';
 import 'package:service_pilot/features/bookings/screens/incoming_booking_screen.dart';
+import 'package:service_pilot/features/bookings/screens/provider_service_history_screen.dart';
 import 'package:service_pilot/features/bookings/widgets/provider_booking_list.dart';
 import 'package:service_pilot/features/providers/providers/provider_provider.dart';
 import 'package:service_pilot/features/providers/services/company_profile_service.dart';
+import 'package:service_pilot/features/quotes/widgets/provider_quote_list.dart';
 import 'package:service_pilot/features/services/widgets/provider_offering_list.dart';
 import 'package:service_pilot/l10n/l10n.dart';
 import 'package:service_pilot/shared/widgets/coming_soon_home.dart';
@@ -58,6 +60,16 @@ class CompanyHome extends ConsumerWidget {
         children: [
           if (user != null && user.canViewBookingInbox) ...[
             ProviderBookingList(providerId: user.id),
+            const SizedBox(height: 12),
+            SpSecondaryButton(
+              key: const Key('provider_view_history_button'),
+              label: context.l10n.providerHistoryButton,
+              icon: Icons.history_rounded,
+              wrapLabel: true,
+              onPressed: () => context.push(ProviderServiceHistoryScreen.path),
+            ),
+            const SizedBox(height: 24),
+            const ProviderQuoteList(),
             const SizedBox(height: 24),
           ],
           ProviderOfferingList(

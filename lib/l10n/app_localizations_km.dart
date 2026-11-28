@@ -1523,10 +1523,6 @@ class AppLocalizationsKm extends AppLocalizations {
   }
 
   @override
-  String get quoteSentMessageGeneric =>
-      'អ្នកផ្តល់សេវានឹងពិនិត្យមើលសំណើរបស់អ្នក ហើយផ្ញើសម្រង់តម្លៃមកវិញ។';
-
-  @override
   String get quoteStatusLabel => 'ស្ថានភាព';
 
   @override
@@ -1560,6 +1556,10 @@ class AppLocalizationsKm extends AppLocalizations {
   String get quoteDetailNotFound => 'រកមិនឃើញសំណើសម្រង់តម្លៃនេះទេ។';
 
   @override
+  String get quoteDetailLoadFailed =>
+      'មិនអាចផ្ទុកសំណើសម្រង់តម្លៃនេះបានទេ។ សូមព្យាយាមម្តងទៀត។';
+
+  @override
   String quoteDetailWaitingMessage(String provider) {
     return 'កំពុងរង់ចាំ $provider ពិនិត្យមើលព័ត៌មានលម្អិត និងផ្ញើសម្រង់តម្លៃមកវិញ។';
   }
@@ -1575,4 +1575,219 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get discoveryLoadingQuotes => 'កំពុងផ្ទុកសំណើសម្រង់តម្លៃរបស់អ្នក';
+
+  @override
+  String get quoteLoadMore => 'បង្ហាញសំណើសម្រង់តម្លៃចាស់ៗ';
+
+  @override
+  String get providerQuotesTitle => 'សំណើសម្រង់តម្លៃ';
+
+  @override
+  String get providerQuotesEmpty => 'មិនទាន់មានសំណើសម្រង់តម្លៃទេ។';
+
+  @override
+  String get providerQuotesLoadError =>
+      'មិនអាចផ្ទុកសំណើសម្រង់តម្លៃបានទេ។ សូមព្យាយាមម្តងទៀត។';
+
+  @override
+  String get providerQuoteDetailTitle => 'សំណើសម្រង់តម្លៃ';
+
+  @override
+  String providerQuotePhotoLabel(int number) {
+    return 'រូបថតទី $number នៃសំណើ';
+  }
+
+  @override
+  String providerQuotePhotoUnavailable(int number) {
+    return 'មិនអាចផ្ទុករូបថតទី $number បានទេ។';
+  }
+
+  @override
+  String get providerQuoteNotFoundOrInaccessible =>
+      'សំណើសម្រង់តម្លៃនេះមិនអាចចូលមើលបានសម្រាប់គណនីរបស់អ្នកទេ។';
+
+  @override
+  String get providerQuotePriceLabel => 'តម្លៃដែលបានផ្ដល់';
+
+  @override
+  String get providerQuotePriceNotSet => 'មិនទាន់បានផ្ដល់តម្លៃ';
+
+  @override
+  String get providerQuoteCustomerLabel => 'ម្ចាស់ផ្ទះ';
+
+  @override
+  String get providerQuoteDecisionApproved =>
+      'ម្ចាស់ផ្ទះបានអនុម័តតម្លៃដែលអ្នកបានផ្ដល់។';
+
+  @override
+  String get providerQuoteDecisionRejected =>
+      'ម្ចាស់ផ្ទះបានបដិសេធតម្លៃដែលអ្នកបានផ្ដល់។';
+
+  @override
+  String get providerQuoteDecisionWaiting =>
+      'កំពុងរង់ចាំម្ចាស់ផ្ទះពិនិត្យតម្លៃដែលអ្នកបានផ្ដល់។';
+
+  @override
+  String get providerQuoteDecisionRequested =>
+      'មិនទាន់មានការផ្ដល់តម្លៃសម្រាប់សំណើនេះទេ។';
+
+  @override
+  String get providerQuotePriceSection => 'តម្លៃរបស់អ្នក';
+
+  @override
+  String get providerQuotePriceInputLabel => 'តម្លៃ (ដុល្លារ)';
+
+  @override
+  String get providerQuotePriceInputHint => '45.00';
+
+  @override
+  String get providerQuotePriceInputHelper =>
+      'ម្ចាស់ផ្ទះនឹងឃើញតម្លៃនេះ ហើយត្រូវអនុម័តវាមុនពេលកក់ម៉ោង។';
+
+  @override
+  String get providerQuotePriceRequired => 'សូមបញ្ចូលតម្លៃសម្រាប់ការងារនេះ។';
+
+  @override
+  String get providerQuoteSendPrice => 'ផ្ញើសម្រង់តម្លៃ';
+
+  @override
+  String get providerQuoteErrorAlreadyPriced => 'សំណើនេះមានតម្លៃរួចហើយ។';
+
+  @override
+  String get providerQuoteErrorNotAllowed =>
+      'អ្នកមិនអាចផ្ដល់តម្លៃសម្រាប់សំណើនេះពីគណនីនេះបានទេ។';
+
+  @override
+  String get providerQuoteErrorSaveFailed =>
+      'មិនអាចផ្ញើតម្លៃរបស់អ្នកបានទេ។ សូមពិនិត្យការតភ្ជាប់ ហើយព្យាយាមម្តងទៀត។';
+
+  @override
+  String quoteDetailReviewMessage(String provider, String price) {
+    return '$provider បានផ្ដល់តម្លៃ $price។ សូមអនុម័តដើម្បីកក់ម៉ោង។';
+  }
+
+  @override
+  String quoteApproveButton(String price) {
+    return 'អនុម័ត $price';
+  }
+
+  @override
+  String get quoteApprovedPriceLabel => 'តម្លៃដែលបានអនុម័ត';
+
+  @override
+  String quoteApprovedMessage(String price, String provider) {
+    return 'អ្នកបានអនុម័តតម្លៃ $price។ សូមកក់ម៉ោងជាមួយ $provider។';
+  }
+
+  @override
+  String get quoteApproveErrorChanged =>
+      'សម្រង់តម្លៃនេះបានផ្លាស់ប្តូរ។ សូមពិនិត្យស្ថានភាពចុងក្រោយ។';
+
+  @override
+  String get quoteApproveErrorFailed =>
+      'មិនអាចអនុម័តសម្រង់តម្លៃនេះបានទេ។ សូមពិនិត្យការតភ្ជាប់ ហើយព្យាយាមម្តងទៀត។';
+
+  @override
+  String get quoteBookButton => 'កក់ម៉ោង';
+
+  @override
+  String get quoteViewBooking => 'មើលការកក់';
+
+  @override
+  String get quoteBookedMessage =>
+      'អ្នកបានកក់ម៉ោងសម្រាប់សម្រង់តម្លៃនេះហើយ។ សូមតាមដានវានៅលើទំព័រស្ថានភាពការកក់។';
+
+  @override
+  String get quoteBookingTitle => 'កក់ម៉ោង';
+
+  @override
+  String get quoteBookingHeading => 'ជ្រើសរើសម៉ោង';
+
+  @override
+  String quoteBookingSubtitle(String service, String provider) {
+    return '$service ជាមួយ $provider';
+  }
+
+  @override
+  String quoteBookingPriceNote(String price) {
+    return 'តម្លៃ $price ដែលអ្នកបានអនុម័តត្រូវបានរក្សាទុកជាមួយសំណើនេះ។ មិនមានការបង់ប្រាក់នៅក្នុងកម្មវិធីទេ។';
+  }
+
+  @override
+  String get quoteBookingSubmit => 'ផ្ញើសំណើកក់';
+
+  @override
+  String get quoteBookingNotApproved =>
+      'សូមអនុម័តតម្លៃដែលបានផ្ដល់ មុនពេលកក់ម៉ោង។';
+
+  @override
+  String get quoteBookingAlreadyBooked =>
+      'អ្នកបានកក់ម៉ោងសម្រាប់សម្រង់តម្លៃនេះរួចហើយ។';
+
+  @override
+  String get quoteBookingUnavailable =>
+      'សម្រង់តម្លៃនេះមិនអាចកក់ពីគណនីរបស់អ្នកបានទេ។';
+
+  @override
+  String get providerActiveBookingsTitle => 'ការណាត់ជួប និងការងារបច្ចុប្បន្ន';
+
+  @override
+  String get providerActiveBookingsEmpty =>
+      'អ្នកមិនទាន់មានការណាត់ជួប ឬការងារកំពុងដំណើរការទេ។';
+
+  @override
+  String get providerAssignedTechnicianLabel => 'ជាងដែលបានចាត់តាំង';
+
+  @override
+  String providerBookingTechnicianValue(String name) {
+    return 'ចាត់តាំងទៅ $name';
+  }
+
+  @override
+  String get providerBookingAddressLabel => 'អាសយដ្ឋានសេវាកម្ម';
+
+  @override
+  String get providerBookingDescriptionLabel => 'ការពិពណ៌នាបញ្ហា';
+
+  @override
+  String get providerBookingEstimatedFeeLabel => 'ថ្លៃប៉ាន់ស្មាន';
+
+  @override
+  String get bookingStatusConfirmed => 'បានបញ្ជាក់';
+
+  @override
+  String get bookingStatusAssigned => 'បានចាត់តាំង';
+
+  @override
+  String get bookingStatusInProgress => 'កំពុងដំណើរការ';
+
+  @override
+  String get bookingStatusCompleted => 'បានបញ្ចប់';
+
+  @override
+  String get bookingStatusCancelled => 'បានបោះបង់';
+
+  @override
+  String get bookingStatusDeclined => 'បានបដិសេធ';
+
+  @override
+  String get bookingStatusPending => 'កំពុងរង់ចាំ';
+
+  @override
+  String get providerHistoryTitle => 'កំណត់ត្រាសេវាកម្ម';
+
+  @override
+  String get providerHistorySubtitle =>
+      'ការកក់ដែលបានបញ្ចប់ បោះបង់ និងបដិសេធសម្រាប់គណនីរបស់អ្នក។';
+
+  @override
+  String get providerHistoryButton => 'កំណត់ត្រាសេវាកម្មដែលបានបញ្ចប់';
+
+  @override
+  String get providerHistoryEmpty =>
+      'អ្នកមិនទាន់មានកំណត់ត្រាសេវាកម្មដែលបានបញ្ចប់ បោះបង់ ឬបដិសេធទេ។';
+
+  @override
+  String get providerHistoryLoadError =>
+      'មិនអាចផ្ទុកកំណត់ត្រាសេវាកម្មបានទេ។ សូមព្យាយាមម្តងទៀត។';
 }

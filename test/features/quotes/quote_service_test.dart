@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:service_pilot/features/bookings/models/booking_request.dart';
@@ -30,7 +32,22 @@ class _FakePhotoUploader implements IBookingPhotoUploader {
     return [
       for (final photo in photos)
         (uploads..add('quotes/$customerId/$bookingId/${photo.name}')).last,
-    ].map((path) => 'https://res.cloudinary.com/demo/image/upload/$path').toList();
+    ]
+        .map((path) => 'https://res.cloudinary.com/demo/image/upload/$path')
+        .toList();
+  }
+}
+
+class _DelayedQuoteFirestore extends FakeFirebaseFirestore {
+  final release = Completer<void>();
+  int writes = 0;
+
+  @override
+  Future<void> maybeThrowSecurityException(String path, Object method) async {
+    if (method is Enum && method.name == 'write') {
+      writes++;
+      await release.future;
+    }
   }
 }
 
@@ -73,6 +90,7 @@ BookingPhoto _photo(String name) => BookingPhoto(
     );
 
 QuoteRequestInput _input({
+  String? submissionId,
   String customerId = 'customer-1',
   String? customerName = 'Sophea Meas',
   String providerId = 'prov-dara-ac',
@@ -81,6 +99,7 @@ QuoteRequestInput _input({
   List<BookingPhoto> photos = const [],
 }) {
   return QuoteRequestInput(
+    submissionId: submissionId,
     customerId: customerId,
     customerName: customerName,
     providerId: providerId,
@@ -160,6 +179,84 @@ void main() {
       );
     });
 
+    test(
+        'retry returns the saved submission without writing or uploading again',
+        () async {
+      final input = _input(
+        submissionId: service.newQuoteRequestId(),
+        photos: [_photo('pcb.jpg')],
+      );
+      final saved = await service.createQuoteRequest(input);
+      final retryService = FirestoreQuoteService(
+        firestore: firestore,
+        photoUploader: _FakePhotoUploader(fail: true),
+      );
+
+      final retried = await retryService.createQuoteRequest(input, retry: true);
+
+      expect(retried.id, saved.id);
+      expect(retried.photoUrls, saved.photoUrls);
+      expect((await firestore.collection('quoteRequests').get()).docs,
+          hasLength(1));
+    });
+
+    testWidgets('retry after a timeout joins the original pending write', (
+      tester,
+    ) async {
+      final delayed = _DelayedQuoteFirestore();
+      final service =
+          FirestoreQuoteService(firestore: delayed, photoUploader: uploader);
+      final input = _input(
+        submissionId: service.newQuoteRequestId(),
+        photos: [_photo('pcb.jpg')],
+      );
+      final timeout = expectLater(
+        service.createQuoteRequest(input),
+        throwsA(isA<QuoteSubmissionException>()),
+      );
+      await tester.pump();
+      expect(delayed.writes, 1);
+      await tester.pump(FirestoreQuoteService.writeTimeout);
+      await timeout;
+
+      final retried = service.createQuoteRequest(input, retry: true);
+      await tester.pump();
+      expect(delayed.writes, 1);
+      expect(uploader.uploads, hasLength(1));
+      delayed.release.complete();
+      await tester.pump();
+
+      expect((await retried).id, input.submissionId);
+      expect(
+          (await delayed.collection('quoteRequests').get()).docs, hasLength(1));
+    });
+
+    test('limits dashboard results and includes recent activity on old quotes',
+        () async {
+      final quotes = firestore.collection('quoteRequests');
+      for (var i = 0; i < 6; i++) {
+        final id = 'q$i';
+        await quotes.doc(id).set({
+          'customerId': 'customer-1',
+          'providerId': i == 5 ? 'another-provider' : 'prov-dara-ac',
+          'createdAt': Timestamp.fromDate(DateTime.utc(2026, 1, i + 1)),
+          if (i == 0) 'updatedAt': Timestamp.fromDate(DateTime.utc(2026, 2)),
+        });
+      }
+
+      final customer = await service.getCustomerQuotePage('customer-1', 2);
+      expect(customer.quotes.map((q) => q.id), ['q5', 'q4']);
+      expect(customer.hasMore, isTrue);
+      final provider =
+          await service.watchProviderQuotePage('prov-dara-ac', 2).first;
+      expect(provider.quotes.map((q) => q.id), ['q0', 'q4']);
+      expect(provider.hasMore, isTrue);
+      final expanded =
+          await service.watchProviderQuotePage('prov-dara-ac', 5).first;
+      expect(expanded.quotes.map((q) => q.id), ['q0', 'q4', 'q3', 'q2', 'q1']);
+      expect(expanded.hasMore, isFalse);
+    });
+
     test('uploads photos first and persists quoteRequest in Requested status',
         () async {
       final quote = await service.createQuoteRequest(
@@ -215,6 +312,59 @@ void main() {
 
       expect(uploader.uploads, isEmpty);
       expect((await firestore.collection('quoteRequests').get()).docs, isEmpty);
+    });
+
+    test('streams owned quote decisions and prices only for the target provider',
+        () async {
+      await firestore.collection('quoteRequests').doc('q-approved').set({
+        'id': 'q-approved',
+        'customerId': 'customer-1',
+        'customerName': 'Sophea Meas',
+        'providerId': 'prov-dara-ac',
+        'providerName': 'Dara Chhum',
+        'offeringId': 'off-quote-1',
+        'offeringTitle': 'Central Inverter PCB Diagnosis',
+        'description': 'Inverter board clicks repeatedly and blinks E5.',
+        'status': 'approved',
+        'quotedPrice': 85.0,
+        'createdAt': DateTime(2026, 11, 27, 9, 0).toIso8601String(),
+      });
+      await firestore.collection('quoteRequests').doc('q-other').set({
+        'id': 'q-other',
+        'customerId': 'customer-2',
+        'providerId': 'other-provider',
+        'providerName': 'Other Provider',
+        'offeringId': 'off-quote-2',
+        'offeringTitle': 'Other AC Service',
+        'description': 'Other provider quote request description.',
+        'status': 'rejected',
+        'quotedPrice': 120.0,
+        'createdAt': DateTime(2026, 11, 27, 10, 0).toIso8601String(),
+      });
+
+      final owned = await service.watchProviderQuoteRequests('prov-dara-ac').first;
+      expect(owned, hasLength(1));
+      expect(owned.single.id, 'q-approved');
+      expect(owned.single.status, QuoteStatus.approved);
+      expect(owned.single.quotedPrice, 85.0);
+
+      final other =
+          await service.watchProviderQuoteRequests('other-provider').first;
+      expect(other, hasLength(1));
+      expect(other.single.id, 'q-other');
+      expect(other.single.status, QuoteStatus.rejected);
+      expect(other.single.quotedPrice, 120.0);
+
+      final detail = await service
+          .watchProviderQuoteRequest('prov-dara-ac', 'q-approved')
+          .first;
+      expect(detail?.id, 'q-approved');
+      expect(
+        await service
+            .watchProviderQuoteRequest('prov-dara-ac', 'q-other')
+            .first,
+        isNull,
+      );
     });
   });
 }

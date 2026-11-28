@@ -24,6 +24,7 @@ import 'package:service_pilot/features/bookings/screens/create_booking_screen.da
 import 'package:service_pilot/features/bookings/screens/incoming_booking_screen.dart';
 import 'package:service_pilot/features/bookings/screens/location_picker_screen.dart';
 import 'package:service_pilot/features/bookings/screens/provider_booking_detail_screen.dart';
+import 'package:service_pilot/features/bookings/screens/provider_service_history_screen.dart';
 import 'package:service_pilot/features/cart/screens/cart_screen.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
 import 'package:service_pilot/features/providers/screens/company_profile_edit_screen.dart';
@@ -32,6 +33,8 @@ import 'package:service_pilot/features/providers/screens/provider_list_screen.da
 import 'package:service_pilot/features/providers/screens/technician_profile_edit_screen.dart';
 import 'package:service_pilot/features/quotes/models/quote_request_model.dart';
 import 'package:service_pilot/features/quotes/screens/create_quote_request_screen.dart';
+import 'package:service_pilot/features/quotes/screens/provider_quote_detail_screen.dart';
+import 'package:service_pilot/features/quotes/screens/quote_booking_screen.dart';
 import 'package:service_pilot/features/quotes/screens/quote_request_confirmation_screen.dart';
 import 'package:service_pilot/features/quotes/screens/quote_request_detail_screen.dart';
 import 'package:service_pilot/features/services/models/category_model.dart';
@@ -67,7 +70,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           state.matchedLocation.startsWith('/admin');
       final isGoingToBookingInbox =
           state.matchedLocation.startsWith(IncomingBookingScreen.path) ||
-          state.matchedLocation.startsWith('/provider/bookings');
+          state.matchedLocation.startsWith('/provider/bookings') ||
+          state.matchedLocation.startsWith('/provider/quotes');
       final isGoingToHome = state.matchedLocation.startsWith('/home') ||
           state.matchedLocation.startsWith('/categories') ||
           state.matchedLocation.startsWith('/providers') ||
@@ -257,6 +261,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
+      // ── Book a time with an approved quote (QUOTE-5 / SCRUM-87) ───────
+      GoRoute(
+        path: '/quotes/:quoteId/book',
+        builder: (_, state) => QuoteBookingScreen(
+          quoteId: state.pathParameters['quoteId'] ?? '',
+          initialQuote: state.extra as QuoteRequestModel?,
+        ),
+      ),
       GoRoute(
         path: '/quotes/:quoteId',
         builder: (_, state) {
@@ -304,11 +316,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
-      // ── Provider Booking Confirmation (BOOK-2 / SCRUM-104) ─────────────
+      // ── Provider Booking History & Confirmation (BOOK-2 / BOOK-5) ─────
+      GoRoute(
+        path: ProviderServiceHistoryScreen.path,
+        builder: (_, __) => const ProviderServiceHistoryScreen(),
+      ),
       GoRoute(
         path: '/provider/bookings/:bookingId',
         builder: (_, state) => ProviderBookingDetailScreen(
           bookingId: state.pathParameters['bookingId']!,
+        ),
+      ),
+      // ── Provider quote inbox detail ─────────────────────────────────────
+      GoRoute(
+        path: '/provider/quotes/:quoteId',
+        builder: (_, state) => ProviderQuoteDetailScreen(
+          quoteId: state.pathParameters['quoteId']!,
         ),
       ),
 

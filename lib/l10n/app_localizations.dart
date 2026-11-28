@@ -2750,12 +2750,6 @@ abstract class AppLocalizations {
   /// **'{provider} will review your request and send a price quote. Your cart was not changed.'**
   String quoteSentMessage(String provider);
 
-  /// No description provided for @quoteSentMessageGeneric.
-  ///
-  /// In en, this message translates to:
-  /// **'The provider will review your request and send a price quote.'**
-  String get quoteSentMessageGeneric;
-
   /// No description provided for @quoteStatusLabel.
   ///
   /// In en, this message translates to:
@@ -2822,6 +2816,12 @@ abstract class AppLocalizations {
   /// **'We couldn\'t find this quote request.'**
   String get quoteDetailNotFound;
 
+  /// No description provided for @quoteDetailLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load this quote request. Try again.'**
+  String get quoteDetailLoadFailed;
+
   /// No description provided for @quoteDetailWaitingMessage.
   ///
   /// In en, this message translates to:
@@ -2851,6 +2851,366 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Loading your quote requests'**
   String get discoveryLoadingQuotes;
+
+  /// No description provided for @quoteLoadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Show older quote requests'**
+  String get quoteLoadMore;
+
+  /// No description provided for @providerQuotesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote requests'**
+  String get providerQuotesTitle;
+
+  /// No description provided for @providerQuotesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No quote requests yet.'**
+  String get providerQuotesEmpty;
+
+  /// No description provided for @providerQuotesLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load quote requests. Please try again.'**
+  String get providerQuotesLoadError;
+
+  /// No description provided for @providerQuoteDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote request'**
+  String get providerQuoteDetailTitle;
+
+  /// No description provided for @providerQuotePhotoLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Request photo {number}'**
+  String providerQuotePhotoLabel(int number);
+
+  /// No description provided for @providerQuotePhotoUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo {number} couldn\'t be loaded.'**
+  String providerQuotePhotoUnavailable(int number);
+
+  /// No description provided for @providerQuoteNotFoundOrInaccessible.
+  ///
+  /// In en, this message translates to:
+  /// **'This quote request isn\'t available for your account.'**
+  String get providerQuoteNotFoundOrInaccessible;
+
+  /// No description provided for @providerQuotePriceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Quoted price'**
+  String get providerQuotePriceLabel;
+
+  /// No description provided for @providerQuotePriceNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not quoted yet'**
+  String get providerQuotePriceNotSet;
+
+  /// No description provided for @providerQuoteCustomerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Homeowner'**
+  String get providerQuoteCustomerLabel;
+
+  /// No description provided for @providerQuoteDecisionApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'The homeowner approved your quoted price.'**
+  String get providerQuoteDecisionApproved;
+
+  /// No description provided for @providerQuoteDecisionRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'The homeowner declined your quoted price.'**
+  String get providerQuoteDecisionRejected;
+
+  /// No description provided for @providerQuoteDecisionWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the homeowner to review your quoted price.'**
+  String get providerQuoteDecisionWaiting;
+
+  /// No description provided for @providerQuoteDecisionRequested.
+  ///
+  /// In en, this message translates to:
+  /// **'No price has been quoted for this request yet.'**
+  String get providerQuoteDecisionRequested;
+
+  /// No description provided for @providerQuotePriceSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Your price'**
+  String get providerQuotePriceSection;
+
+  /// No description provided for @providerQuotePriceInputLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Price (USD)'**
+  String get providerQuotePriceInputLabel;
+
+  /// No description provided for @providerQuotePriceInputHint.
+  ///
+  /// In en, this message translates to:
+  /// **'45.00'**
+  String get providerQuotePriceInputHint;
+
+  /// No description provided for @providerQuotePriceInputHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'The homeowner sees this amount and approves it before booking a time.'**
+  String get providerQuotePriceInputHelper;
+
+  /// No description provided for @providerQuotePriceRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the price for this job.'**
+  String get providerQuotePriceRequired;
+
+  /// No description provided for @providerQuoteSendPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Send quote'**
+  String get providerQuoteSendPrice;
+
+  /// No description provided for @providerQuoteErrorAlreadyPriced.
+  ///
+  /// In en, this message translates to:
+  /// **'This request already has a price.'**
+  String get providerQuoteErrorAlreadyPriced;
+
+  /// No description provided for @providerQuoteErrorNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t price this request from this account.'**
+  String get providerQuoteErrorNotAllowed;
+
+  /// No description provided for @providerQuoteErrorSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t send your price. Check your connection and try again.'**
+  String get providerQuoteErrorSaveFailed;
+
+  /// No description provided for @quoteDetailReviewMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{provider} quoted {price}. Approve it to book a time.'**
+  String quoteDetailReviewMessage(String provider, String price);
+
+  /// No description provided for @quoteApproveButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve {price}'**
+  String quoteApproveButton(String price);
+
+  /// No description provided for @quoteApprovedPriceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved price'**
+  String get quoteApprovedPriceLabel;
+
+  /// No description provided for @quoteApprovedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You approved {price}. Book a time with {provider}.'**
+  String quoteApprovedMessage(String price, String provider);
+
+  /// No description provided for @quoteApproveErrorChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'This quote has changed. Check its latest status.'**
+  String get quoteApproveErrorChanged;
+
+  /// No description provided for @quoteApproveErrorFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t approve this quote. Check your connection and try again.'**
+  String get quoteApproveErrorFailed;
+
+  /// No description provided for @quoteBookButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Book a time'**
+  String get quoteBookButton;
+
+  /// No description provided for @quoteViewBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'View booking'**
+  String get quoteViewBooking;
+
+  /// No description provided for @quoteBookedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You booked a time for this quote. Track it on the booking status page.'**
+  String get quoteBookedMessage;
+
+  /// No description provided for @quoteBookingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Book a time'**
+  String get quoteBookingTitle;
+
+  /// No description provided for @quoteBookingHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a time'**
+  String get quoteBookingHeading;
+
+  /// No description provided for @quoteBookingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{service} with {provider}'**
+  String quoteBookingSubtitle(String service, String provider);
+
+  /// No description provided for @quoteBookingPriceNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your approved price of {price} is saved with this request. No payment is taken in the app.'**
+  String quoteBookingPriceNote(String price);
+
+  /// No description provided for @quoteBookingSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Send booking request'**
+  String get quoteBookingSubmit;
+
+  /// No description provided for @quoteBookingNotApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve the quoted price before you book a time.'**
+  String get quoteBookingNotApproved;
+
+  /// No description provided for @quoteBookingAlreadyBooked.
+  ///
+  /// In en, this message translates to:
+  /// **'You already booked a time for this quote.'**
+  String get quoteBookingAlreadyBooked;
+
+  /// No description provided for @quoteBookingUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This quote can\'t be booked from your account.'**
+  String get quoteBookingUnavailable;
+
+  /// No description provided for @providerActiveBookingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Current appointments & jobs'**
+  String get providerActiveBookingsTitle;
+
+  /// No description provided for @providerActiveBookingsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no active appointments or jobs right now.'**
+  String get providerActiveBookingsEmpty;
+
+  /// No description provided for @providerAssignedTechnicianLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned technician'**
+  String get providerAssignedTechnicianLabel;
+
+  /// No description provided for @providerBookingTechnicianValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned to {name}'**
+  String providerBookingTechnicianValue(String name);
+
+  /// No description provided for @providerBookingAddressLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Service address'**
+  String get providerBookingAddressLabel;
+
+  /// No description provided for @providerBookingDescriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Problem description'**
+  String get providerBookingDescriptionLabel;
+
+  /// No description provided for @providerBookingEstimatedFeeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated fee'**
+  String get providerBookingEstimatedFeeLabel;
+
+  /// No description provided for @bookingStatusConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get bookingStatusConfirmed;
+
+  /// No description provided for @bookingStatusAssigned.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned'**
+  String get bookingStatusAssigned;
+
+  /// No description provided for @bookingStatusInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'In Progress'**
+  String get bookingStatusInProgress;
+
+  /// No description provided for @bookingStatusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get bookingStatusCompleted;
+
+  /// No description provided for @bookingStatusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get bookingStatusCancelled;
+
+  /// No description provided for @bookingStatusDeclined.
+  ///
+  /// In en, this message translates to:
+  /// **'Declined'**
+  String get bookingStatusDeclined;
+
+  /// No description provided for @bookingStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get bookingStatusPending;
+
+  /// No description provided for @providerHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Service records'**
+  String get providerHistoryTitle;
+
+  /// No description provided for @providerHistorySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed, cancelled, and declined bookings for your account.'**
+  String get providerHistorySubtitle;
+
+  /// No description provided for @providerHistoryButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed & closed records'**
+  String get providerHistoryButton;
+
+  /// No description provided for @providerHistoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no completed, cancelled, or declined service records yet.'**
+  String get providerHistoryEmpty;
+
+  /// No description provided for @providerHistoryLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load service records right now. Please try again.'**
+  String get providerHistoryLoadError;
 }
 
 class _AppLocalizationsDelegate

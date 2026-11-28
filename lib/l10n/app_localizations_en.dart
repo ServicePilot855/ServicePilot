@@ -1547,10 +1547,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get quoteSentMessageGeneric =>
-      'The provider will review your request and send a price quote.';
-
-  @override
   String get quoteStatusLabel => 'Status';
 
   @override
@@ -1584,6 +1580,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quoteDetailNotFound => 'We couldn\'t find this quote request.';
 
   @override
+  String get quoteDetailLoadFailed =>
+      'Couldn\'t load this quote request. Try again.';
+
+  @override
   String quoteDetailWaitingMessage(String provider) {
     return 'Waiting for $provider to review your details and send a price quote.';
   }
@@ -1599,4 +1599,220 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get discoveryLoadingQuotes => 'Loading your quote requests';
+
+  @override
+  String get quoteLoadMore => 'Show older quote requests';
+
+  @override
+  String get providerQuotesTitle => 'Quote requests';
+
+  @override
+  String get providerQuotesEmpty => 'No quote requests yet.';
+
+  @override
+  String get providerQuotesLoadError =>
+      'Couldn\'t load quote requests. Please try again.';
+
+  @override
+  String get providerQuoteDetailTitle => 'Quote request';
+
+  @override
+  String providerQuotePhotoLabel(int number) {
+    return 'Request photo $number';
+  }
+
+  @override
+  String providerQuotePhotoUnavailable(int number) {
+    return 'Photo $number couldn\'t be loaded.';
+  }
+
+  @override
+  String get providerQuoteNotFoundOrInaccessible =>
+      'This quote request isn\'t available for your account.';
+
+  @override
+  String get providerQuotePriceLabel => 'Quoted price';
+
+  @override
+  String get providerQuotePriceNotSet => 'Not quoted yet';
+
+  @override
+  String get providerQuoteCustomerLabel => 'Homeowner';
+
+  @override
+  String get providerQuoteDecisionApproved =>
+      'The homeowner approved your quoted price.';
+
+  @override
+  String get providerQuoteDecisionRejected =>
+      'The homeowner declined your quoted price.';
+
+  @override
+  String get providerQuoteDecisionWaiting =>
+      'Waiting for the homeowner to review your quoted price.';
+
+  @override
+  String get providerQuoteDecisionRequested =>
+      'No price has been quoted for this request yet.';
+
+  @override
+  String get providerQuotePriceSection => 'Your price';
+
+  @override
+  String get providerQuotePriceInputLabel => 'Price (USD)';
+
+  @override
+  String get providerQuotePriceInputHint => '45.00';
+
+  @override
+  String get providerQuotePriceInputHelper =>
+      'The homeowner sees this amount and approves it before booking a time.';
+
+  @override
+  String get providerQuotePriceRequired => 'Enter the price for this job.';
+
+  @override
+  String get providerQuoteSendPrice => 'Send quote';
+
+  @override
+  String get providerQuoteErrorAlreadyPriced =>
+      'This request already has a price.';
+
+  @override
+  String get providerQuoteErrorNotAllowed =>
+      'You can\'t price this request from this account.';
+
+  @override
+  String get providerQuoteErrorSaveFailed =>
+      'We couldn\'t send your price. Check your connection and try again.';
+
+  @override
+  String quoteDetailReviewMessage(String provider, String price) {
+    return '$provider quoted $price. Approve it to book a time.';
+  }
+
+  @override
+  String quoteApproveButton(String price) {
+    return 'Approve $price';
+  }
+
+  @override
+  String get quoteApprovedPriceLabel => 'Approved price';
+
+  @override
+  String quoteApprovedMessage(String price, String provider) {
+    return 'You approved $price. Book a time with $provider.';
+  }
+
+  @override
+  String get quoteApproveErrorChanged =>
+      'This quote has changed. Check its latest status.';
+
+  @override
+  String get quoteApproveErrorFailed =>
+      'We couldn\'t approve this quote. Check your connection and try again.';
+
+  @override
+  String get quoteBookButton => 'Book a time';
+
+  @override
+  String get quoteViewBooking => 'View booking';
+
+  @override
+  String get quoteBookedMessage =>
+      'You booked a time for this quote. Track it on the booking status page.';
+
+  @override
+  String get quoteBookingTitle => 'Book a time';
+
+  @override
+  String get quoteBookingHeading => 'Choose a time';
+
+  @override
+  String quoteBookingSubtitle(String service, String provider) {
+    return '$service with $provider';
+  }
+
+  @override
+  String quoteBookingPriceNote(String price) {
+    return 'Your approved price of $price is saved with this request. No payment is taken in the app.';
+  }
+
+  @override
+  String get quoteBookingSubmit => 'Send booking request';
+
+  @override
+  String get quoteBookingNotApproved =>
+      'Approve the quoted price before you book a time.';
+
+  @override
+  String get quoteBookingAlreadyBooked =>
+      'You already booked a time for this quote.';
+
+  @override
+  String get quoteBookingUnavailable =>
+      'This quote can\'t be booked from your account.';
+
+  @override
+  String get providerActiveBookingsTitle => 'Current appointments & jobs';
+
+  @override
+  String get providerActiveBookingsEmpty =>
+      'You have no active appointments or jobs right now.';
+
+  @override
+  String get providerAssignedTechnicianLabel => 'Assigned technician';
+
+  @override
+  String providerBookingTechnicianValue(String name) {
+    return 'Assigned to $name';
+  }
+
+  @override
+  String get providerBookingAddressLabel => 'Service address';
+
+  @override
+  String get providerBookingDescriptionLabel => 'Problem description';
+
+  @override
+  String get providerBookingEstimatedFeeLabel => 'Estimated fee';
+
+  @override
+  String get bookingStatusConfirmed => 'Confirmed';
+
+  @override
+  String get bookingStatusAssigned => 'Assigned';
+
+  @override
+  String get bookingStatusInProgress => 'In Progress';
+
+  @override
+  String get bookingStatusCompleted => 'Completed';
+
+  @override
+  String get bookingStatusCancelled => 'Cancelled';
+
+  @override
+  String get bookingStatusDeclined => 'Declined';
+
+  @override
+  String get bookingStatusPending => 'Pending';
+
+  @override
+  String get providerHistoryTitle => 'Service records';
+
+  @override
+  String get providerHistorySubtitle =>
+      'Completed, cancelled, and declined bookings for your account.';
+
+  @override
+  String get providerHistoryButton => 'Completed & closed records';
+
+  @override
+  String get providerHistoryEmpty =>
+      'You have no completed, cancelled, or declined service records yet.';
+
+  @override
+  String get providerHistoryLoadError =>
+      'Unable to load service records right now. Please try again.';
 }

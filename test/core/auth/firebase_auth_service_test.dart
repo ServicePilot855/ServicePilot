@@ -1,11 +1,20 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:service_pilot/core/auth/auth_service.dart';
 import 'package:service_pilot/core/auth/firebase_auth_service.dart';
 import 'package:service_pilot/core/constants/app_roles.dart';
+import 'package:service_pilot/features/auth/models/user_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../helpers/test_firebase_helper.dart';
+
+class _UnavailableFirestore extends FakeFirebaseFirestore {
+  @override
+  Future<void> maybeThrowSecurityException(String path, Object method) async {
+    throw FirebaseException(plugin: 'cloud_firestore', code: 'unavailable');
+  }
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -331,23 +340,159 @@ void main() {
 
     // ── Technician Activation ───────────────────────────────────────────────
 
+    test('sign-in loads verified technician membership on a fresh device', () async {
+      final firestore = FakeFirebaseFirestore();
+      const email = 'borey@example.test';
+      fakeAuth.seedUser(uid: 'tech-1', email: email, password: 'password123');
+      await firestore.collection('users').doc('tech-1').set({
+        'id': 'tech-1',
+        'fullName': 'Borey Nhem',
+        'email': email,
+        'phoneNumber': '',
+        'role': 'company_technician',
+        'status': 'active',
+        'companyId': 'company-1',
+      });
+      final freshDevice = FirebaseAuthService(
+        firebaseAuth: fakeAuth,
+        prefs: await SharedPreferences.getInstance(),
+        firestore: firestore,
+      );
+
+      final user = await freshDevice.login(email, 'password123');
+      expect(user.role, AppRole.companyTechnician);
+      expect(user.companyId, 'company-1');
+    });
+
+    test('activation rejects an invitation missing from Firestore', () async {
+      final service = FirebaseAuthService(
+        firebaseAuth: fakeAuth,
+        prefs: await SharedPreferences.getInstance(),
+        firestore: FakeFirebaseFirestore(),
+      );
+      await expectLater(
+        service.activateTechnicianAccount(
+          token: testTechnicianInviteId,
+          fullName: 'Borey Nhem',
+          password: 'password123',
+          email: testTechnicianEmail,
+        ),
+        throwsA(isA<AuthException>()),
+      );
+      expect(fakeAuth.currentUser, isNull);
+      await expectLater(
+        fakeAuth.signInWithEmailAndPassword(
+          email: testTechnicianEmail,
+          password: 'password123',
+        ),
+        throwsA(isA<FirebaseException>().having((e) => e.code, 'code', 'user-not-found')),
+      );
+    });
+
+    test('fresh sign-in refuses to infer a role when Firestore is unavailable', () async {
+      fakeAuth.seedUser(
+        uid: 'tech-1',
+        email: testTechnicianEmail,
+        password: 'password123',
+      );
+      final service = FirebaseAuthService(
+        firebaseAuth: fakeAuth,
+        prefs: await SharedPreferences.getInstance(),
+        firestore: _UnavailableFirestore(),
+      );
+
+      await expectLater(
+        service.login(testTechnicianEmail, 'password123'),
+        throwsA(isA<AuthException>()),
+      );
+    });
+
+    test('server membership replaces a stale homeowner cache', () async {
+      final firestore = FakeFirebaseFirestore();
+      final service = FirebaseAuthService(
+        firebaseAuth: fakeAuth,
+        prefs: await SharedPreferences.getInstance(),
+        firestore: firestore,
+      );
+      fakeAuth.seedUser(
+        uid: 'legacy-tech',
+        email: testTechnicianEmail,
+        password: 'password123',
+      );
+      final before = await service.login(testTechnicianEmail, 'password123');
+      expect(before.role, AppRole.homeowner);
+      await firestore.collection('users').doc(before.id).set({
+        'role': 'companyTechnician',
+        'status': 'active',
+        'companyId': testTechnicianCompanyId,
+      });
+
+      final restored = await service.getCurrentUser();
+      expect(restored?.role, AppRole.companyTechnician);
+      expect(restored?.companyId, testTechnicianCompanyId);
+    });
+
     test('validateInviteToken validates token format', () {
-      expect(authService.validateInviteToken('INVITE-COMPANY-123'), isTrue);
-      expect(authService.validateInviteToken('INVITE-2024-MOCK'), isTrue);
-      expect(authService.validateInviteToken('tok12345'), isTrue);
+      expect(authService.validateInviteToken(testTechnicianInviteId), isTrue);
+      expect(authService.validateInviteToken('tok12345'), isFalse);
       expect(authService.validateInviteToken(''), isFalse);
     });
 
-    test('activateTechnicianAccount creates active company technician', () async {
-      final user = await authService.activateTechnicianAccount(
-        token: 'INVITE-TEST-99',
+    test('activation persists membership and rejects replay', () async {
+      final firestore = FakeFirebaseFirestore();
+      await seedTechnicianInvite(firestore);
+      final service = FirebaseAuthService(
+        firebaseAuth: fakeAuth,
+        prefs: await SharedPreferences.getInstance(),
+        firestore: firestore,
+      );
+      Future<UserModel> activate() => service.activateTechnicianAccount(
+        token: testTechnicianInviteId,
         fullName: 'Borey Nhem',
         password: 'password123',
+        email: testTechnicianEmail,
       );
 
+      final user = await activate();
       expect(user.fullName, equals('Borey Nhem'));
       expect(user.role, equals(AppRole.companyTechnician));
       expect(user.status, equals('active'));
+      expect(user.companyId, testTechnicianCompanyId);
+      expect(fakeAuth.currentUser, isNull);
+      final account = await firestore.collection('users').doc(user.id).get();
+      expect(account.data()?['companyId'], testTechnicianCompanyId);
+      final entry = await firestore.collection('providers')
+          .doc(testTechnicianCompanyId).collection('technicians').doc(user.id).get();
+      expect(entry.data(), {'id': user.id, 'fullName': 'Borey Nhem'});
+      await expectLater(activate(), throwsA(isA<AuthException>()));
+      expect(fakeAuth.currentUser, isNull);
+
+      final signedIn = await service.login(testTechnicianEmail, 'password123');
+      expect(signedIn.role, AppRole.companyTechnician);
+      expect(signedIn.companyId, testTechnicianCompanyId);
+    });
+
+    test('activation rejects expired and wrong-recipient invitations', () async {
+      final firestore = FakeFirebaseFirestore();
+      final service = FirebaseAuthService(
+        firebaseAuth: fakeAuth,
+        prefs: await SharedPreferences.getInstance(),
+        firestore: firestore,
+      );
+      Future<UserModel> activate(String email) => service.activateTechnicianAccount(
+        token: testTechnicianInviteId,
+        fullName: 'Borey Nhem',
+        password: 'password123',
+        email: email,
+      );
+      await seedTechnicianInvite(firestore, expiresAt: DateTime(2020));
+      await expectLater(activate(testTechnicianEmail), throwsA(isA<AuthException>()));
+      await seedTechnicianInvite(firestore);
+      await expectLater(activate('uninvited@example.test'), throwsA(isA<AuthException>()));
+      expect((await firestore.collection('users').get()).docs, isEmpty);
+      final invitation = await firestore.collection('technicianInvites')
+          .doc(testTechnicianInviteId).get();
+      expect(invitation.data(), isNot(contains('redeemedBy')));
     });
 
     test('activateTechnicianAccount validates invalid token and short password', () {
@@ -362,7 +507,7 @@ void main() {
 
       expect(
         () => authService.activateTechnicianAccount(
-          token: 'INVITE-TEST-99',
+          token: testTechnicianInviteId,
           fullName: 'Borey',
           password: 'short',
         ),

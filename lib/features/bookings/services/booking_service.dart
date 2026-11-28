@@ -4,6 +4,9 @@ import 'package:service_pilot/core/constants/booking_status.dart';
 import 'package:service_pilot/features/bookings/models/booking_model.dart';
 import 'package:service_pilot/features/bookings/models/booking_request.dart';
 import 'package:service_pilot/features/bookings/models/incoming_booking_request.dart';
+import 'package:service_pilot/features/bookings/models/provider_service_record.dart';
+import 'package:service_pilot/features/bookings/models/quote_booking_request.dart';
+import 'package:service_pilot/features/quotes/models/quote_request_model.dart';
 
 /// Thrown when a requested booking ID does not exist.
 class BookingNotFoundException implements Exception {
@@ -54,10 +57,9 @@ class CannotCancelBookingException implements Exception {
     required this.bookingId,
     required this.currentStatus,
     String? message,
-  }) : message =
-           message ??
-           'Cannot cancel a booking that is already ${currentStatus.label}. '
-               'Only Pending, Assigned, or Confirmed bookings can be cancelled.';
+  }) : message = message ??
+            'Cannot cancel a booking that is already ${currentStatus.label}. '
+                'Only Pending, Assigned, or Confirmed bookings can be cancelled.';
 
   @override
   String toString() =>
@@ -77,7 +79,8 @@ class UnauthorizedBookingConfirmationException implements Exception {
   const UnauthorizedBookingConfirmationException({
     required this.bookingId,
     required this.providerId,
-    this.message = 'Only the assigned service provider can confirm this booking.',
+    this.message =
+        'Only the assigned service provider can confirm this booking.',
   });
 
   @override
@@ -120,9 +123,8 @@ class InvalidBookingDeclineStateException implements Exception {
     required this.bookingId,
     required this.currentStatus,
     String? message,
-  }) : message =
-           message ??
-           'This request cannot be declined because it is already ${currentStatus.label}.';
+  }) : message = message ??
+            'This request cannot be declined because it is already ${currentStatus.label}.';
 
   @override
   String toString() =>
@@ -145,9 +147,8 @@ class InvalidBookingTransitionException implements Exception {
     required this.currentStatus,
     required this.targetStatus,
     String? message,
-  }) : message =
-           message ??
-           'Cannot change booking status from ${currentStatus.label} to ${targetStatus.label}.';
+  }) : message = message ??
+            'Cannot change booking status from ${currentStatus.label} to ${targetStatus.label}.';
 
   @override
   String toString() =>
@@ -163,6 +164,22 @@ class InvalidBookingRequestException implements Exception {
   @override
   String toString() =>
       'InvalidBookingRequestException(${errors.map((e) => e.name).join(', ')})';
+}
+
+/// Thrown when a quote cannot enter the booking flow (QUOTE-5 / SCRUM-87):
+/// it is missing, belongs to another homeowner, is not approved, or was
+/// already booked. No booking is created.
+class QuoteNotBookableException implements Exception {
+  const QuoteNotBookableException(this.quoteId, this.reason, {this.bookingId});
+
+  final String quoteId;
+  final QuoteBookingBlock reason;
+
+  /// The existing booking when [reason] is [QuoteBookingBlock.alreadyBooked].
+  final String? bookingId;
+
+  @override
+  String toString() => 'QuoteNotBookableException($quoteId, ${reason.name})';
 }
 
 /// Thrown when a booking could not be saved (offline, refused by the server).
@@ -188,6 +205,16 @@ abstract class IBookingService {
   /// - [BookingSubmissionException] if the booking could not be saved.
   Future<BookingModel> createBooking(BookingRequest request);
 
+  /// QUOTE-5 (SCRUM-87): saves a `Pending` booking from the approved quote
+  /// [QuoteBookingRequest.quoteId]. The booking keeps the approved amount and
+  /// links to the quote and its provider; the quote records the booking.
+  ///
+  /// Throws:
+  /// - [InvalidBookingRequestException] if the address or time is invalid.
+  /// - [QuoteNotBookableException] if the quote fails the approval gate.
+  /// - [BookingSubmissionException] if the booking could not be saved.
+  Future<BookingModel> createQuoteBooking(QuoteBookingRequest request);
+
   /// Returns all bookings belonging to [customerId].
   Future<List<BookingModel>> getCustomerBookings(String customerId);
 
@@ -197,6 +224,13 @@ abstract class IBookingService {
   /// Emits real-time updates for accepted bookings addressed to [providerId].
   Stream<List<BookingModel>> watchProviderBookings(String providerId);
 
+  /// Returns active appointments and ongoing jobs (`Confirmed`, `Assigned`,
+  /// `In Progress`) addressed to [providerId] (BOOK-4 / SCRUM-89).
+  Future<List<BookingModel>> getProviderActiveBookings(String providerId);
+
+  /// Emits real-time updates for active jobs addressed to [providerId].
+  Stream<List<BookingModel>> watchProviderActiveBookings(String providerId);
+
   Future<List<IncomingBookingRequest>> getIncomingRequests(String providerId);
 
   Future<IncomingBookingRequest?> getIncomingRequest(
@@ -205,6 +239,12 @@ abstract class IBookingService {
   );
 
   Future<List<IncomingBookingRequest>> getDeclinedRequests(String providerId);
+
+  /// Returns completed, cancelled, and declined service records for [providerId]
+  /// (BOOK-5 / SCRUM-90).
+  Future<List<ProviderServiceRecord>> getProviderServiceRecords(
+    String providerId,
+  );
 
   Future<IncomingBookingRequest?> getDeclinedRequest(
     String providerId,
@@ -296,12 +336,14 @@ class BookingService implements IBookingService {
   @override
   Future<List<IncomingBookingRequest>> getIncomingRequests(
     String providerId,
-  ) => _requests(providerId, BookingStatus.pending);
+  ) =>
+      _requests(providerId, BookingStatus.pending);
 
   @override
   Future<List<IncomingBookingRequest>> getDeclinedRequests(
     String providerId,
-  ) => _requests(providerId, BookingStatus.declined);
+  ) =>
+      _requests(providerId, BookingStatus.declined);
 
   Future<List<IncomingBookingRequest>> _requests(
     String providerId,
@@ -309,8 +351,7 @@ class BookingService implements IBookingService {
   ) async {
     return _bookings
         .where((booking) =>
-            booking.providerId == providerId &&
-            booking.status == status)
+            booking.providerId == providerId && booking.status == status)
         .map(IncomingBookingRequest.fromBooking)
         .toList();
   }
@@ -319,13 +360,15 @@ class BookingService implements IBookingService {
   Future<IncomingBookingRequest?> getIncomingRequest(
     String providerId,
     String bookingId,
-  ) => _request(providerId, bookingId, BookingStatus.pending);
+  ) =>
+      _request(providerId, bookingId, BookingStatus.pending);
 
   @override
   Future<IncomingBookingRequest?> getDeclinedRequest(
     String providerId,
     String bookingId,
-  ) => _request(providerId, bookingId, BookingStatus.declined);
+  ) =>
+      _request(providerId, bookingId, BookingStatus.declined);
 
   Future<IncomingBookingRequest?> _request(
     String providerId,
@@ -340,6 +383,7 @@ class BookingService implements IBookingService {
     }
     return IncomingBookingRequest.fromBooking(booking);
   }
+
   final StreamController<List<BookingModel>> _updatesController =
       StreamController<List<BookingModel>>.broadcast();
 
@@ -356,9 +400,17 @@ class BookingService implements IBookingService {
   BookingService({
     List<BookingModel>? initialBookings,
     String customerId = defaultCustomerId,
+    this.findQuote,
+    this.onQuoteBooked,
   }) : _bookings = List<BookingModel>.from(
-         initialBookings ?? buildDefaultBookings(customerId: customerId),
-       );
+          initialBookings ?? buildDefaultBookings(customerId: customerId),
+        );
+
+  /// Looks up quotes for [createQuoteBooking]; without it no quote is found.
+  final Future<QuoteRequestModel?> Function(String quoteId)? findQuote;
+
+  /// Told when a quote booking is saved, so a paired quote store can link it.
+  final void Function(String quoteId, String bookingId)? onQuoteBooked;
 
   /// Default Phnom Penh repair bookings covering each lifecycle status for US-14.
   static List<BookingModel> buildDefaultBookings({
@@ -546,6 +598,38 @@ class BookingService implements IBookingService {
   }
 
   @override
+  Future<BookingModel> createQuoteBooking(QuoteBookingRequest request) async {
+    final errors = request.validate();
+    if (errors.isNotEmpty) throw InvalidBookingRequestException(errors);
+
+    final quote = await findQuote?.call(request.quoteId);
+    // A booking already saved from this quote also counts as booked.
+    final existing = _bookings.where((b) => b.quoteId == request.quoteId);
+    final block = quoteBookingBlock(quote, request.customerId) ??
+        (existing.isEmpty ? null : QuoteBookingBlock.alreadyBooked);
+    if (block != null) {
+      throw QuoteNotBookableException(
+        request.quoteId,
+        block,
+        bookingId:
+            quote?.bookingId ?? (existing.isEmpty ? null : existing.first.id),
+      );
+    }
+
+    final now = DateTime.now();
+    final booking = bookingFromApprovedQuote(
+      bookingId: 'bk-${now.microsecondsSinceEpoch}',
+      quote: quote!,
+      request: request,
+      now: now,
+    );
+    _bookings.add(booking);
+    onQuoteBooked?.call(quote.id, booking.id);
+    _notifyListeners();
+    return booking;
+  }
+
+  @override
   Future<List<BookingModel>> getCustomerBookings(String customerId) async {
     return List.unmodifiable(
       _bookings.where((booking) => booking.customerId == customerId),
@@ -576,6 +660,52 @@ class BookingService implements IBookingService {
   bool _isAcceptedBy(BookingModel booking, String providerId) {
     return booking.providerId == providerId &&
         booking.status.exposesAcceptedDetails;
+  }
+
+  @override
+  Future<List<BookingModel>> getProviderActiveBookings(
+    String providerId,
+  ) async {
+    return List.unmodifiable(
+      _bookings.where((booking) => _isActiveWorkFor(booking, providerId)),
+    );
+  }
+
+  @override
+  Stream<List<BookingModel>> watchProviderActiveBookings(
+    String providerId,
+  ) async* {
+    List<BookingModel> filter() => List.unmodifiable(
+          _bookings.where((booking) => _isActiveWorkFor(booking, providerId)),
+        );
+
+    yield filter();
+    yield* _updatesController.stream.map(
+      (list) => List.unmodifiable(
+        list.where((booking) => _isActiveWorkFor(booking, providerId)),
+      ),
+    );
+  }
+
+  bool _isActiveWorkFor(BookingModel booking, String providerId) {
+    return booking.providerId == providerId &&
+        booking.status.isActiveProviderWork;
+  }
+
+  @override
+  Future<List<ProviderServiceRecord>> getProviderServiceRecords(
+    String providerId,
+  ) async {
+    final records = _bookings
+        .where((b) => b.providerId == providerId && b.status.isClosedRecord)
+        .map(ProviderServiceRecord.fromBooking)
+        .toList()
+      ..sort((a, b) {
+        final dateA = a.appointmentDate ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final dateB = b.appointmentDate ?? DateTime.fromMillisecondsSinceEpoch(0);
+        return dateB.compareTo(dateA);
+      });
+    return List.unmodifiable(records);
   }
 
   @override

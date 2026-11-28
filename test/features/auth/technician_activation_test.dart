@@ -1,3 +1,4 @@
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,27 +15,34 @@ void main() {
   group('SCRUM-49 / US-04: Company Technician Account Activation Tests', () {
     late FakeFirebaseAuth fakeAuth;
     late FirebaseAuthService authService;
+    late FakeFirebaseFirestore firestore;
 
     setUp(() async {
       fakeAuth = FakeFirebaseAuth();
-      authService = await createTestFirebaseAuthService(fakeAuth: fakeAuth);
+      firestore = FakeFirebaseFirestore();
+      authService = await createTestFirebaseAuthService(
+        fakeAuth: fakeAuth,
+        firestore: firestore,
+      );
     });
 
     test('validates valid invite token', () {
-      expect(authService.validateInviteToken('INVITE-ABC-123'), isTrue);
+      expect(authService.validateInviteToken(testTechnicianInviteId), isTrue);
       expect(authService.validateInviteToken(''), isFalse);
     });
 
     test('activateTechnicianAccount creates company technician with correct association', () async {
+      await seedTechnicianInvite(firestore);
       final user = await authService.activateTechnicianAccount(
-        token: 'INVITE-ABC-123',
+        token: testTechnicianInviteId,
         fullName: 'Borey Nhem',
         password: 'password123',
+        email: testTechnicianEmail,
       );
 
       expect(user.fullName, equals('Borey Nhem'));
       expect(user.role, equals(AppRole.companyTechnician));
-      expect(user.companyName, isNotNull);
+      expect(user.companyId, testTechnicianCompanyId);
       expect(user.status, equals('active'));
     });
 
@@ -46,7 +54,8 @@ void main() {
           ],
           child: const MaterialApp(
             home: TechnicianActivationScreen(
-              token: 'INVITE-ABC-123',
+              token: testTechnicianInviteId,
+              email: testTechnicianEmail,
               companyName: 'Phnom Penh Fix Co.',
             ),
           ),
@@ -56,6 +65,7 @@ void main() {
 
       expect(find.text('Activate Account'), findsNWidgets(2));
       expect(find.text('Phnom Penh Fix Co.'), findsOneWidget);
+      expect(find.text(testTechnicianEmail), findsOneWidget);
       expect(find.text('Full Name'), findsOneWidget);
       expect(find.text('Create Password'), findsOneWidget);
       expect(find.text('Confirm Password'), findsOneWidget);
@@ -76,6 +86,30 @@ void main() {
 
       expect(find.text('Invalid or Expired Link'), findsOneWidget);
       expect(find.text('Back to Login'), findsOneWidget);
+    });
+
+    testWidgets('links without a recipient show the invalid state at 360dp',
+        (tester) async {
+      await tester.binding.setSurfaceSize(const Size(360, 640));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [authServiceProvider.overrideWithValue(authService)],
+          child: MaterialApp(
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: const TextScaler.linear(1.3),
+              ),
+              child: child!,
+            ),
+            home: const TechnicianActivationScreen(token: testTechnicianInviteId),
+          ),
+        ),
+      );
+
+      expect(find.text('Invalid or Expired Link'), findsOneWidget);
+      expect(find.text('Create Password'), findsNothing);
+      expect(tester.takeException(), isNull);
     });
   });
 }

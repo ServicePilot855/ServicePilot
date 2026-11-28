@@ -12,11 +12,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 ///
 /// Features:
 /// - Real [FirebaseAuth] integration for user identity, sessions, and security.
-/// - Local profile caching and Firestore persistence for company accounts.
+/// - Local profile caching and Firestore persistence for provider and technician accounts.
 /// - Full role-based user management across Customers, Technicians, Companies, and Admins.
 /// - Comprehensive [FirebaseAuthException] mapping to user-friendly messages.
 class FirebaseAuthService implements IAuthService {
-  static const String _tokenPrefix = 'INVITE-';
+  static final _inviteTokenPattern = RegExp(r'^[A-Za-z0-9_-]{32,128}$');
 
   final FirebaseAuth? _injectedAuth;
   final SharedPreferences? _injectedPrefs;
@@ -402,9 +402,7 @@ class FirebaseAuthService implements IAuthService {
 
   @override
   bool validateInviteToken(String token) {
-    final trimmed = token.trim();
-    if (trimmed.isEmpty) return false;
-    return trimmed.startsWith(_tokenPrefix) || trimmed.length >= 6;
+    return _inviteTokenPattern.hasMatch(token.trim());
   }
 
   @override
@@ -414,8 +412,9 @@ class FirebaseAuthService implements IAuthService {
     required String password,
     String? email,
   }) async {
+    const invalidInvite = AuthException('Invalid or expired invitation token.');
     if (!validateInviteToken(token)) {
-      throw const AuthException('Invalid or expired invitation token.');
+      throw invalidInvite;
     }
     if (password.length < 8) {
       throw const AuthException('Password must be at least 8 characters long.');
@@ -426,11 +425,16 @@ class FirebaseAuthService implements IAuthService {
       throw const AuthException('Full name is required.');
     }
 
-    final sanitizedToken = token.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
-    final effectiveEmail = (email != null && email.trim().isNotEmpty)
-        ? email.trim().toLowerCase()
-        : 'tech.$sanitizedToken@servicepilot.app';
+    final effectiveEmail = email?.trim().toLowerCase();
+    if (effectiveEmail == null || effectiveEmail.isEmpty) throw invalidInvite;
+    final firestore = _companyFirestore;
+    if (firestore == null) {
+      throw const AuthException('Activation failed. Please try again.');
+    }
+    final invite = firestore.collection('technicianInvites').doc(token.trim());
 
+    var signedInForActivation = false;
+    User? createdUser;
     try {
       UserCredential credential;
       try {
@@ -438,6 +442,7 @@ class FirebaseAuthService implements IAuthService {
           email: effectiveEmail,
           password: password,
         );
+        createdUser = credential.user;
       } on FirebaseAuthException catch (e) {
         if (e.code == 'email-already-in-use') {
           credential = await _auth.signInWithEmailAndPassword(
@@ -449,30 +454,82 @@ class FirebaseAuthService implements IAuthService {
         }
       }
 
+      signedInForActivation = true;
       final fbUser = credential.user;
       if (fbUser == null) {
         throw const AuthException('Could not activate technician account.');
       }
 
-      await fbUser.updateDisplayName(cleanName);
-      final user = UserModel(
-        id: fbUser.uid,
-        fullName: cleanName,
-        email: effectiveEmail,
-        phoneNumber: fbUser.phoneNumber ?? '+85500000099',
-        role: AppRole.companyTechnician,
-        status: 'active',
-        companyName: 'Service Partner Company',
-        createdAt: fbUser.metadata.creationTime ?? DateTime.now(),
-      );
+      final account = firestore.collection('users').doc(fbUser.uid);
+      return await firestore.runTransaction((transaction) async {
+        final invitation = (await transaction.get(invite)).data();
+        final companyId = invitation?['companyId'];
+        final expiresAt = invitation?['expiresAt'];
+        if (invitation == null ||
+            invitation['email'] != effectiveEmail ||
+            invitation.containsKey('redeemedBy') ||
+            companyId is! String ||
+            companyId.isEmpty ||
+            companyId.contains('/') ||
+            expiresAt is! Timestamp ||
+            !expiresAt.toDate().isAfter(DateTime.now()) ||
+            (await transaction.get(account)).exists) {
+          throw invalidInvite;
+        }
 
-      await _saveUserProfile(user);
-      return user;
+        final user = UserModel(
+          id: fbUser.uid,
+          fullName: cleanName,
+          email: effectiveEmail,
+          phoneNumber: fbUser.phoneNumber ?? '',
+          role: AppRole.companyTechnician,
+          status: 'active',
+          companyId: companyId,
+          createdAt: fbUser.metadata.creationTime ?? DateTime.now(),
+        );
+        final rosterEntry = firestore
+            .collection('providers')
+            .doc(companyId)
+            .collection('technicians')
+            .doc(user.id);
+        transaction.set(account, {
+          ...user.toJson(),
+          'technicianInviteId': invite.id,
+        });
+        transaction.update(invite, {'redeemedBy': user.id});
+        transaction.set(rosterEntry, {'id': user.id, 'fullName': user.fullName});
+        return user;
+      });
     } on FirebaseAuthException catch (e) {
       throw AuthException(_mapFirebaseError(e));
-    } catch (e) {
-      if (e is AuthException) rethrow;
-      throw AuthException('Technician activation failed: $e');
+    } on AuthException {
+      await _discardRejectedActivation(createdUser, firestore);
+      rethrow;
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') {
+        await _discardRejectedActivation(createdUser, firestore);
+        throw invalidInvite;
+      }
+      throw const AuthException('Activation failed. Please try again.');
+    } finally {
+      if (signedInForActivation) await logout();
+    }
+  }
+
+  Future<void> _discardRejectedActivation(
+    User? createdUser,
+    FirebaseFirestore firestore,
+  ) async {
+    if (createdUser == null) return;
+    try {
+      // A retry after an uncertain commit must keep an enrolled account usable.
+      final account = await firestore.collection('users').doc(createdUser.uid)
+          .get(const GetOptions(source: Source.server));
+      if (!account.exists && _auth.currentUser?.uid == createdUser.uid) {
+        await createdUser.delete();
+      }
+    } on FirebaseException catch (error) {
+      debugPrint('[FirebaseAuth] Rejected activation cleanup failed: ${error.code}');
     }
   }
 
@@ -645,7 +702,50 @@ class FirebaseAuthService implements IAuthService {
     String? defaultName,
   }) async {
     final cached = await _loadCachedProfile(fbUser.uid);
-    if (cached != null) {
+    final firestore = _companyFirestore;
+    Map<String, dynamic>? data;
+    if (firestore != null) {
+      try {
+        final account = await firestore
+            .collection('users')
+            .doc(fbUser.uid)
+            .get(const GetOptions(source: Source.server));
+        data = account.data();
+      } on FirebaseException catch (error) {
+        if (cached == null || cached.role == AppRole.companyTechnician) {
+          throw const AuthException(
+            'Could not verify company membership. Please try again.',
+          );
+        }
+        debugPrint('[FirebaseAuth] Account lookup failed: ${error.code}');
+      }
+    }
+    if (data != null &&
+        (data['role'] == AppRole.companyTechnician.value ||
+            data['role'] == 'companyTechnician')) {
+      final companyId = data['companyId'];
+      if (companyId is! String || companyId.trim().isEmpty || companyId.contains('/')) {
+        throw const AuthException(
+          'Could not verify company membership. Please ask your company administrator.',
+        );
+      }
+      final technician = _userFromFirestore(fbUser.uid, {
+        ...data,
+        'role': AppRole.companyTechnician.value,
+        'fullName': data['fullName'] ?? fbUser.displayName ??
+            _inferNameFromEmail(fbUser.email ?? ''),
+        'email': data['email'] ?? fbUser.email ?? '',
+        'phoneNumber': data['phoneNumber'] ?? fbUser.phoneNumber ?? '',
+      });
+      await _saveUserProfile(technician);
+      return technician;
+    }
+    if (data == null && cached?.role == AppRole.companyTechnician) {
+      throw const AuthException(
+        'Could not verify company membership. Please ask your company administrator.',
+      );
+    }
+    if (cached != null && cached.role != AppRole.companyTechnician) {
       if (cached.isCompany && !cached.isSuspended && cached.companyId == null &&
           cached.id == fbUser.uid &&
           cached.email.toLowerCase() == fbUser.email?.toLowerCase()) {
@@ -664,39 +764,21 @@ class FirebaseAuthService implements IAuthService {
       return cached;
     }
 
-    final firestore = _companyFirestore;
-    if (firestore != null) {
-      try {
-        final data = (await firestore.collection('users').doc(fbUser.uid).get())
-            .data();
-        if (data != null &&
-            (data['role'] == AppRole.company.value ||
-                data['role'] == AppRole.independentProvider.value)) {
-          final createdAt = data['createdAt'];
-          final updatedAt = data['updatedAt'];
-          final providerUser = UserModel.fromJson({
-            ...data,
-            'id': fbUser.uid,
-            if (createdAt is Timestamp)
-              'createdAt': createdAt.toDate().toIso8601String(),
-            if (updatedAt is Timestamp)
-              'updatedAt': updatedAt.toDate().toIso8601String(),
-          });
-          final linkedUser = providerUser.isIndependentTechnician &&
-                  !providerUser.isSuspended
-              ? await _linkLegacyTechnician(providerUser)
-              : providerUser;
-          await _saveUserProfile(linkedUser);
-          return linkedUser;
-        }
-      } on FirebaseException catch (error) {
-        debugPrint('[FirebaseAuth] Provider account lookup failed: ${error.code}');
-      }
+    if (data != null &&
+        (data['role'] == AppRole.company.value ||
+            data['role'] == AppRole.independentProvider.value)) {
+      final providerUser = _userFromFirestore(fbUser.uid, data);
+      final linkedUser = providerUser.isIndependentTechnician &&
+              !providerUser.isSuspended
+          ? await _linkLegacyTechnician(providerUser)
+          : providerUser;
+      await _saveUserProfile(linkedUser);
+      return linkedUser;
     }
 
     final cachedByEmail =
         await _loadCachedProfile(fbUser.uid, email: email ?? fbUser.email);
-    if (cachedByEmail != null) {
+    if (cachedByEmail != null && cachedByEmail.role != AppRole.companyTechnician) {
       await _recordActiveSession(cachedByEmail.id);
       return cachedByEmail;
     }
@@ -722,6 +804,16 @@ class FirebaseAuthService implements IAuthService {
     return linkedUser;
   }
 
+  UserModel _userFromFirestore(String uid, Map<String, dynamic> data) {
+    final createdAt = data['createdAt'];
+    return UserModel.fromJson({
+      ...data,
+      'id': uid,
+      if (createdAt is Timestamp)
+        'createdAt': createdAt.toDate().toIso8601String(),
+    });
+  }
+
   Future<void> _recordActiveSession(String userId) async {
     final prefs = await _getPrefs();
     await prefs.setString('sp_active_user_id', userId);
@@ -734,7 +826,6 @@ class FirebaseAuthService implements IAuthService {
 
   AppRole _inferRoleFromEmail(String email) {
     final lower = email.toLowerCase();
-    if (lower.contains('tech@') || lower.contains('.tech@')) return AppRole.companyTechnician;
     if (lower.contains('technician') || lower.contains('provider')) return AppRole.independentProvider;
     if (lower.contains('company') || lower.contains('business')) return AppRole.company;
     if (lower.contains('admin')) return AppRole.admin;

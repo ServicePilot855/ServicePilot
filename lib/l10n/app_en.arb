@@ -602,7 +602,6 @@
   "@quoteSentMessage": {
     "placeholders": {"provider": {"type": "String"}}
   },
-  "quoteSentMessageGeneric": "The provider will review your request and send a price quote.",
   "quoteStatusLabel": "Status",
   "quoteStatusRequested": "Requested",
   "quoteStatusQuoted": "Quoted",
@@ -614,6 +613,7 @@
   "quoteDetailTitle": "Quote request",
   "quoteDetailLoading": "Loading quote request",
   "quoteDetailNotFound": "We couldn't find this quote request.",
+  "quoteDetailLoadFailed": "Couldn't load this quote request. Try again.",
   "quoteDetailWaitingMessage": "Waiting for {provider} to review your details and send a price quote.",
   "@quoteDetailWaitingMessage": {
     "placeholders": {"provider": {"type": "String"}}
@@ -621,5 +621,93 @@
   "discoveryHomeQuotes": "My quote requests",
   "discoveryNoQuotes": "You have no quote requests yet.",
   "discoveryQuotesError": "Couldn't load your quote requests.",
-  "discoveryLoadingQuotes": "Loading your quote requests"
+  "discoveryLoadingQuotes": "Loading your quote requests",
+  "quoteLoadMore": "Show older quote requests",
+  "providerQuotesTitle": "Quote requests",
+  "providerQuotesEmpty": "No quote requests yet.",
+  "providerQuotesLoadError": "Couldn't load quote requests. Please try again.",
+  "providerQuoteDetailTitle": "Quote request",
+  "providerQuotePhotoLabel": "Request photo {number}",
+  "@providerQuotePhotoLabel": {
+    "placeholders": { "number": { "type": "int" } }
+  },
+  "providerQuotePhotoUnavailable": "Photo {number} couldn't be loaded.",
+  "@providerQuotePhotoUnavailable": {
+    "placeholders": { "number": { "type": "int" } }
+  },
+  "providerQuoteNotFoundOrInaccessible": "This quote request isn't available for your account.",
+  "providerQuotePriceLabel": "Quoted price",
+  "providerQuotePriceNotSet": "Not quoted yet",
+  "providerQuoteCustomerLabel": "Homeowner",
+  "providerQuoteDecisionApproved": "The homeowner approved your quoted price.",
+  "providerQuoteDecisionRejected": "The homeowner declined your quoted price.",
+  "providerQuoteDecisionWaiting": "Waiting for the homeowner to review your quoted price.",
+  "providerQuoteDecisionRequested": "No price has been quoted for this request yet.",
+  "providerQuotePriceSection": "Your price",
+  "providerQuotePriceInputLabel": "Price (USD)",
+  "providerQuotePriceInputHint": "45.00",
+  "providerQuotePriceInputHelper": "The homeowner sees this amount and approves it before booking a time.",
+  "providerQuotePriceRequired": "Enter the price for this job.",
+  "providerQuoteSendPrice": "Send quote",
+  "providerQuoteErrorAlreadyPriced": "This request already has a price.",
+  "providerQuoteErrorNotAllowed": "You can't price this request from this account.",
+  "providerQuoteErrorSaveFailed": "We couldn't send your price. Check your connection and try again.",
+  "quoteDetailReviewMessage": "{provider} quoted {price}. Approve it to book a time.",
+  "@quoteDetailReviewMessage": {
+    "placeholders": { "provider": { "type": "String" }, "price": { "type": "String" } }
+  },
+  "quoteApproveButton": "Approve {price}",
+  "@quoteApproveButton": {
+    "placeholders": { "price": { "type": "String" } }
+  },
+  "quoteApprovedPriceLabel": "Approved price",
+  "quoteApprovedMessage": "You approved {price}. Book a time with {provider}.",
+  "@quoteApprovedMessage": {
+    "placeholders": { "price": { "type": "String" }, "provider": { "type": "String" } }
+  },
+  "quoteApproveErrorChanged": "This quote has changed. Check its latest status.",
+  "quoteApproveErrorFailed": "We couldn't approve this quote. Check your connection and try again.",
+  "quoteBookButton": "Book a time",
+  "quoteViewBooking": "View booking",
+  "quoteBookedMessage": "You booked a time for this quote. Track it on the booking status page.",
+  "quoteBookingTitle": "Book a time",
+  "quoteBookingHeading": "Choose a time",
+  "quoteBookingSubtitle": "{service} with {provider}",
+  "@quoteBookingSubtitle": {
+    "placeholders": { "service": { "type": "String" }, "provider": { "type": "String" } }
+  },
+  "quoteBookingPriceNote": "Your approved price of {price} is saved with this request. No payment is taken in the app.",
+  "@quoteBookingPriceNote": {
+    "placeholders": { "price": { "type": "String" } }
+  },
+  "quoteBookingSubmit": "Send booking request",
+  "quoteBookingNotApproved": "Approve the quoted price before you book a time.",
+  "quoteBookingAlreadyBooked": "You already booked a time for this quote.",
+  "quoteBookingUnavailable": "This quote can't be booked from your account.",
+
+  "@_BOOKING_ACTIVE_WORK": {},
+  "providerActiveBookingsTitle": "Current appointments & jobs",
+  "providerActiveBookingsEmpty": "You have no active appointments or jobs right now.",
+  "providerAssignedTechnicianLabel": "Assigned technician",
+  "providerBookingTechnicianValue": "Assigned to {name}",
+  "@providerBookingTechnicianValue": {
+    "placeholders": {"name": {"type": "String"}}
+  },
+  "providerBookingAddressLabel": "Service address",
+  "providerBookingDescriptionLabel": "Problem description",
+  "providerBookingEstimatedFeeLabel": "Estimated fee",
+  "bookingStatusConfirmed": "Confirmed",
+  "bookingStatusAssigned": "Assigned",
+  "bookingStatusInProgress": "In Progress",
+  "bookingStatusCompleted": "Completed",
+  "bookingStatusCancelled": "Cancelled",
+  "bookingStatusDeclined": "Declined",
+  "bookingStatusPending": "Pending",
+
+  "@_BOOKING_HISTORY_PROVIDER": {},
+  "providerHistoryTitle": "Service records",
+  "providerHistorySubtitle": "Completed, cancelled, and declined bookings for your account.",
+  "providerHistoryButton": "Completed & closed records",
+  "providerHistoryEmpty": "You have no completed, cancelled, or declined service records yet.",
+  "providerHistoryLoadError": "Unable to load service records right now. Please try again."
 }

@@ -1,3 +1,4 @@
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:service_pilot/core/auth/auth_provider.dart';
@@ -14,6 +15,7 @@ void main() {
   group('AuthNotifier with FirebaseAuthService Tests', () {
     late FakeFirebaseAuth fakeAuth;
     late FirebaseAuthService authService;
+    late FakeFirebaseFirestore firestore;
     late ProviderContainer container;
 
     setUp(() async {
@@ -21,9 +23,11 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
 
       fakeAuth = FakeFirebaseAuth();
+      firestore = FakeFirebaseFirestore();
       authService = FirebaseAuthService(
         firebaseAuth: fakeAuth,
         prefs: prefs,
+        firestore: firestore,
       );
 
       container = ProviderContainer(
@@ -160,11 +164,13 @@ void main() {
     });
 
     test('activateTechnicianAccount activates user with valid invite token', () async {
+      await seedTechnicianInvite(firestore);
       final notifier = container.read(authProvider.notifier);
       final success = await notifier.activateTechnicianAccount(
-        token: 'INVITE-TEST-123',
+        token: testTechnicianInviteId,
         fullName: 'Activated Tech',
         password: 'password123',
+        email: testTechnicianEmail,
       );
 
       expect(success, isTrue);

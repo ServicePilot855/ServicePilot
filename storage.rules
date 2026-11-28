@@ -38,6 +38,7 @@ service firebase.storage {
           (account.role == 'company' && account.get('companyId', uid) == uid))) ||
          (job.get('technicianId', '') == uid &&
           account.role in ['company_technician', 'companyTechnician'] &&
+          account.get('status', '') == 'active' &&
           account.get('companyId', '') == job.providerId));
     }
 
