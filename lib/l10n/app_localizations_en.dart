@@ -670,6 +670,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get providerAbout => 'About';
 
   @override
+  String get providerContactTelegram => 'Message on Telegram';
+
+  @override
+  String get providerContactMessenger => 'Message on Messenger';
+
+  @override
+  String get providerContactNote =>
+      'Opens outside ServicePilot. Your bookings and prices stay the same.';
+
+  @override
+  String providerContactOpenError(String app) {
+    return 'Couldn’t open $app. Check that $app or a web browser is installed, then try again.';
+  }
+
+  @override
   String get providerNoReviews => 'No reviews yet';
 
   @override

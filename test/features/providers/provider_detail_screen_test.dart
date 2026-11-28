@@ -97,8 +97,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Contact links'), findsOneWidget);
-      expect(find.text('https://t.me/company_a'), findsOneWidget);
-      expect(find.text('Messenger'), findsNothing);
+      expect(find.widgetWithText(SpSecondaryButton, 'Message on Telegram'),
+          findsOneWidget);
+      expect(find.text('Message on Messenger'), findsNothing);
     });
 
     testWidgets(

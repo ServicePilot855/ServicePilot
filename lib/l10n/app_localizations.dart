@@ -1316,6 +1316,30 @@ abstract class AppLocalizations {
   /// **'About'**
   String get providerAbout;
 
+  /// No description provided for @providerContactTelegram.
+  ///
+  /// In en, this message translates to:
+  /// **'Message on Telegram'**
+  String get providerContactTelegram;
+
+  /// No description provided for @providerContactMessenger.
+  ///
+  /// In en, this message translates to:
+  /// **'Message on Messenger'**
+  String get providerContactMessenger;
+
+  /// No description provided for @providerContactNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens outside ServicePilot. Your bookings and prices stay the same.'**
+  String get providerContactNote;
+
+  /// No description provided for @providerContactOpenError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t open {app}. Check that {app} or a web browser is installed, then try again.'**
+  String providerContactOpenError(String app);
+
   /// No description provided for @providerNoReviews.
   ///
   /// In en, this message translates to:

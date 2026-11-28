@@ -7,6 +7,7 @@ import 'package:service_pilot/features/cart/providers/cart_provider.dart';
 import 'package:service_pilot/features/cart/screens/cart_screen.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
 import 'package:service_pilot/features/providers/providers/provider_provider.dart';
+import 'package:service_pilot/features/providers/services/provider_contact_links.dart';
 import 'package:service_pilot/features/providers/widgets/provider_rating_summary.dart';
 import 'package:service_pilot/features/providers/widgets/provider_type_badge.dart';
 import 'package:service_pilot/features/quotes/screens/create_quote_request_screen.dart';
@@ -148,10 +149,7 @@ class _ProviderProfile extends ConsumerWidget {
     final unavailableReason = provider.unavailableReason?.trim();
     final about = provider.bio.trim();
     final description = provider.description.trim();
-    final contactLinks = {
-      l10n.companyProfileTelegram: provider.telegramUrl?.trim() ?? '',
-      l10n.companyProfileMessenger: provider.messengerUrl?.trim() ?? '',
-    }.entries.where((link) => link.value.isNotEmpty);
+    final contactLinks = providerContactLinks(provider);
     final areas = provider.coverageAreas.isEmpty
         ? [provider.serviceArea]
         : provider.coverageAreas;
@@ -254,21 +252,7 @@ class _ProviderProfile extends ConsumerWidget {
                   if (provider.isApprovedAndActive && contactLinks.isNotEmpty)
                     _ProfileSection(
                       title: l10n.companyProfileContacts,
-                      child: SelectionArea(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            for (final link in contactLinks) ...[
-                              Text(
-                                link.key,
-                                style: AppTheme.text(weight: FontWeight.w600),
-                              ),
-                              Text(link.value, style: bodyStyle),
-                              const SizedBox(height: 8),
-                            ],
-                          ],
-                        ),
-                      ),
+                      child: _ContactActions(links: contactLinks),
                     ),
                   _OfferingsSection(provider: provider),
                 ],
@@ -305,6 +289,65 @@ class _ProviderProfile extends ConsumerWidget {
                 ),
               ),
             ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Outlined actions that open the provider's saved Telegram or Messenger
+/// link outside the app (DISC-2). Opening a link only hands it to the
+/// platform; it never changes bookings, quotes or the cart.
+class _ContactActions extends ConsumerWidget {
+  const _ContactActions({required this.links});
+
+  final List<ProviderContactLink> links;
+
+  Future<void> _open(
+    BuildContext context,
+    WidgetRef ref,
+    ProviderContactLink link,
+  ) async {
+    final opened = await ref.read(externalLinkLauncherProvider)(link.uri);
+    if (opened || !context.mounted) return;
+    final l10n = context.l10n;
+    final app = switch (link.channel) {
+      ProviderContactChannel.telegram => l10n.companyProfileTelegram,
+      ProviderContactChannel.messenger => l10n.companyProfileMessenger,
+    };
+    showSpError(context, l10n.providerContactOpenError(app));
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final link in links) ...[
+          SpSecondaryButton(
+            key: Key('provider_contact_${link.channel.name}'),
+            label: switch (link.channel) {
+              ProviderContactChannel.telegram => l10n.providerContactTelegram,
+              ProviderContactChannel.messenger => l10n.providerContactMessenger,
+            },
+            icon: switch (link.channel) {
+              ProviderContactChannel.telegram => Icons.send_rounded,
+              ProviderContactChannel.messenger => Icons.forum_outlined,
+            },
+            outlineColor: AppTheme.browseControlBorder,
+            wrapLabel: true,
+            onPressed: () => _open(context, ref, link),
+          ),
+          const SizedBox(height: 8),
+        ],
+        Text(
+          l10n.providerContactNote,
+          style: AppTheme.text(
+            size: 13,
+            color: AppTheme.browseSecondary,
+            height: 1.5,
           ),
         ),
       ],
