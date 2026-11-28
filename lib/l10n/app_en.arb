@@ -683,5 +683,12 @@
   "quoteBookingSubmit": "Send booking request",
   "quoteBookingNotApproved": "Approve the quoted price before you book a time.",
   "quoteBookingAlreadyBooked": "You already booked a time for this quote.",
-  "quoteBookingUnavailable": "This quote can't be booked from your account."
+  "quoteBookingUnavailable": "This quote can't be booked from your account.",
+
+  "@_BOOKING_HISTORY_PROVIDER": {},
+  "providerHistoryTitle": "Service records",
+  "providerHistorySubtitle": "Completed, cancelled, and declined bookings for your account.",
+  "providerHistoryButton": "Completed & closed records",
+  "providerHistoryEmpty": "You have no completed, cancelled, or declined service records yet.",
+  "providerHistoryLoadError": "Unable to load service records right now. Please try again."
 }

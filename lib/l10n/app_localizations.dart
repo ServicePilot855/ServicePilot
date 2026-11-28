@@ -3097,6 +3097,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This quote can\'t be booked from your account.'**
   String get quoteBookingUnavailable;
+
+  /// No description provided for @providerHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Service records'**
+  String get providerHistoryTitle;
+
+  /// No description provided for @providerHistorySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed, cancelled, and declined bookings for your account.'**
+  String get providerHistorySubtitle;
+
+  /// No description provided for @providerHistoryButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed & closed records'**
+  String get providerHistoryButton;
+
+  /// No description provided for @providerHistoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no completed, cancelled, or declined service records yet.'**
+  String get providerHistoryEmpty;
+
+  /// No description provided for @providerHistoryLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load service records right now. Please try again.'**
+  String get providerHistoryLoadError;
 }
 
 class _AppLocalizationsDelegate

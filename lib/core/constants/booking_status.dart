@@ -22,7 +22,16 @@ extension BookingStatusExtension on BookingStatus {
     BookingStatus.completed,
   };
 
+  /// Terminal service record statuses displayed in BOOK-5 (SCRUM-90).
+  static const closedRecordStatuses = {
+    BookingStatus.completed,
+    BookingStatus.cancelled,
+    BookingStatus.declined,
+  };
+
   bool get exposesAcceptedDetails => acceptedStatuses.contains(this);
+
+  bool get isClosedRecord => closedRecordStatuses.contains(this);
 
   /// Serialized database string value.
   String get value {

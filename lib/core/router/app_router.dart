@@ -24,6 +24,7 @@ import 'package:service_pilot/features/bookings/screens/create_booking_screen.da
 import 'package:service_pilot/features/bookings/screens/incoming_booking_screen.dart';
 import 'package:service_pilot/features/bookings/screens/location_picker_screen.dart';
 import 'package:service_pilot/features/bookings/screens/provider_booking_detail_screen.dart';
+import 'package:service_pilot/features/bookings/screens/provider_service_history_screen.dart';
 import 'package:service_pilot/features/cart/screens/cart_screen.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
 import 'package:service_pilot/features/providers/screens/company_profile_edit_screen.dart';
@@ -315,7 +316,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
-      // ── Provider Booking Confirmation (BOOK-2 / SCRUM-104) ─────────────
+      // ── Provider Booking History & Confirmation (BOOK-2 / BOOK-5) ─────
+      GoRoute(
+        path: ProviderServiceHistoryScreen.path,
+        builder: (_, __) => const ProviderServiceHistoryScreen(),
+      ),
       GoRoute(
         path: '/provider/bookings/:bookingId',
         builder: (_, state) => ProviderBookingDetailScreen(

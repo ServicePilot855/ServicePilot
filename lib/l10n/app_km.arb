@@ -283,5 +283,10 @@
   "quoteBookingSubmit": "ផ្ញើសំណើកក់",
   "quoteBookingNotApproved": "សូមអនុម័តតម្លៃដែលបានផ្ដល់ មុនពេលកក់ម៉ោង។",
   "quoteBookingAlreadyBooked": "អ្នកបានកក់ម៉ោងសម្រាប់សម្រង់តម្លៃនេះរួចហើយ។",
-  "quoteBookingUnavailable": "សម្រង់តម្លៃនេះមិនអាចកក់ពីគណនីរបស់អ្នកបានទេ។"
+  "quoteBookingUnavailable": "សម្រង់តម្លៃនេះមិនអាចកក់ពីគណនីរបស់អ្នកបានទេ។",
+  "providerHistoryTitle": "កំណត់ត្រាសេវាកម្ម",
+  "providerHistorySubtitle": "ការកក់ដែលបានបញ្ចប់ បោះបង់ និងបដិសេធសម្រាប់គណនីរបស់អ្នក។",
+  "providerHistoryButton": "កំណត់ត្រាសេវាកម្មដែលបានបញ្ចប់",
+  "providerHistoryEmpty": "អ្នកមិនទាន់មានកំណត់ត្រាសេវាកម្មដែលបានបញ្ចប់ បោះបង់ ឬបដិសេធទេ។",
+  "providerHistoryLoadError": "មិនអាចផ្ទុកកំណត់ត្រាសេវាកម្មបានទេ។ សូមព្យាយាមម្តងទៀត។"
 }
