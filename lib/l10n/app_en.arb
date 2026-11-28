@@ -383,6 +383,11 @@
 
   "@_OFFERINGS": {},
   "offeringCreateTitle": "Add Service Offering",
+  "offeringEditTitle": "Edit listing",
+  "offeringEditSave": "Save changes",
+  "offeringEditSuccess": "Listing updated.",
+  "offeringEditError": "Could not save your changes. Please try again.",
+  "offeringEditUnavailable": "This listing is unavailable for editing.",
   "offeringHeaderTitle": "New Service Offering",
   "offeringCreateSubtitle": "Publish a new service offering with fixed or custom quote pricing.",
   "offeringCategoryLabel": "Service Category",
@@ -425,6 +430,26 @@
 
   "@_ADMIN": {},
   "adminDashboardTitle": "Platform Administration",
+  "adminAccountLookupTitle": "Find an account",
+  "adminAccountLookupId": "Account ID",
+  "adminAccountLookupIdHint": "Example: abC123xYz",
+  "adminAccountLookupSearch": "Search",
+  "adminAccountLookupInvalid": "Enter a valid account ID.",
+  "adminAccountLookupResult": "Account summary",
+  "adminAccountLookupRole": "Role: {role}",
+  "@adminAccountLookupRole": {
+    "placeholders": {"role": {"type": "String"}}
+  },
+  "adminAccountLookupStatus": "Status: {status}",
+  "@adminAccountLookupStatus": {
+    "placeholders": {"status": {"type": "String"}}
+  },
+  "adminAccountLookupEmpty": "No account found for this ID.",
+  "adminAccountLookupDenied": "Only active Platform Admins can look up accounts.",
+  "adminAccountLookupError": "Could not look up the account. Please try again.",
+  "adminAccountLookupUnknown": "Unavailable",
+  "adminAccountStatusActive": "Active",
+  "adminAccountStatusSuspended": "Suspended",
   "adminPendingProvidersSection": "Pending provider applications",
   "adminApprovedProvidersSection": "Approved active providers",
   "adminPendingProvidersEmpty": "No pending provider applications require review right now.",

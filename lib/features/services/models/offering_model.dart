@@ -112,7 +112,8 @@ class OfferingModel {
       categoryName: data['categoryName'] as String? ?? '',
       title: data['title'] as String? ?? '',
       description: data['description'] as String? ?? '',
-      pricingMode: OfferingPricingMode.fromValue(data['pricingMode'] as String?),
+      pricingMode:
+          OfferingPricingMode.fromValue(data['pricingMode'] as String?),
       price: (data['price'] as num?)?.toDouble(),
       unit: data['unit'] as String?,
       isActive: data['isActive'] as bool? ?? true,
@@ -149,6 +150,16 @@ class OfferingModel {
   }
 
   Map<String, dynamic> toJson() => toMap();
+
+  Map<String, dynamic> get editableFields => {
+        'categoryId': categoryId,
+        'categoryName': categoryName,
+        'title': title,
+        'description': description,
+        'pricingMode': pricingMode.value,
+        'price': price,
+        'unit': isFixedPrice ? unit : null,
+      };
 
   OfferingModel copyWith({
     String? id,

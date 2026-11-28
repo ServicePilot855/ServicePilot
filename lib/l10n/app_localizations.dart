@@ -1826,6 +1826,36 @@ abstract class AppLocalizations {
   /// **'Add Service Offering'**
   String get offeringCreateTitle;
 
+  /// No description provided for @offeringEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit listing'**
+  String get offeringEditTitle;
+
+  /// No description provided for @offeringEditSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get offeringEditSave;
+
+  /// No description provided for @offeringEditSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Listing updated.'**
+  String get offeringEditSuccess;
+
+  /// No description provided for @offeringEditError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save your changes. Please try again.'**
+  String get offeringEditError;
+
+  /// No description provided for @offeringEditUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This listing is unavailable for editing.'**
+  String get offeringEditUnavailable;
+
   /// No description provided for @offeringHeaderTitle.
   ///
   /// In en, this message translates to:
@@ -2065,6 +2095,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Platform Administration'**
   String get adminDashboardTitle;
+
+  /// No description provided for @adminAccountLookupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Find an account'**
+  String get adminAccountLookupTitle;
+
+  /// No description provided for @adminAccountLookupId.
+  ///
+  /// In en, this message translates to:
+  /// **'Account ID'**
+  String get adminAccountLookupId;
+
+  /// No description provided for @adminAccountLookupIdHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Example: abC123xYz'**
+  String get adminAccountLookupIdHint;
+
+  /// No description provided for @adminAccountLookupSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get adminAccountLookupSearch;
+
+  /// No description provided for @adminAccountLookupInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid account ID.'**
+  String get adminAccountLookupInvalid;
+
+  /// No description provided for @adminAccountLookupResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Account summary'**
+  String get adminAccountLookupResult;
+
+  /// No description provided for @adminAccountLookupRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Role: {role}'**
+  String adminAccountLookupRole(String role);
+
+  /// No description provided for @adminAccountLookupStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status: {status}'**
+  String adminAccountLookupStatus(String status);
+
+  /// No description provided for @adminAccountLookupEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No account found for this ID.'**
+  String get adminAccountLookupEmpty;
+
+  /// No description provided for @adminAccountLookupDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Only active Platform Admins can look up accounts.'**
+  String get adminAccountLookupDenied;
+
+  /// No description provided for @adminAccountLookupError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not look up the account. Please try again.'**
+  String get adminAccountLookupError;
+
+  /// No description provided for @adminAccountLookupUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable'**
+  String get adminAccountLookupUnknown;
+
+  /// No description provided for @adminAccountStatusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get adminAccountStatusActive;
+
+  /// No description provided for @adminAccountStatusSuspended.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspended'**
+  String get adminAccountStatusSuspended;
 
   /// No description provided for @adminPendingProvidersSection.
   ///

@@ -138,33 +138,26 @@ class FirestoreOfferingService implements IOfferingService {
 
   @override
   Future<OfferingModel> updateOffering(OfferingModel offering) async {
-    final sanitized =
-        offering.isQuoteRequired ? offering.copyWith(price: null) : offering;
-
-    if (Firebase.apps.isNotEmpty) {
-      try {
-        final finalOffering = sanitized.copyWith(updatedAt: DateTime.now());
-        await _firestore
-            .collection(collectionName)
-            .doc(finalOffering.id)
-            .update(finalOffering.toMap());
-
-        // Best-effort in-memory fallback cache update
-        try {
-          await _fallbackService.updateOffering(finalOffering);
-        } catch (e) {
-          debugPrint(
-              '[FirestoreOfferingService] Fallback cache update error (ignored): $e');
-        }
-        return finalOffering;
-      } catch (e) {
-        debugPrint(
-          '[FirestoreOfferingService] Update offering Firestore error ($e); saving to fallback store.',
-        );
-      }
+    if (offering.isFixedPrice &&
+        !OfferingModel.isValidFixedPrice(offering.price)) {
+      throw ArgumentError.value(offering.price, 'price', 'Invalid fixed price');
     }
+    if (!_hasFirestore) throw StateError('Firestore unavailable');
 
-    return _fallbackService.updateOffering(sanitized);
+    final updatedAt = DateTime.now();
+    final changes = {
+      ...offering.editableFields,
+      'updatedAt': updatedAt.toIso8601String(),
+    };
+    await _firestore
+        .collection(collectionName)
+        .doc(offering.id)
+        .update(changes);
+    final saved = OfferingModel.fromMap({...offering.toMap(), ...changes});
+    if (await _fallbackService.getOfferingById(saved.id) != null) {
+      await _fallbackService.updateOffering(saved);
+    }
+    return saved;
   }
 
   @override

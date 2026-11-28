@@ -18,6 +18,7 @@ import 'package:service_pilot/features/services/providers/offering_provider.dart
 import 'package:service_pilot/features/services/screens/create_offering_screen.dart';
 import 'package:service_pilot/features/services/services/category_service.dart';
 import 'package:service_pilot/features/services/services/offering_service.dart';
+import 'package:service_pilot/features/services/widgets/provider_offering_list.dart';
 import 'package:service_pilot/l10n/app_localizations.dart';
 
 class _MockAuthNotifier extends AuthNotifier {
@@ -63,11 +64,12 @@ void main() {
     List<ProviderModel>? providers,
     String? categoryId = 'cat-ac',
     String? providerId,
+    String initialLocation = '/offerings/create',
     Locale locale = const Locale('en'),
     double textScale = 1,
   }) {
     final router = GoRouter(
-      initialLocation: '/offerings/create',
+      initialLocation: initialLocation,
       routes: [
         GoRoute(
           path: '/offerings/create',
@@ -77,8 +79,24 @@ void main() {
           ),
         ),
         GoRoute(
+          path: '/offerings/:offeringId/edit',
+          builder: (_, state) => EditOfferingScreen(
+              offeringId: state.pathParameters['offeringId']!),
+        ),
+        GoRoute(
           path: '/home/:role',
-          builder: (_, __) => const Scaffold(body: Text('Provider home')),
+          builder: (_, __) => Scaffold(
+            body: ListView(
+              children: [
+                const Text('Provider home'),
+                if (initialLocation == '/home/technician')
+                  const ProviderOfferingList(
+                    providerId: 'prov-tech-1',
+                    providerName: 'Tech Lead',
+                  ),
+              ],
+            ),
+          ),
         ),
         GoRoute(
           path: '/providers/:id',
@@ -182,6 +200,65 @@ void main() {
     status: 'active',
     companyId: 'prov-company-1',
   );
+  const existingListing = OfferingModel(
+    id: 'existing',
+    providerId: 'prov-tech-1',
+    providerName: 'Tech Lead',
+    categoryId: 'cat-ac',
+    title: 'Split Unit Wash',
+    description: 'Deep cleaning and drain inspection.',
+    pricingMode: OfferingPricingMode.fixed,
+    price: 25.49,
+  );
+
+  testWidgets('opens a prefilled dashboard listing and refreshes its profile',
+      (tester) async {
+    setupViewport(tester, size: const Size(360, 900));
+    final service = OfferingService(initialOfferings: [existingListing]);
+    await tester.pumpWidget(buildTestApp(
+      initialLocation: '/home/technician',
+      customCategoryService: CategoryService(initialCategories: testCategories),
+      customOfferingService: service,
+      providers: [technician, company],
+      textScale: 1.3,
+    ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('edit_offering_existing')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Split Unit Wash'), findsOneWidget);
+    final price = find.byKey(const Key('offering_price_field'));
+    await tester.ensureVisible(price);
+    expect(find.text('25.49'), findsOneWidget);
+    await tester.enterText(price, '35.75');
+    final save = find.byKey(const Key('save_offering_button'));
+    await tester.ensureVisible(save);
+    await tester.tap(save);
+    await tester.pumpAndSettle();
+
+    expect((await service.getOfferings()).single.price, 35.75);
+    expect(find.text(r'$35.75'), findsOneWidget);
+    final router = GoRouter.of(tester.element(find.text('Provider home')));
+    router.go('/providers/prov-tech-1');
+    await tester.pumpAndSettle();
+    expect(find.text(r'$35.75'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('another provider cannot open the edit form by its URL',
+      (tester) async {
+    setupViewport(tester);
+    await tester.pumpWidget(buildTestApp(
+      initialLocation: '/offerings/existing/edit',
+      customOfferingService:
+          OfferingService(initialOfferings: [existingListing]),
+      mockUser: companyAdmin,
+    ));
+    await tester.pumpAndSettle();
+    expect(
+        find.text('This listing is unavailable for editing.'), findsOneWidget);
+    expect(find.byKey(const Key('save_offering_button')), findsNothing);
+  });
 
   group('SCRUM-76 fixed-price publishing', () {
     for (final (locale, width) in [

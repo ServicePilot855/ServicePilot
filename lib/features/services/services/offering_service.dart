@@ -134,12 +134,19 @@ class OfferingService implements IOfferingService {
 
   @override
   Future<OfferingModel> updateOffering(OfferingModel offering) async {
+    if (offering.isFixedPrice &&
+        !OfferingModel.isValidFixedPrice(offering.price)) {
+      throw ArgumentError.value(offering.price, 'price', 'Invalid fixed price');
+    }
     final index = _offerings.indexWhere((o) => o.id == offering.id);
     if (index == -1) {
       throw Exception('Offering with ID ${offering.id} not found');
     }
-    final sanitized =
-        offering.isQuoteRequired ? offering.copyWith(price: null) : offering;
+    final sanitized = OfferingModel.fromMap({
+      ..._offerings[index].toMap(),
+      ...offering.editableFields,
+      'updatedAt': (offering.updatedAt ?? DateTime.now()).toIso8601String(),
+    });
 
     _offerings[index] = sanitized;
     return sanitized;

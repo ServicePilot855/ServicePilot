@@ -26,6 +26,7 @@ function firestoreFields(data) {
   return Object.fromEntries(Object.entries(data).map(([key, value]) => {
     if (typeof value === 'number') return [key, { doubleValue: value }];
     if (typeof value === 'boolean') return [key, { booleanValue: value }];
+    if (value === null) return [key, { nullValue: null }];
     return [key, { stringValue: value }];
   }));
 }
@@ -82,6 +83,21 @@ for (const actor of [technician, company]) {
   await write(`offerings/${record.id}`, record, actor.token);
   const publicRecord = await request(`${documents}/offerings/${record.id}`);
   assert.deepEqual(publicRecord.fields, firestoreFields(record));
+
+  const path = `offerings/${record.id}`;
+  const updated = { ...record, title: 'Updated unit wash', price: 31.25 };
+  await write(path, updated, actor.token);
+  await write(path, { ...updated, price: 31.251 }, actor.token, 403);
+  await write(path, { ...updated, price: 1 }, otherCompany.token, 403);
+  assert.deepEqual((await request(`${documents}/${path}`)).fields, firestoreFields(updated));
+
+  const quote = { ...updated, pricingMode: 'quote_required', price: null };
+  await write(path, quote, actor.token);
+  await write(path, { ...quote, title: 'Edited by another provider' }, otherCompany.token, 403);
+  await write(path, { ...quote, price: 25 }, actor.token, 403);
+  await write(path, { ...quote, categoryId: 'cat-inactive' }, actor.token, 403);
+  assert.deepEqual((await request(`${documents}/${path}`)).fields, firestoreFields(quote));
+  await write(path, updated, actor.token);
 }
 
 // A company association alone cannot grant publishing rights to another account.
