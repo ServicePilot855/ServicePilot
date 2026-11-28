@@ -1772,4 +1772,22 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get bookingStatusPending => 'កំពុងរង់ចាំ';
+
+  @override
+  String get providerHistoryTitle => 'កំណត់ត្រាសេវាកម្ម';
+
+  @override
+  String get providerHistorySubtitle =>
+      'ការកក់ដែលបានបញ្ចប់ បោះបង់ និងបដិសេធសម្រាប់គណនីរបស់អ្នក។';
+
+  @override
+  String get providerHistoryButton => 'កំណត់ត្រាសេវាកម្មដែលបានបញ្ចប់';
+
+  @override
+  String get providerHistoryEmpty =>
+      'អ្នកមិនទាន់មានកំណត់ត្រាសេវាកម្មដែលបានបញ្ចប់ បោះបង់ ឬបដិសេធទេ។';
+
+  @override
+  String get providerHistoryLoadError =>
+      'មិនអាចផ្ទុកកំណត់ត្រាសេវាកម្មបានទេ។ សូមព្យាយាមម្តងទៀត។';
 }

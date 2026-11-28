@@ -702,5 +702,12 @@
   "bookingStatusCompleted": "Completed",
   "bookingStatusCancelled": "Cancelled",
   "bookingStatusDeclined": "Declined",
-  "bookingStatusPending": "Pending"
+  "bookingStatusPending": "Pending",
+
+  "@_BOOKING_HISTORY_PROVIDER": {},
+  "providerHistoryTitle": "Service records",
+  "providerHistorySubtitle": "Completed, cancelled, and declined bookings for your account.",
+  "providerHistoryButton": "Completed & closed records",
+  "providerHistoryEmpty": "You have no completed, cancelled, or declined service records yet.",
+  "providerHistoryLoadError": "Unable to load service records right now. Please try again."
 }

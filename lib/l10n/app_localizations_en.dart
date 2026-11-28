@@ -1797,4 +1797,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bookingStatusPending => 'Pending';
+
+  @override
+  String get providerHistoryTitle => 'Service records';
+
+  @override
+  String get providerHistorySubtitle =>
+      'Completed, cancelled, and declined bookings for your account.';
+
+  @override
+  String get providerHistoryButton => 'Completed & closed records';
+
+  @override
+  String get providerHistoryEmpty =>
+      'You have no completed, cancelled, or declined service records yet.';
+
+  @override
+  String get providerHistoryLoadError =>
+      'Unable to load service records right now. Please try again.';
 }

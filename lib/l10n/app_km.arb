@@ -297,5 +297,10 @@
   "bookingStatusCompleted": "បានបញ្ចប់",
   "bookingStatusCancelled": "បានបោះបង់",
   "bookingStatusDeclined": "បានបដិសេធ",
-  "bookingStatusPending": "កំពុងរង់ចាំ"
+  "bookingStatusPending": "កំពុងរង់ចាំ",
+  "providerHistoryTitle": "កំណត់ត្រាសេវាកម្ម",
+  "providerHistorySubtitle": "ការកក់ដែលបានបញ្ចប់ បោះបង់ និងបដិសេធសម្រាប់គណនីរបស់អ្នក។",
+  "providerHistoryButton": "កំណត់ត្រាសេវាកម្មដែលបានបញ្ចប់",
+  "providerHistoryEmpty": "អ្នកមិនទាន់មានកំណត់ត្រាសេវាកម្មដែលបានបញ្ចប់ បោះបង់ ឬបដិសេធទេ។",
+  "providerHistoryLoadError": "មិនអាចផ្ទុកកំណត់ត្រាសេវាកម្មបានទេ។ សូមព្យាយាមម្តងទៀត។"
 }
