@@ -3,11 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:service_pilot/core/theme/app_theme.dart';
+import 'package:service_pilot/features/bookings/models/booking_item.dart';
 import 'package:service_pilot/features/bookings/models/booking_request.dart';
 import 'package:service_pilot/features/bookings/providers/booking_provider.dart';
 import 'package:service_pilot/features/bookings/services/booking_service.dart';
 import 'package:service_pilot/features/bookings/widgets/appointment_fields.dart';
 import 'package:service_pilot/features/bookings/widgets/problem_photo_controls.dart';
+import 'package:service_pilot/features/cart/models/cart_state.dart';
+import 'package:service_pilot/features/cart/providers/cart_provider.dart';
+import 'package:service_pilot/features/cart/screens/cart_screen.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
 import 'package:service_pilot/features/providers/providers/provider_provider.dart';
 import 'package:service_pilot/features/services/providers/category_provider.dart';
@@ -21,6 +25,10 @@ import 'package:service_pilot/shared/widgets/sp_text_field.dart';
 /// US-12 (SCRUM-43). Reached from the provider page's Book button at
 /// `/providers/:providerId/book`. On success the booking is saved as Pending
 /// and the customer lands on the "Request sent" page.
+///
+/// CART-3 (SCRUM-82): with a [cart], the form is the cart checkout. The cart's
+/// services and total replace the service picker, and the booking is saved
+/// with those items and their total.
 class CreateBookingScreen extends ConsumerWidget {
   const CreateBookingScreen({
     super.key,
@@ -29,6 +37,7 @@ class CreateBookingScreen extends ConsumerWidget {
     this.initialServiceTitle,
     this.initialOfferingId,
     this.isQuoteRequired = false,
+    this.cart,
   });
 
   final String providerId;
@@ -44,6 +53,9 @@ class CreateBookingScreen extends ConsumerWidget {
 
   /// Whether this intake requires a custom price quote.
   final bool isQuoteRequired;
+
+  /// The reviewed cart when this form is the cart checkout.
+  final CartState? cart;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -110,6 +122,7 @@ class CreateBookingScreen extends ConsumerWidget {
       initialServiceTitle: initialServiceTitle,
       initialOfferingId: initialOfferingId,
       isQuoteRequired: isQuoteRequired,
+      cart: cart,
     );
   }
 
@@ -128,12 +141,14 @@ class _BookingForm extends ConsumerStatefulWidget {
     this.initialServiceTitle,
     this.initialOfferingId,
     this.isQuoteRequired = false,
+    this.cart,
   });
 
   final ProviderModel provider;
   final String? initialServiceTitle;
   final String? initialOfferingId;
   final bool isQuoteRequired;
+  final CartState? cart;
 
   @override
   ConsumerState<_BookingForm> createState() => _BookingFormState();
@@ -154,10 +169,26 @@ class _BookingFormState extends ConsumerState<_BookingForm> {
 
   ProviderModel get _provider => widget.provider;
 
+  CartState? get _cart => widget.cart;
+
+  /// The cart's services as booking lines, priced as the customer saw them.
+  List<BookingItem> get _cartItems => [
+        for (final item in _cart?.items ?? const [])
+          BookingItem(
+            offeringId: item.offering.id,
+            providerId: item.offering.providerId,
+            title: item.offering.title,
+            unitPrice: item.offering.price ?? 0,
+            quantity: item.quantity,
+          ),
+      ];
+
   @override
   void initState() {
     super.initState();
-    if (widget.initialServiceTitle != null &&
+    if (_cart != null) {
+      _service = BookingRequest.cartServiceTitle(_cartItems);
+    } else if (widget.initialServiceTitle != null &&
         widget.initialServiceTitle!.trim().isNotEmpty) {
       _service = widget.initialServiceTitle!.trim();
     }
@@ -198,6 +229,12 @@ class _BookingFormState extends ConsumerState<_BookingForm> {
     _addressController.dispose();
     super.dispose();
   }
+
+  /// Cart problems are not tied to one field, so they show as a snackbar.
+  static const _cartErrors = {
+    BookingFieldError.cartItemsInvalid,
+    BookingFieldError.cartMixedProviders,
+  };
 
   String? _check(BookingFieldError? error) =>
       error == null ? null : bookingFieldErrorMessage(context.l10n, error);
@@ -262,6 +299,7 @@ class _BookingFormState extends ConsumerState<_BookingForm> {
     setState(() => _submitting = true);
     final l10n = context.l10n;
     try {
+      final items = _cartItems;
       final request = BookingRequest(
         customerId: ref.read(activeCustomerIdProvider),
         providerId: _provider.id,
@@ -275,14 +313,25 @@ class _BookingFormState extends ConsumerState<_BookingForm> {
         latitude: _pin?.latitude,
         longitude: _pin?.longitude,
         photos: List.unmodifiable(_photos),
+        items: items,
       );
       final booking =
           await ref.read(bookingServiceProvider).createBooking(request);
       ref.invalidate(customerBookingsProvider);
       if (!mounted) return;
+      final cartNotifier = ref.read(cartProvider.notifier);
       // Replace the form so Back cannot send the same request twice.
       context.go('/bookings/${booking.id}/sent', extra: booking);
-    } on InvalidBookingRequestException {
+      // The cart has become this booking (CART-3 / SCRUM-82).
+      if (request.isFromCart) cartNotifier.clear();
+    } on InvalidBookingRequestException catch (error) {
+      final cartError = error.errors.where(_cartErrors.contains).firstOrNull;
+      if (cartError != null) {
+        if (mounted) {
+          showSpError(context, bookingFieldErrorMessage(l10n, cartError));
+        }
+        return;
+      }
       // The chosen time may have become too soon while the form was open.
       _formKey.currentState?.validate();
     } catch (error, stack) {
@@ -298,7 +347,8 @@ class _BookingFormState extends ConsumerState<_BookingForm> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final price = _provider.startingPrice ?? 0;
+    final cart = _cart;
+    final price = cart != null ? 0 : _provider.startingPrice ?? 0;
 
     return Form(
       key: _formKey,
@@ -306,7 +356,7 @@ class _BookingFormState extends ConsumerState<_BookingForm> {
           ? AutovalidateMode.onUserInteraction
           : AutovalidateMode.disabled,
       child: SpFlowPage(
-        title: l10n.bookingFormTitle,
+        title: cart != null ? l10n.cartCheckoutTitle : l10n.bookingFormTitle,
         onBack: () => CreateBookingScreen._leave(context),
         bottom: SpPrimaryButton(
           key: const Key('booking_submit_button'),
@@ -329,18 +379,35 @@ class _BookingFormState extends ConsumerState<_BookingForm> {
             ),
           ],
           const SizedBox(height: 32),
-          SpFormSection(
-            title: l10n.bookingServiceSection,
-            children: [
-              _ServicePicker(
-                options: _serviceOptions(l10n),
-                initialValue: _service,
-                validator: (value) =>
-                    _check(BookingRequestValidator.service(value)),
-                onChanged: (value) => setState(() => _service = value),
-              ),
-            ],
-          ),
+          if (cart != null)
+            SpFormSection(
+              key: const Key('booking_cart_items'),
+              title: l10n.cartCheckoutServicesSection,
+              children: [
+                CartProviderLine(cart: cart),
+                const SizedBox(height: 16),
+                const Divider(height: 1, color: AppTheme.border),
+                for (final item in cart.items) ...[
+                  CartItemRow(item: item),
+                  const Divider(height: 1, color: AppTheme.border),
+                ],
+                const SizedBox(height: 16),
+                CartTotalRow(total: BookingItem.totalOf(_cartItems)),
+              ],
+            )
+          else
+            SpFormSection(
+              title: l10n.bookingServiceSection,
+              children: [
+                _ServicePicker(
+                  options: _serviceOptions(l10n),
+                  initialValue: _service,
+                  validator: (value) =>
+                      _check(BookingRequestValidator.service(value)),
+                  onChanged: (value) => setState(() => _service = value),
+                ),
+              ],
+            ),
           const SizedBox(height: 32),
           SpFormSection(
             title: l10n.bookingProblemSection,
@@ -430,7 +497,8 @@ class _BookingFormState extends ConsumerState<_BookingForm> {
           const SizedBox(height: 16),
           SpNotice(
             icon: Icons.info_outline_rounded,
-            message: l10n.bookingPaymentNote,
+            message:
+                cart != null ? l10n.cartPaymentNote : l10n.bookingPaymentNote,
             tone: SpTone.neutral,
           ),
         ],

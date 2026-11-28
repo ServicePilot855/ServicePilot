@@ -95,11 +95,12 @@ class FirestoreBookingService implements IBookingService {
       address: request.address.trim(),
       preferredDateTime: request.preferredDateTime,
       status: BookingStatus.pending,
-      totalPrice: request.estimatedPrice,
+      totalPrice: request.totalPrice,
       createdAt: DateTime.now(),
       latitude: request.latitude,
       longitude: request.longitude,
       photoUrls: photoUrls,
+      items: request.items,
     );
 
     await _guard(() {

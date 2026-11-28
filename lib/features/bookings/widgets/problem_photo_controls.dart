@@ -48,6 +48,10 @@ String bookingFieldErrorMessage(
       return l10n.bookingErrorTooManyPhotos(BookingRequestValidator.maxPhotos);
     case BookingFieldError.photoTooLarge:
       return l10n.bookingErrorPhotoTooLarge(maxPhotoMb);
+    case BookingFieldError.cartItemsInvalid:
+      return l10n.bookingErrorCartInvalid;
+    case BookingFieldError.cartMixedProviders:
+      return l10n.bookingErrorCartMixedProviders;
   }
 }
 

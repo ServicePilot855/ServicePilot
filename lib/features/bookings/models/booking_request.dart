@@ -1,5 +1,8 @@
 import 'dart:typed_data';
 
+import 'package:service_pilot/features/bookings/models/booking_item.dart';
+import 'package:service_pilot/features/services/models/offering_model.dart';
+
 /// A problem photo picked by the customer, held in memory until upload.
 class BookingPhoto {
   final Uint8List bytes;
@@ -45,6 +48,10 @@ class BookingRequest {
   /// Optional problem photos (PLAN.md: up to 5, 5 MB each).
   final List<BookingPhoto> photos;
 
+  /// Fixed-price services from the reviewed cart (CART-3 / SCRUM-82). Empty
+  /// for a single-service request from the provider page.
+  final List<BookingItem> items;
+
   const BookingRequest({
     required this.customerId,
     required this.providerId,
@@ -58,7 +65,27 @@ class BookingRequest {
     this.latitude,
     this.longitude,
     this.photos = const [],
+    this.items = const [],
   });
+
+  /// Whether this request was sent from the cart.
+  bool get isFromCart => items.isNotEmpty;
+
+  /// Price saved on the booking: the item total for a cart, otherwise the
+  /// provider's starting price.
+  double get totalPrice =>
+      isFromCart ? BookingItem.totalOf(items) : estimatedPrice;
+
+  /// Longest service title Firestore accepts (`serviceType` in the rules).
+  static const int serviceTitleMaxLength = 100;
+
+  /// One-line service title for a cart booking, for lists that show a single
+  /// title: the item names joined with commas, shortened to fit.
+  static String cartServiceTitle(List<BookingItem> items) {
+    final joined = items.map((item) => item.title.trim()).join(', ');
+    if (joined.length <= serviceTitleMaxLength) return joined;
+    return '${joined.substring(0, serviceTitleMaxLength - 1).trimRight()}…';
+  }
 }
 
 /// Why a booking request field was rejected. The form turns each value into a
@@ -76,6 +103,13 @@ enum BookingFieldError {
   dateTimeTooFar,
   tooManyPhotos,
   photoTooLarge,
+
+  /// A cart item is missing its offering, has no valid fixed price or
+  /// quantity, or the cart holds too many lines (CART-3 / SCRUM-82).
+  cartItemsInvalid,
+
+  /// A cart item belongs to a provider other than the booking's provider.
+  cartMixedProviders,
 }
 
 /// Field rules for US-12 booking requests.
@@ -95,6 +129,9 @@ class BookingRequestValidator {
 
   static const int maxPhotos = 5;
   static const int maxPhotoBytes = 5 * 1024 * 1024;
+
+  /// Matches the `services` list limit in `firestore.rules`.
+  static const int maxCartItems = 20;
 
   static BookingFieldError? service(String? value) {
     if (value == null || value.trim().isEmpty) {
@@ -146,12 +183,35 @@ class BookingRequestValidator {
     return null;
   }
 
+  /// Cart lines must all come from [providerId], each with an offering, a
+  /// title, a valid fixed price and a positive quantity. No items is valid:
+  /// that is a single-service request.
+  static BookingFieldError? cartItems(
+    List<BookingItem> items, {
+    required String providerId,
+  }) {
+    if (items.isEmpty) return null;
+    if (items.any((item) => item.providerId != providerId)) {
+      return BookingFieldError.cartMixedProviders;
+    }
+    final offeringIds = <String>{};
+    final invalid = items.length > maxCartItems ||
+        items.any((item) =>
+            item.offeringId.trim().isEmpty ||
+            !offeringIds.add(item.offeringId) ||
+            item.title.trim().isEmpty ||
+            item.quantity < 1 ||
+            !OfferingModel.isValidFixedPrice(item.unitPrice));
+    return invalid ? BookingFieldError.cartItemsInvalid : null;
+  }
+
   /// Every problem with [request], in form order. Empty when it can be sent.
   static List<BookingFieldError> validate(
     BookingRequest request, {
     DateTime? now,
   }) {
     return [
+      cartItems(request.items, providerId: request.providerId),
       service(request.serviceTitle),
       description(request.description),
       photos(request.photos),

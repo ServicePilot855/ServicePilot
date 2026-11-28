@@ -1790,4 +1790,35 @@ class AppLocalizationsKm extends AppLocalizations {
   @override
   String get providerHistoryLoadError =>
       'មិនអាចផ្ទុកកំណត់ត្រាសេវាកម្មបានទេ។ សូមព្យាយាមម្តងទៀត។';
+
+  @override
+  String get cartCheckoutButton => 'បន្តទៅការបញ្ជាទិញ';
+
+  @override
+  String get cartCheckoutTitle => 'ការបញ្ជាទិញ';
+
+  @override
+  String get cartCheckoutServicesSection => 'សេវាកម្មរបស់អ្នក';
+
+  @override
+  String get bookingErrorCartInvalid =>
+      'សេវាកម្មមួយក្នុងកន្ត្រករបស់អ្នកមិនអាចកក់បានទៀតទេ។ សូមត្រឡប់ទៅកន្ត្រក ពិនិត្យវា ហើយព្យាយាមម្តងទៀត។';
+
+  @override
+  String get bookingErrorCartMixedProviders =>
+      'កន្ត្រករបស់អ្នកមានសេវាកម្មពីអ្នកផ្តល់សេវាច្រើនជាងមួយ។ សូមរក្សាទុកតែសេវាកម្មពីអ្នកផ្តល់សេវាតែមួយ ហើយព្យាយាមម្តងទៀត។';
+
+  @override
+  String get bookingSummaryReference => 'លេខយោងការកក់';
+
+  @override
+  String get bookingSummaryServices => 'សេវាកម្ម';
+
+  @override
+  String get bookingSummaryTotal => 'សរុប';
+
+  @override
+  String bookingSummaryItemLine(String serviceTitle, String price) {
+    return '$serviceTitle៖ $price';
+  }
 }

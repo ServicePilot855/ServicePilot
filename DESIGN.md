@@ -301,6 +301,9 @@ The cart holds fixed-price services from one provider. [Cart review](lib/feature
 - Put **Total** in Headline type, aligned with the line totals, then a neutral notice saying that no payment is taken in the app.
 - An empty cart shows an `SpStatusHero` and an outlined **Browse services** button.
 - Only homeowners can open `/cart`.
+- Pin **Continue to checkout** as the cart's one filled button.
+
+[Checkout](lib/features/cart/screens/cart_checkout_screen.dart) at `/cart/checkout` is the [booking request form](lib/features/bookings/screens/create_booking_screen.dart) titled **Checkout**. A read-only **Your services** section takes the place of the service picker: provider, lines and total, with no remove buttons. The job details, photo, address and time fields stay as they are. When the save succeeds, the cart empties and the **Request sent** page shows the booking reference, each service with its price, and the total. When the save fails, no receipt appears and the cart is kept. Cart problems that aren't tied to one field use `showSpError`.
 
 ## Quote requests
 
