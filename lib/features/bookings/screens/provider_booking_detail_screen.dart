@@ -40,10 +40,67 @@ class _ProviderBookingDetailScreenState
     extends ConsumerState<ProviderBookingDetailScreen> {
   bool _isConfirming = false;
   bool _isDeclining = false;
+  bool _isCompleting = false;
   bool _isAssigning = false;
   bool _isStarting = false;
   String? _successMessage;
   String? _errorMessage;
+
+  Future<void> _completeBooking(String providerId) async {
+    final l10n = context.l10n;
+    setState(() {
+      _isCompleting = true;
+      _errorMessage = null;
+      _successMessage = null;
+    });
+
+    try {
+      final service = ref.read(bookingServiceProvider);
+      await service.completeBooking(
+        bookingId: widget.bookingId,
+        providerId: providerId,
+      );
+
+      if (!mounted) return;
+      ref.invalidate(bookingDetailProvider(widget.bookingId));
+      ref.invalidate(liveBookingDetailProvider(widget.bookingId));
+      ref.invalidate(providerBookingsProvider(providerId));
+      ref.invalidate(liveProviderBookingsProvider(providerId));
+      ref.invalidate(providerActiveBookingsProvider(providerId));
+      ref.invalidate(liveProviderActiveBookingsProvider(providerId));
+      ref.invalidate(providerServiceRecordsProvider);
+      ref.invalidate(customerBookingsProvider);
+
+      setState(() {
+        _isCompleting = false;
+        _successMessage = l10n.providerBookingCompleteSuccess;
+      });
+    } on UnauthorizedBookingCompletionException {
+      if (!mounted) return;
+      setState(() {
+        _isCompleting = false;
+        _errorMessage = l10n.providerBookingCompleteUnauthorized;
+      });
+    } on InvalidBookingTransitionException {
+      if (!mounted) return;
+      setState(() {
+        _isCompleting = false;
+        _errorMessage = l10n.providerBookingCompleteIneligible;
+      });
+    } on BookingSubmissionException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isCompleting = false;
+        _errorMessage = e.message;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isCompleting = false;
+        _errorMessage = l10n.providerBookingCompleteIneligible;
+      });
+    }
+  }
 
   Future<void> _confirmBooking(
     DateTime preferredTime,
@@ -477,6 +534,7 @@ class _ProviderBookingDetailScreenState
         booking.canBeAssigned &&
         ref.watch(currentUserProvider)?.isCompany == true;
     final canStart = isOwned && booking.canBeStarted;
+    final canComplete = isOwned && booking.canBeCompleted;
 
     final preferredFormatted = DateFormat('EEE, d MMM yyyy • h:mm a')
         .format(booking.preferredDateTime);
@@ -493,11 +551,14 @@ class _ProviderBookingDetailScreenState
           children: [
             if (_successMessage != null &&
                 (booking.status == BookingStatus.confirmed ||
-                    booking.status == BookingStatus.inProgress)) ...[
+                    booking.status == BookingStatus.inProgress ||
+                    booking.status == BookingStatus.completed)) ...[
               SpNotice(
-                key: booking.status == BookingStatus.inProgress
-                    ? const Key('provider_booking_started_notice')
-                    : const Key('provider_booking_confirmed_notice'),
+                key: booking.status == BookingStatus.completed
+                    ? const Key('provider_booking_completed_notice')
+                    : (booking.status == BookingStatus.inProgress
+                        ? const Key('provider_booking_started_notice')
+                        : const Key('provider_booking_confirmed_notice')),
                 icon: Icons.check_circle_outline_rounded,
                 message: _successMessage!,
                 tone: SpTone.success,
@@ -666,6 +727,17 @@ class _ProviderBookingDetailScreenState
                 onPressed: _isStarting
                     ? null
                     : () => _startBooking(activeProviderId),
+              )
+            else if (canComplete)
+              SpPrimaryButton(
+                key: const Key('provider_complete_booking_button'),
+                label: l10n.providerBookingCompleteButton,
+                icon: Icons.check_circle_outline_rounded,
+                isLoading: _isCompleting,
+                wrapLabel: true,
+                onPressed: _isCompleting
+                    ? null
+                    : () => _completeBooking(activeProviderId),
               )
             else if (!booking.status.exposesAcceptedDetails)
               SpNotice(

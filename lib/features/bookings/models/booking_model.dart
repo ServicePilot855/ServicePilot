@@ -128,6 +128,14 @@ class BookingModel {
   bool canBeDeclinedBy(String targetProviderId) =>
       isOwnedByProvider(targetProviderId) && status == BookingStatus.pending;
 
+  /// Whether this booking is in an eligible state for completion (WORK-2 / SCRUM-92):
+  /// only `In Progress` bookings can transition to `Completed`.
+  bool get canBeCompleted => status == BookingStatus.inProgress;
+
+  /// Whether [targetProviderId] is authorized to complete this booking now.
+  bool canBeCompletedByProvider(String targetProviderId) =>
+      isOwnedByProvider(targetProviderId) && canBeCompleted;
+
   factory BookingModel.fromJson(Map<String, dynamic> json) {
     return BookingModel(
       id: json['id'] as String,

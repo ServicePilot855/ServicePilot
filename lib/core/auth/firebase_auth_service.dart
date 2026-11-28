@@ -745,6 +745,27 @@ class FirebaseAuthService implements IAuthService {
         'Could not verify company membership. Please ask your company administrator.',
       );
     }
+    if (data != null) {
+      final serverUser = _userFromFirestore(fbUser.uid, {
+        ...data,
+        'fullName': data['fullName'] ??
+            fbUser.displayName ??
+            defaultName ??
+            _inferNameFromEmail(fbUser.email ?? ''),
+        'email': data['email'] ?? fbUser.email ?? email ?? '',
+        'phoneNumber': data['phoneNumber'] ?? fbUser.phoneNumber ?? '',
+      });
+      final resolvedUser = serverUser.isIndependentTechnician &&
+              !serverUser.isSuspended
+          ? await _linkLegacyTechnician(serverUser)
+          : (serverUser.isCompany &&
+                  !serverUser.isSuspended &&
+                  serverUser.companyId == null
+              ? await _linkLegacyCompany(serverUser)
+              : serverUser);
+      await _saveUserProfile(resolvedUser);
+      return resolvedUser;
+    }
     if (cached != null && cached.role != AppRole.companyTechnician) {
       if (cached.isCompany && !cached.isSuspended && cached.companyId == null &&
           cached.id == fbUser.uid &&

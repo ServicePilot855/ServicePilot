@@ -729,6 +729,12 @@
   "providerHistoryEmpty": "You have no completed, cancelled, or declined service records yet.",
   "providerHistoryLoadError": "Unable to load service records right now. Please try again.",
 
+  "@_WORK_2_COMPLETION": {},
+  "providerBookingCompleteButton": "Mark as Completed",
+  "providerBookingCompleteSuccess": "Job marked as completed! Both you and the homeowner now see it in service history.",
+  "providerBookingCompleteUnauthorized": "Only the authorized service provider can complete this booking.",
+  "providerBookingCompleteIneligible": "Only In Progress jobs can be marked as completed.",
+
   "@_CART_CHECKOUT": {},
   "cartCheckoutButton": "Continue to checkout",
   "cartCheckoutTitle": "Checkout",

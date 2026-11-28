@@ -261,9 +261,9 @@ class AdminHome extends ConsumerWidget {
                       child: CircularProgressIndicator(),
                     ),
                   ),
-                  error: (_, __) => SpNotice(
+                  error: (err, _) => SpNotice(
                     icon: Icons.error_outline_rounded,
-                    message: l10n.providerDirectoryError,
+                    message: '${l10n.providerDirectoryError}\n$err',
                     tone: SpTone.danger,
                   ),
                 ),
