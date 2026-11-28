@@ -35,6 +35,11 @@ class TechnicianJob {
   final String address;
   final String description;
 
+  /// Whether this assigned job can be marked `In Progress` now
+  /// (TECHJOB-2 / SCRUM-101).
+  bool get canBeStarted =>
+      status == BookingStatus.confirmed || status == BookingStatus.assigned;
+
   factory TechnicianJob.fromBooking(BookingModel booking) {
     final confirmed = booking.confirmedAppointmentAt;
     return TechnicianJob(

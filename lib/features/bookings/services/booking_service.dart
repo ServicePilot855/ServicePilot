@@ -399,6 +399,18 @@ abstract class IBookingService {
     required String providerId,
   });
 
+  /// The assigned company technician starts work (`In Progress`) on their own
+  /// eligible job (TECHJOB-2 / SCRUM-101).
+  ///
+  /// Uses the same state and quote-approval rules as [startBooking], and
+  /// enforces that [bookingId] belongs to [companyId] and is assigned to
+  /// [technicianId].
+  Future<BookingModel> startTechnicianJob({
+    required String bookingId,
+    required String technicianId,
+    required String companyId,
+  });
+
   /// Updates a booking to [newStatus] if the lifecycle transition is valid.
   Future<BookingModel> updateBookingStatus({
     required String bookingId,
@@ -1003,6 +1015,35 @@ class BookingService implements IBookingService {
   Future<BookingModel> startBooking({
     required String bookingId,
     required String providerId,
+  }) {
+    return _startBooking(
+      bookingId: bookingId,
+      actorId: providerId,
+      isAuthorized: (booking) => booking.isOwnedByProvider(providerId),
+    );
+  }
+
+  @override
+  Future<BookingModel> startTechnicianJob({
+    required String bookingId,
+    required String technicianId,
+    required String companyId,
+  }) {
+    return _startBooking(
+      bookingId: bookingId,
+      actorId: technicianId,
+      isAuthorized: (booking) =>
+          technicianId.isNotEmpty &&
+          companyId.isNotEmpty &&
+          booking.isOwnedByProvider(companyId) &&
+          booking.assignedTechnicianId == technicianId,
+    );
+  }
+
+  Future<BookingModel> _startBooking({
+    required String bookingId,
+    required String actorId,
+    required bool Function(BookingModel booking) isAuthorized,
   }) async {
     final index = _bookings.indexWhere((b) => b.id == bookingId);
     if (index == -1) {
@@ -1010,10 +1051,10 @@ class BookingService implements IBookingService {
     }
 
     final booking = _bookings[index];
-    if (!booking.isOwnedByProvider(providerId)) {
+    if (!isAuthorized(booking)) {
       throw UnauthorizedBookingStartException(
         bookingId: bookingId,
-        providerId: providerId,
+        providerId: actorId,
       );
     }
     if (!booking.canBeStarted) {

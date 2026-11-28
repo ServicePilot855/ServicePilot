@@ -605,6 +605,38 @@ class FirestoreBookingService implements IBookingService {
     required String bookingId,
     required String providerId,
   }) {
+    return _startBookingTransaction(
+      bookingId: bookingId,
+      actorId: providerId,
+      isAuthorized: (booking) => booking.isOwnedByProvider(providerId),
+    );
+  }
+
+  /// TECHJOB-2 (SCRUM-101): starts an assigned job for the company technician
+  /// using the same state and transactional quote-approval gate as
+  /// [startBooking].
+  @override
+  Future<BookingModel> startTechnicianJob({
+    required String bookingId,
+    required String technicianId,
+    required String companyId,
+  }) {
+    return _startBookingTransaction(
+      bookingId: bookingId,
+      actorId: technicianId,
+      isAuthorized: (booking) =>
+          technicianId.isNotEmpty &&
+          companyId.isNotEmpty &&
+          booking.isOwnedByProvider(companyId) &&
+          booking.assignedTechnicianId == technicianId,
+    );
+  }
+
+  Future<BookingModel> _startBookingTransaction({
+    required String bookingId,
+    required String actorId,
+    required bool Function(BookingModel booking) isAuthorized,
+  }) {
     final ref = _bookings.doc(bookingId);
     return _guard(
       () => _firestore.runTransaction((transaction) async {
@@ -615,10 +647,10 @@ class FirestoreBookingService implements IBookingService {
         }
 
         final booking = BookingModel.fromFirestore(ref.id, data);
-        if (!booking.isOwnedByProvider(providerId)) {
+        if (!isAuthorized(booking)) {
           throw UnauthorizedBookingStartException(
             bookingId: bookingId,
-            providerId: providerId,
+            providerId: actorId,
           );
         }
         if (!booking.canBeStarted) {

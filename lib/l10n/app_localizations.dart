@@ -3410,6 +3410,12 @@ abstract class AppLocalizations {
   /// **'Service'**
   String get technicianJobServiceLabel;
 
+  /// No description provided for @technicianJobStartedNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Job started. The company and homeowner can now see it as In Progress.'**
+  String get technicianJobStartedNotice;
+
   /// No description provided for @technicianJobAppointmentValue.
   ///
   /// In en, this message translates to:

@@ -338,6 +338,7 @@
   "technicianJobAppointmentLabel": "ពេលណាត់ជួប",
   "technicianJobPreferredTimeLabel": "ពេលវេលាដែលចង់បាន (មិនទាន់បញ្ជាក់)",
   "technicianJobServiceLabel": "សេវាកម្ម",
+  "technicianJobStartedNotice": "បានចាប់ផ្តើមការងារ។ ក្រុមហ៊ុន និងអតិថិជនអាចឃើញវាជា «កំពុងដំណើរការ» ហើយ។",
   "technicianJobAppointmentValue": "ពេលណាត់ជួប៖ {time}",
   "technicianJobPreferredTimeValue": "ពេលវេលាដែលចង់បាន (មិនទាន់បញ្ជាក់)៖ {time}"
 }

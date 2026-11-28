@@ -756,6 +756,7 @@
   "technicianJobAppointmentLabel": "Appointment",
   "technicianJobPreferredTimeLabel": "Preferred time (not confirmed yet)",
   "technicianJobServiceLabel": "Service",
+  "technicianJobStartedNotice": "Job started. The company and homeowner can now see it as In Progress.",
   "technicianJobAppointmentValue": "Appointment: {time}",
   "@technicianJobAppointmentValue": {"placeholders": {"time": {"type": "String"}}},
   "technicianJobPreferredTimeValue": "Preferred time (not confirmed yet): {time}",

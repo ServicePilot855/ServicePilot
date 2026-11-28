@@ -3,9 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/core/constants/app_roles.dart';
+import 'package:service_pilot/core/constants/booking_status.dart';
 import 'package:service_pilot/core/theme/app_theme.dart';
+import 'package:service_pilot/features/auth/models/user_model.dart';
 import 'package:service_pilot/features/bookings/models/technician_job.dart';
 import 'package:service_pilot/features/bookings/providers/booking_provider.dart';
+import 'package:service_pilot/features/bookings/services/booking_service.dart';
+import 'package:service_pilot/features/bookings/widgets/start_job_dialog.dart';
 import 'package:service_pilot/features/bookings/widgets/technician_job_list.dart';
 import 'package:service_pilot/l10n/l10n.dart';
 import 'package:service_pilot/shared/widgets/sp_button.dart';
@@ -18,7 +22,7 @@ import 'package:service_pilot/shared/widgets/status_badge.dart';
 ///
 /// A job that is not this technician's active job shows a neutral
 /// "unavailable" notice and nothing from the booking.
-class TechnicianJobDetailScreen extends ConsumerWidget {
+class TechnicianJobDetailScreen extends ConsumerStatefulWidget {
   const TechnicianJobDetailScreen({super.key, required this.bookingId});
 
   static const String path = '/technician/jobs/:bookingId';
@@ -29,10 +33,89 @@ class TechnicianJobDetailScreen extends ConsumerWidget {
   final String bookingId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TechnicianJobDetailScreen> createState() =>
+      _TechnicianJobDetailScreenState();
+}
+
+class _TechnicianJobDetailScreenState
+    extends ConsumerState<TechnicianJobDetailScreen> {
+  bool _isStarting = false;
+  String? _errorMessage;
+  String? _successMessage;
+
+  Future<void> _startJob(TechnicianJob job, UserModel user) async {
+    final l10n = context.l10n;
+    final confirmed = await StartJobDialog.show(context);
+    if (confirmed != true || !mounted) return;
+
+    setState(() {
+      _isStarting = true;
+      _errorMessage = null;
+      _successMessage = null;
+    });
+
+    try {
+      final service = ref.read(bookingServiceProvider);
+      await service.startTechnicianJob(
+        bookingId: job.id,
+        technicianId: user.id,
+        companyId: user.companyId ?? '',
+      );
+
+      if (!mounted) return;
+      ref.invalidate(technicianJobsProvider);
+      ref.invalidate(technicianJobProvider(widget.bookingId));
+      ref.invalidate(bookingDetailProvider(widget.bookingId));
+      ref.invalidate(liveBookingDetailProvider(widget.bookingId));
+      ref.invalidate(providerBookingsProvider(job.companyId));
+      ref.invalidate(liveProviderBookingsProvider(job.companyId));
+      ref.invalidate(providerActiveBookingsProvider(job.companyId));
+      ref.invalidate(liveProviderActiveBookingsProvider(job.companyId));
+
+      setState(() {
+        _isStarting = false;
+        _successMessage = l10n.technicianJobStartedNotice;
+      });
+    } on UnauthorizedBookingStartException {
+      if (!mounted) return;
+      setState(() {
+        _isStarting = false;
+        _errorMessage = l10n.providerBookingStartNotAuthorized;
+      });
+    } on InvalidBookingStartStateException {
+      if (!mounted) return;
+      setState(() {
+        _isStarting = false;
+        _errorMessage = l10n.providerBookingStartIneligible;
+      });
+    } on QuoteNotApprovedForStartException {
+      if (!mounted) return;
+      setState(() {
+        _isStarting = false;
+        _errorMessage = l10n.providerBookingStartQuotePending;
+      });
+    } on BookingSubmissionException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isStarting = false;
+        _errorMessage = e.message;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isStarting = false;
+        _errorMessage = l10n.technicianJobsLoadError;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
     final user = ref.watch(currentUserProvider);
-    final jobProvider = technicianJobProvider(bookingId);
+    final jobProvider = technicianJobProvider(widget.bookingId);
+    final canActAsTechnician =
+        user != null && user.isCompanyTechnician && !user.isSuspended;
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -54,8 +137,16 @@ class TechnicianJobDetailScreen extends ConsumerWidget {
         ),
       ),
       body: ref.watch(jobProvider).when(
-            data: (job) =>
-                job == null ? const _Unavailable() : _JobDetails(job: job),
+            data: (job) => job == null
+                ? const _Unavailable()
+                : _JobDetails(
+                    job: job,
+                    canStart: canActAsTechnician && job.canBeStarted,
+                    isStarting: _isStarting,
+                    errorMessage: _errorMessage,
+                    successMessage: _successMessage,
+                    onStart: () => _startJob(job, user!),
+                  ),
             loading: () => Center(
               child: CircularProgressIndicator(
                 semanticsLabel: l10n.technicianJobsLoading,
@@ -89,9 +180,21 @@ class TechnicianJobDetailScreen extends ConsumerWidget {
 }
 
 class _JobDetails extends StatelessWidget {
-  const _JobDetails({required this.job});
+  const _JobDetails({
+    required this.job,
+    required this.canStart,
+    required this.isStarting,
+    required this.errorMessage,
+    required this.successMessage,
+    required this.onStart,
+  });
 
   final TechnicianJob job;
+  final bool canStart;
+  final bool isStarting;
+  final String? errorMessage;
+  final String? successMessage;
+  final VoidCallback onStart;
 
   @override
   Widget build(BuildContext context) {
@@ -109,6 +212,16 @@ class _JobDetails extends StatelessWidget {
               key: const Key('technician_job_detail_status'),
               status: job.status,
             ),
+            if (successMessage != null &&
+                job.status == BookingStatus.inProgress) ...[
+              const SizedBox(height: 16),
+              SpNotice(
+                key: const Key('technician_job_started_notice'),
+                icon: Icons.check_circle_outline_rounded,
+                message: successMessage!,
+                tone: SpTone.success,
+              ),
+            ],
             const SizedBox(height: 24),
             Container(
               width: double.infinity,
@@ -161,6 +274,26 @@ class _JobDetails extends StatelessWidget {
                 ],
               ),
             ),
+            if (errorMessage != null) ...[
+              const SizedBox(height: 16),
+              SpNotice(
+                key: const Key('technician_job_error_notice'),
+                icon: Icons.error_outline_rounded,
+                message: errorMessage!,
+                tone: SpTone.danger,
+              ),
+            ],
+            if (canStart) ...[
+              const SizedBox(height: 24),
+              SpPrimaryButton(
+                key: const Key('technician_start_job_button'),
+                label: l10n.providerBookingStartButton,
+                icon: Icons.play_arrow_rounded,
+                wrapLabel: true,
+                isLoading: isStarting,
+                onPressed: isStarting ? null : onStart,
+              ),
+            ],
           ],
         ),
       ),

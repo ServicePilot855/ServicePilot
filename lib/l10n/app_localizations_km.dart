@@ -1908,6 +1908,10 @@ class AppLocalizationsKm extends AppLocalizations {
   String get technicianJobServiceLabel => 'សេវាកម្ម';
 
   @override
+  String get technicianJobStartedNotice =>
+      'បានចាប់ផ្តើមការងារ។ ក្រុមហ៊ុន និងអតិថិជនអាចឃើញវាជា «កំពុងដំណើរការ» ហើយ។';
+
+  @override
   String technicianJobAppointmentValue(String time) {
     return 'ពេលណាត់ជួប៖ $time';
   }
