@@ -667,6 +667,21 @@ class AppLocalizationsKm extends AppLocalizations {
   String get providerAbout => 'អំពីអ្នកផ្តល់សេវា';
 
   @override
+  String get providerContactTelegram => 'ផ្ញើសារតាម Telegram';
+
+  @override
+  String get providerContactMessenger => 'ផ្ញើសារតាម Messenger';
+
+  @override
+  String get providerContactNote =>
+      'បើកនៅខាងក្រៅ ServicePilot។ ការកក់ និងតម្លៃរបស់អ្នកនៅដដែល។';
+
+  @override
+  String providerContactOpenError(String app) {
+    return 'មិនអាចបើក $app បានទេ។ សូមពិនិត្យថាបានដំឡើង $app ឬកម្មវិធីរុករកបណ្ដាញ រួចព្យាយាមម្ដងទៀត។';
+  }
+
+  @override
   String get providerNoReviews => 'មិនទាន់មានការវាយតម្លៃ';
 
   @override

@@ -241,6 +241,13 @@
   "providerSpecialties": "Specialties",
   "providerAreas": "Service areas",
   "providerAbout": "About",
+  "providerContactTelegram": "Message on Telegram",
+  "providerContactMessenger": "Message on Messenger",
+  "providerContactNote": "Opens outside ServicePilot. Your bookings and prices stay the same.",
+  "providerContactOpenError": "Couldn’t open {app}. Check that {app} or a web browser is installed, then try again.",
+  "@providerContactOpenError": {
+    "placeholders": {"app": {"type": "String"}}
+  },
   "providerNoReviews": "No reviews yet",
   "providerRatingUnavailable": "Rating unavailable",
   "providerReviewCount": "{count, plural, one{{count} review} other{{count} reviews}}",
