@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/core/theme/app_theme.dart';
 import 'package:service_pilot/features/admin/providers/admin_provider_approval_provider.dart';
+import 'package:service_pilot/features/admin/screens/admin_account_lookup_screen.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
 import 'package:service_pilot/features/providers/widgets/provider_type_badge.dart';
 import 'package:service_pilot/l10n/l10n.dart';
@@ -125,6 +126,17 @@ class AdminHome extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
+
+                if (actor.isActive) ...[
+                  SpSecondaryButton(
+                    label: l10n.adminAccountLookupTitle,
+                    icon: Icons.manage_search_rounded,
+                    wrapLabel: true,
+                    onPressed: () =>
+                        context.push(AdminAccountLookupScreen.path),
+                  ),
+                  const SizedBox(height: 20),
+                ],
 
                 // ── Executive Metrics Row (Quick Overview) ──────────────────
                 Row(
@@ -393,19 +405,22 @@ class _MetricCard extends StatelessWidget {
                     ),
                     child: Icon(icon, size: 18, color: tone.foreground),
                   ),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: tone.background,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusChip),
-                    ),
-                    child: Text(
-                      badgeText,
-                      style: AppTheme.text(
-                        size: 11,
-                        weight: FontWeight.w700,
-                        color: tone.foreground,
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: tone.background,
+                        borderRadius: BorderRadius.circular(AppTheme.radiusChip),
+                      ),
+                      child: Text(
+                        badgeText,
+                        style: AppTheme.text(
+                          size: 11,
+                          weight: FontWeight.w700,
+                          color: tone.foreground,
+                        ),
                       ),
                     ),
                   ),

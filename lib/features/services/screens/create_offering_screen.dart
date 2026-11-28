@@ -25,10 +25,12 @@ class CreateOfferingScreen extends ConsumerStatefulWidget {
     super.key,
     this.initialCategoryId,
     this.initialProviderId,
+    this.existingOffering,
   });
 
   final String? initialCategoryId;
   final String? initialProviderId;
+  final OfferingModel? existingOffering;
 
   @override
   ConsumerState<CreateOfferingScreen> createState() =>
@@ -50,7 +52,15 @@ class _CreateOfferingScreenState extends ConsumerState<CreateOfferingScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedCategoryId = widget.initialCategoryId;
+    final existing = widget.existingOffering;
+    _selectedCategoryId = existing?.categoryId ?? widget.initialCategoryId;
+    if (existing != null) {
+      _titleController.text = existing.title;
+      _descriptionController.text = existing.description;
+      _priceController.text = existing.price?.toStringAsFixed(2) ?? '';
+      _unitController.text = existing.unit ?? '';
+      _pricingMode = existing.pricingMode;
+    }
   }
 
   @override
@@ -87,16 +97,22 @@ class _CreateOfferingScreenState extends ConsumerState<CreateOfferingScreen> {
 
     final user = ref.read(currentUserProvider);
     final isFixed = _pricingMode == OfferingPricingMode.fixed;
+    final existing = widget.existingOffering;
     if (user == null ||
         !(user.isIndependentTechnician ||
             user.isCompany ||
-            (!isFixed && user.isAdmin))) {
+            (existing == null && !isFixed && user.isAdmin))) {
       setState(() => _errorMessage = l10n.offeringUnauthorized);
       return;
     }
 
     final ownProviderId = ref.read(currentProviderIdProvider);
     final requestedProviderId = widget.initialProviderId;
+    if (existing != null &&
+        ref.read(offeringEditorProviderId) != existing.providerId) {
+      setState(() => _errorMessage = l10n.offeringEditUnavailable);
+      return;
+    }
     if (isFixed &&
         (ownProviderId.isEmpty ||
             (requestedProviderId != null &&
@@ -108,9 +124,10 @@ class _CreateOfferingScreenState extends ConsumerState<CreateOfferingScreen> {
       return;
     }
 
-    final providerId = !isFixed && requestedProviderId?.isNotEmpty == true
-        ? requestedProviderId!
-        : ownProviderId;
+    final providerId = existing?.providerId ??
+        (!isFixed && requestedProviderId?.isNotEmpty == true
+            ? requestedProviderId!
+            : ownProviderId);
     final price =
         isFixed ? double.tryParse(_priceController.text.trim()) : null;
     final title = _titleController.text.trim();
@@ -128,14 +145,17 @@ class _CreateOfferingScreenState extends ConsumerState<CreateOfferingScreen> {
 
       final isProviderActive = provider != null
           ? provider.isApprovedAndActive
-          : !isFixed && user.isActive && Firebase.apps.isEmpty;
+          : existing == null &&
+              !isFixed &&
+              user.isActive &&
+              Firebase.apps.isEmpty;
 
       if (!isProviderActive || user.isSuspended) {
         setState(() => _errorMessage = l10n.offeringActiveRequired);
         return;
       }
 
-      if (isFixed &&
+      if ((isFixed || existing != null) &&
           (provider!.appRole != user.role ||
               (provider.id != user.id &&
                   provider.email.toLowerCase() != user.email.toLowerCase()))) {
@@ -152,7 +172,7 @@ class _CreateOfferingScreenState extends ConsumerState<CreateOfferingScreen> {
       }
 
       final newOffering = OfferingModel(
-        id: 'offering-${DateTime.now().millisecondsSinceEpoch}',
+        id: existing?.id ?? 'offering-${DateTime.now().millisecondsSinceEpoch}',
         providerId: providerId,
         providerName: provider?.displayName ??
             (user.isCompany
@@ -169,26 +189,44 @@ class _CreateOfferingScreenState extends ConsumerState<CreateOfferingScreen> {
             : OfferingPricingMode.quoteRequired,
         price: price,
         unit: isFixed && unit.isNotEmpty ? unit : null,
+        isActive: existing?.isActive ?? true,
+        createdAt: existing?.createdAt,
       );
 
       final service = ref.read(offeringServiceProvider);
-      await service.createOffering(newOffering);
+      if (existing == null) {
+        await service.createOffering(newOffering);
+      } else {
+        await service.updateOffering(newOffering);
+      }
 
       if (!mounted) return;
       ref.invalidate(offeringsByProviderProvider(providerId));
       ref.invalidate(offeringsByCategoryProvider(categoryId));
+      if (existing != null) {
+        ref.invalidate(offeringDetailProvider(existing.id));
+        if (existing.categoryId != categoryId) {
+          ref.invalidate(offeringsByCategoryProvider(existing.categoryId));
+        }
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.offeringSuccessSnackbar),
+          content: Text(existing == null
+              ? l10n.offeringSuccessSnackbar
+              : l10n.offeringEditSuccess),
           backgroundColor: AppTheme.success,
         ),
       );
 
       _leave(context);
     } catch (error) {
-      debugPrint('[CreateOfferingScreen] Publish failed: $error');
-      if (mounted) setState(() => _errorMessage = l10n.offeringPublishError);
+      debugPrint('[CreateOfferingScreen] Save failed: $error');
+      if (mounted) {
+        setState(() => _errorMessage = existing == null
+            ? l10n.offeringPublishError
+            : l10n.offeringEditError);
+      }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -197,13 +235,14 @@ class _CreateOfferingScreenState extends ConsumerState<CreateOfferingScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final editing = widget.existingOffering != null;
     final categoriesAsync = ref.watch(_offeringCategoriesProvider);
     final categories = categoriesAsync.asData?.value;
 
     return Form(
       key: _formKey,
       child: SpFlowPage(
-        title: l10n.offeringCreateTitle,
+        title: editing ? l10n.offeringEditTitle : l10n.offeringCreateTitle,
         onBack: () => _leave(context),
         bottom: Column(
           mainAxisSize: MainAxisSize.min,
@@ -220,8 +259,10 @@ class _CreateOfferingScreenState extends ConsumerState<CreateOfferingScreen> {
               const SizedBox(height: 8),
             ],
             SpPrimaryButton(
-              key: const Key('publish_offering_button'),
-              label: l10n.offeringCreateButton,
+              key: Key(
+                  editing ? 'save_offering_button' : 'publish_offering_button'),
+              label:
+                  editing ? l10n.offeringEditSave : l10n.offeringCreateButton,
               isLoading: _isSubmitting,
               wrapLabel: true,
               onPressed:
@@ -233,8 +274,8 @@ class _CreateOfferingScreenState extends ConsumerState<CreateOfferingScreen> {
         ),
         children: [
           SpPageHeader(
-            title: l10n.offeringHeaderTitle,
-            subtitle: l10n.offeringCreateSubtitle,
+            title: editing ? l10n.offeringEditTitle : l10n.offeringHeaderTitle,
+            subtitle: editing ? null : l10n.offeringCreateSubtitle,
           ),
           const SizedBox(height: 24),
           Text(
@@ -445,6 +486,50 @@ class _CreateOfferingScreenState extends ConsumerState<CreateOfferingScreen> {
           ],
         ],
       ),
+    );
+  }
+}
+
+class EditOfferingScreen extends ConsumerWidget {
+  const EditOfferingScreen({super.key, required this.offeringId});
+
+  final String offeringId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final editorId = ref.watch(offeringEditorProviderId);
+    final result =
+        editorId == null ? null : ref.watch(offeringDetailProvider(offeringId));
+    final offering = result?.asData?.value;
+    if (offering != null && offering.providerId == editorId) {
+      return CreateOfferingScreen(
+        key: ValueKey(offering.id),
+        existingOffering: offering,
+      );
+    }
+
+    return SpFlowPage(
+      title: l10n.offeringEditTitle,
+      onBack: () {
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go(ref.read(currentUserProvider)?.role.homeRoute ?? '/login');
+        }
+      },
+      children: [
+        if (result?.isLoading == true)
+          const LinearProgressIndicator()
+        else
+          SpNotice(
+            icon: Icons.error_outline_rounded,
+            message: result?.hasError == true
+                ? l10n.offeringLoadError
+                : l10n.offeringEditUnavailable,
+            tone: SpTone.danger,
+          ),
+      ],
     );
   }
 }

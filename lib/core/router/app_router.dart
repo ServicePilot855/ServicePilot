@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/core/auth/auth_state.dart';
 import 'package:service_pilot/core/constants/app_roles.dart';
+import 'package:service_pilot/features/admin/screens/admin_account_lookup_screen.dart';
 import 'package:service_pilot/features/admin/screens/provider_review_screen.dart';
 import 'package:service_pilot/features/admin/screens/admin_pending_providers_screen.dart';
 import 'package:service_pilot/features/auth/screens/splash_screen.dart';
@@ -119,6 +120,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (isAuthenticated && isGoingToAdmin && !authState.user.isAdmin) {
         return authState.user.role.homeRoute;
       }
+      if (isAuthenticated &&
+          state.matchedLocation == AdminAccountLookupScreen.path &&
+          !authState.user.isActive) {
+        return authState.user.role.homeRoute;
+      }
 
       if (isAuthenticated &&
           state.matchedLocation == '/home/company/profile' &&
@@ -216,6 +222,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             initialProviderId: providerId,
           );
         },
+      ),
+      GoRoute(
+        path: '/offerings/:offeringId/edit',
+        builder: (_, state) =>
+            EditOfferingScreen(offeringId: state.pathParameters['offeringId']!),
       ),
       GoRoute(
         path: '/categories/:categoryId/providers',
@@ -399,6 +410,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/admin/providers/pending',
         builder: (_, __) => const AdminPendingProvidersScreen(),
+      ),
+      GoRoute(
+        path: AdminAccountLookupScreen.path,
+        builder: (_, __) => const AdminAccountLookupScreen(),
       ),
 
       // ── Protected home routes ─────────────────────────────────────────

@@ -5,6 +5,7 @@ import 'package:service_pilot/core/theme/app_theme.dart';
 import 'package:service_pilot/features/services/models/offering_model.dart';
 import 'package:service_pilot/features/services/providers/offering_provider.dart';
 import 'package:service_pilot/l10n/l10n.dart';
+import 'package:service_pilot/shared/widgets/sp_button.dart';
 import 'package:service_pilot/shared/widgets/sp_layout.dart';
 
 /// Dashboard section displaying published service offerings for a provider
@@ -23,6 +24,7 @@ class ProviderOfferingList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final offeringsAsync = ref.watch(offeringsByProviderProvider(providerId));
+    final canEdit = ref.watch(offeringEditorProviderId) == providerId;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,7 +80,14 @@ class ProviderOfferingList extends ConsumerWidget {
               separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final offering = offerings[index];
-                return _OfferingCard(offering: offering);
+                return _OfferingCard(
+                  offering: offering,
+                  onEdit: canEdit
+                      ? () => context.push(
+                            '/offerings/${Uri.encodeComponent(offering.id)}/edit',
+                          )
+                      : null,
+                );
               },
             );
           },
@@ -103,9 +112,10 @@ class ProviderOfferingList extends ConsumerWidget {
 }
 
 class _OfferingCard extends StatelessWidget {
-  const _OfferingCard({required this.offering});
+  const _OfferingCard({required this.offering, this.onEdit});
 
   final OfferingModel offering;
+  final VoidCallback? onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +128,9 @@ class _OfferingCard extends StatelessWidget {
         color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusCard),
         border: Border.all(
-          color: isQuote ? AppTheme.accent.withValues(alpha: 0.5) : AppTheme.border,
+          color: isQuote
+              ? AppTheme.accent.withValues(alpha: 0.5)
+              : AppTheme.border,
         ),
         boxShadow: const [
           BoxShadow(
@@ -206,6 +218,12 @@ class _OfferingCard extends StatelessWidget {
               height: 1.4,
             ),
           ),
+          if (onEdit != null)
+            SpTextButton(
+              key: ValueKey('edit_offering_${offering.id}'),
+              label: l10n.offeringEditTitle,
+              onPressed: onEdit,
+            ),
         ],
       ),
     );

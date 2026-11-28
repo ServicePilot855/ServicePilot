@@ -991,6 +991,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get offeringCreateTitle => 'Add Service Offering';
 
   @override
+  String get offeringEditTitle => 'Edit listing';
+
+  @override
+  String get offeringEditSave => 'Save changes';
+
+  @override
+  String get offeringEditSuccess => 'Listing updated.';
+
+  @override
+  String get offeringEditError =>
+      'Could not save your changes. Please try again.';
+
+  @override
+  String get offeringEditUnavailable =>
+      'This listing is unavailable for editing.';
+
+  @override
   String get offeringHeaderTitle => 'New Service Offering';
 
   @override
@@ -1124,6 +1141,54 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminDashboardTitle => 'Platform Administration';
+
+  @override
+  String get adminAccountLookupTitle => 'Find an account';
+
+  @override
+  String get adminAccountLookupId => 'Account ID';
+
+  @override
+  String get adminAccountLookupIdHint => 'Example: abC123xYz';
+
+  @override
+  String get adminAccountLookupSearch => 'Search';
+
+  @override
+  String get adminAccountLookupInvalid => 'Enter a valid account ID.';
+
+  @override
+  String get adminAccountLookupResult => 'Account summary';
+
+  @override
+  String adminAccountLookupRole(String role) {
+    return 'Role: $role';
+  }
+
+  @override
+  String adminAccountLookupStatus(String status) {
+    return 'Status: $status';
+  }
+
+  @override
+  String get adminAccountLookupEmpty => 'No account found for this ID.';
+
+  @override
+  String get adminAccountLookupDenied =>
+      'Only active Platform Admins can look up accounts.';
+
+  @override
+  String get adminAccountLookupError =>
+      'Could not look up the account. Please try again.';
+
+  @override
+  String get adminAccountLookupUnknown => 'Unavailable';
+
+  @override
+  String get adminAccountStatusActive => 'Active';
+
+  @override
+  String get adminAccountStatusSuspended => 'Suspended';
 
   @override
   String get adminPendingProvidersSection => 'Pending provider applications';

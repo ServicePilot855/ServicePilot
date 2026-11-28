@@ -104,9 +104,10 @@ void main() {
         expect(find.text('Mekong Home Repair Co., Ltd.'), findsOneWidget);
 
         // Tap pending provider card -> navigates to ProviderReviewScreen
-        await tester.tap(
-          find.byKey(const Key('admin_pending_provider_prov-pending-sokha')),
-        );
+        final providerCard =
+            find.byKey(const Key('admin_pending_provider_prov-pending-sokha'));
+        await tester.ensureVisible(providerCard);
+        await tester.tap(providerCard);
         await tester.pumpAndSettle();
 
         expect(find.text('Review provider'), findsOneWidget);

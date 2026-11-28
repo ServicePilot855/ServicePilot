@@ -982,6 +982,22 @@ class AppLocalizationsKm extends AppLocalizations {
   String get offeringCreateTitle => 'បន្ថែមសេវាកម្ម';
 
   @override
+  String get offeringEditTitle => 'កែសម្រួលសេវាកម្ម';
+
+  @override
+  String get offeringEditSave => 'រក្សាទុកការកែប្រែ';
+
+  @override
+  String get offeringEditSuccess => 'បានធ្វើបច្ចុប្បន្នភាពសេវាកម្ម។';
+
+  @override
+  String get offeringEditError =>
+      'មិនអាចរក្សាទុកការកែប្រែបានទេ។ សូមព្យាយាមម្តងទៀត។';
+
+  @override
+  String get offeringEditUnavailable => 'មិនអាចកែសម្រួលសេវាកម្មនេះបានទេ។';
+
+  @override
   String get offeringHeaderTitle => 'សេវាកម្មថ្មី';
 
   @override
@@ -1111,6 +1127,54 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get adminDashboardTitle => 'ការគ្រប់គ្រងប្រព័ន្ធ';
+
+  @override
+  String get adminAccountLookupTitle => 'ស្វែងរកគណនី';
+
+  @override
+  String get adminAccountLookupId => 'លេខសម្គាល់គណនី';
+
+  @override
+  String get adminAccountLookupIdHint => 'ឧទាហរណ៍៖ abC123xYz';
+
+  @override
+  String get adminAccountLookupSearch => 'ស្វែងរក';
+
+  @override
+  String get adminAccountLookupInvalid => 'សូមបញ្ចូលលេខសម្គាល់គណនីត្រឹមត្រូវ។';
+
+  @override
+  String get adminAccountLookupResult => 'ព័ត៌មានសង្ខេបអំពីគណនី';
+
+  @override
+  String adminAccountLookupRole(String role) {
+    return 'តួនាទី៖ $role';
+  }
+
+  @override
+  String adminAccountLookupStatus(String status) {
+    return 'ស្ថានភាព៖ $status';
+  }
+
+  @override
+  String get adminAccountLookupEmpty => 'រកមិនឃើញគណនីសម្រាប់លេខសម្គាល់នេះទេ។';
+
+  @override
+  String get adminAccountLookupDenied =>
+      'មានតែអ្នកគ្រប់គ្រងប្រព័ន្ធដែលមានគណនីសកម្មប៉ុណ្ណោះដែលអាចស្វែងរកគណនីបាន។';
+
+  @override
+  String get adminAccountLookupError =>
+      'មិនអាចស្វែងរកគណនីបានទេ។ សូមព្យាយាមម្តងទៀត។';
+
+  @override
+  String get adminAccountLookupUnknown => 'មិនមានព័ត៌មាន';
+
+  @override
+  String get adminAccountStatusActive => 'សកម្ម';
+
+  @override
+  String get adminAccountStatusSuspended => 'បានផ្អាក';
 
   @override
   String get adminPendingProvidersSection =>

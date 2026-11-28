@@ -175,7 +175,8 @@ service cloud.firestore {
             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
           ) ||
-          request.auth.token.get('email', '').matches('^[^@]*admin[^@]*@servicepilot\\.app$')
+          (request.auth.token.get('email_verified', false) == true &&
+            request.auth.token.get('email', '').matches('^[^@]*admin[^@]*@servicepilot\\.app$'))
         );
     }
 
@@ -623,7 +624,11 @@ service cloud.firestore {
 
     match /users/{userId} {
       // User registration and account PII belong strictly to the owner and Platform Admins.
-      allow read: if isOwner(userId) || isAdmin();
+      allow get: if isOwner(userId) || isAdmin();
+      // Support searches require admin access even for a query for one's own ID.
+      allow list: if isAdmin() &&
+        (!exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active');
 
       // Create: User themselves or platform admin.
       // Privilege escalation protection: non-admins cannot assign themselves the 'admin' role.
@@ -1039,7 +1044,7 @@ service cloud.firestore {
         );
       }
 
-      function isFixedOfferingPublisher(data) {
+      function ownsManagedOffering(data) {
         let providerId = data.providerId;
         let profile = get(/databases/$(database)/documents/providers/$(providerId)).data;
         let account = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
@@ -1060,10 +1065,13 @@ service cloud.firestore {
       function isValidFixedOffering(data) {
         let price = data.price;
         let cents = price * 100.0;
-        let categoryId = data.categoryId;
         return price > 0 && cents - cents == 0 &&
-          int(cents + 0.5) / 100.0 == price &&
-          data.title.size() >= 3 && data.title.matches('(?s).*\\S.*') &&
+          int(cents + 0.5) / 100.0 == price && hasValidListingDetails(data);
+      }
+
+      function hasValidListingDetails(data) {
+        let categoryId = data.categoryId;
+        return data.title.size() >= 3 && data.title.matches('(?s).*\\S.*') &&
           data.description.size() >= 10 && data.description.matches('(?s).*\\S.*') &&
           get(/databases/$(database)/documents/categories/$(categoryId)).data.isActive == true;
       }
@@ -1077,20 +1085,21 @@ service cloud.firestore {
                        isValidOffering(request.resource.data) &&
                        request.resource.data.id == offeringId &&
                        (request.resource.data.pricingMode == 'fixed'
-                         ? isFixedOfferingPublisher(request.resource.data) &&
+                         ? ownsManagedOffering(request.resource.data) &&
                            isValidFixedOffering(request.resource.data)
                          : isOfferingPublisher(request.resource.data.providerId));
 
-      // Update: Provider (owner) or platform admin. Enforces immutable fields.
+      // Edit listing content without changing its owner or publication state.
       allow update: if isAuthenticated() &&
                        isValidOffering(request.resource.data) &&
-                       areImmutableFieldsUnchanged(['id', 'providerId', 'createdAt']) &&
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+                         'categoryId', 'categoryName', 'title', 'description',
+                         'pricingMode', 'price', 'unit', 'updatedAt'
+                       ]) &&
+                       ownsManagedOffering(resource.data) &&
                        (request.resource.data.pricingMode == 'fixed'
-                         ? isFixedOfferingPublisher(request.resource.data) &&
-                           isValidFixedOffering(request.resource.data)
-                         : resource.data.pricingMode == 'fixed'
-                           ? isFixedOfferingPublisher(resource.data)
-                           : isOfferingPublisher(resource.data.providerId));
+                         ? isValidFixedOffering(request.resource.data)
+                         : hasValidListingDetails(request.resource.data));
 
       // Delete: Provider (owner) or platform admin
       allow delete: if (isOfferingOwner(resource.data.providerId) || isAdmin());

@@ -82,4 +82,44 @@ void main() {
     );
     expect((await firestore.collection('offerings').get()).docs, isEmpty);
   });
+
+  test('edits the existing listing and leaves recorded prices intact',
+      () async {
+    final firestore = FakeFirebaseFirestore();
+    final service = FirestoreOfferingService(firestore: firestore);
+    final saved = await service.createOffering(offering);
+    final booking = firestore.collection('bookings').doc('recorded');
+    final quote = firestore.collection('quoteRequests').doc('approved');
+    await booking.set({'offeringId': saved.id, 'totalPrice': 25.49});
+    await quote.set(
+        {'offeringId': saved.id, 'status': 'approved', 'approvedPrice': 40});
+
+    await service
+        .updateOffering(saved.copyWith(title: 'Updated wash', price: 31));
+    final visible =
+        (await service.getOfferings(providerId: 'provider-1')).single;
+    expect(visible.id, saved.id);
+    expect(visible.title, 'Updated wash');
+    expect(visible.price, 31);
+
+    await service.updateOffering(
+      visible.copyWith(pricingMode: OfferingPricingMode.quoteRequired),
+    );
+    expect((await service.getOfferingById(saved.id))!.price, isNull);
+    expect((await booking.get()).get('totalPrice'), 25.49);
+    expect((await quote.get()).get('approvedPrice'), 40);
+  });
+
+  test('denied updates fail even when the listing is cached', () async {
+    final firestore = _SwitchableFirestore();
+    final service = FirestoreOfferingService(firestore: firestore);
+    final saved = await service.createOffering(offering);
+    firestore.denyAccess = true;
+
+    await expectLater(
+      service.updateOffering(saved.copyWith(price: 31)),
+      throwsA(isA<FirebaseException>()),
+    );
+    expect((await service.getOfferingById(saved.id))!.price, 25.49);
+  });
 }

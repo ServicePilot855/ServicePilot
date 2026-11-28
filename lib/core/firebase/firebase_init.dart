@@ -6,6 +6,11 @@ import 'package:flutter/foundation.dart';
 
 import '../../firebase_options.dart';
 
+const firestoreEmulatorEnabled =
+    kDebugMode && bool.fromEnvironment('USE_FIRESTORE_EMULATOR');
+const firestoreEmulatorHost = '127.0.0.1';
+const firestoreEmulatorPort = 8080;
+
 /// Initializes Firebase and configures local emulators when running in debug.
 ///
 /// Call this once at app startup, before [runApp].
@@ -27,10 +32,12 @@ Future<void> initializeFirebase() async {
     }
 
     // Optional Firestore emulator support via: --dart-define=USE_FIRESTORE_EMULATOR=true
-    const useFirestoreEmulator = bool.fromEnvironment('USE_FIRESTORE_EMULATOR', defaultValue: false);
-    if (useFirestoreEmulator) {
+    if (firestoreEmulatorEnabled) {
       try {
-        FirebaseFirestore.instance.useFirestoreEmulator('127.0.0.1', 8080);
+        FirebaseFirestore.instance.useFirestoreEmulator(
+          firestoreEmulatorHost,
+          firestoreEmulatorPort,
+        );
       } catch (e) {
         debugPrint('Firestore emulator init skipped: $e');
       }
