@@ -444,6 +444,17 @@ abstract class IBookingService {
     required String providerId,
   });
 
+  /// The assigned company technician marks their own `In Progress` job as
+  /// `Completed` (TECHJOB-3 / SCRUM-102).
+  ///
+  /// Uses the same lifecycle state rules as [completeBooking], and enforces
+  /// that [bookingId] belongs to [companyId] and is assigned to [technicianId].
+  Future<BookingModel> completeTechnicianJob({
+    required String bookingId,
+    required String technicianId,
+    required String companyId,
+  });
+
   /// Updates a booking to [newStatus] if the lifecycle transition is valid.
   Future<BookingModel> updateBookingStatus({
     required String bookingId,
@@ -1060,6 +1071,35 @@ class BookingService implements IBookingService {
   Future<BookingModel> completeBooking({
     required String bookingId,
     required String providerId,
+  }) {
+    return _completeBooking(
+      bookingId: bookingId,
+      actorId: providerId,
+      isAuthorized: (booking) => booking.isOwnedByProvider(providerId),
+    );
+  }
+
+  @override
+  Future<BookingModel> completeTechnicianJob({
+    required String bookingId,
+    required String technicianId,
+    required String companyId,
+  }) {
+    return _completeBooking(
+      bookingId: bookingId,
+      actorId: technicianId,
+      isAuthorized: (booking) =>
+          technicianId.isNotEmpty &&
+          companyId.isNotEmpty &&
+          booking.isOwnedByProvider(companyId) &&
+          booking.assignedTechnicianId == technicianId,
+    );
+  }
+
+  Future<BookingModel> _completeBooking({
+    required String bookingId,
+    required String actorId,
+    required bool Function(BookingModel booking) isAuthorized,
   }) async {
     final index = _bookings.indexWhere((b) => b.id == bookingId);
     if (index == -1) {
@@ -1067,10 +1107,10 @@ class BookingService implements IBookingService {
     }
 
     final booking = _bookings[index];
-    if (!booking.isOwnedByProvider(providerId)) {
+    if (!isAuthorized(booking)) {
       throw UnauthorizedBookingCompletionException(
         bookingId: bookingId,
-        actorId: providerId,
+        actorId: actorId,
       );
     }
 

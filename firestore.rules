@@ -1125,13 +1125,32 @@ service cloud.firestore {
           );
       }
 
-      // Read: Requesting homeowner, addressed verified provider, or platform admin.
-      allow read: if isAuthenticated() &&
+      function isAssignedTechnicianForQuoteBooking() {
+        let linkedBookingId = resource.data.get('bookingId', '');
+        let bookingPath = /databases/$(database)/documents/bookings/$(linkedBookingId);
+        return linkedBookingId is string &&
+          linkedBookingId != '' &&
+          exists(bookingPath) &&
+          get(bookingPath).data.get('quoteId', '') == quoteId &&
+          isAssignedBookingTechnician(get(bookingPath).data);
+      }
+
+      // Read: Requesting homeowner, addressed verified provider, platform admin,
+      // or the assigned company technician reading the quote linked to their job
+      // during startTechnicianJob.
+      allow list: if isAuthenticated() &&
                      (
                        resource.data.customerId == request.auth.uid ||
                        isAdmin() ||
                        ownsVerifiedQuoteInbox(resource.data.providerId)
                      );
+      allow get: if isAuthenticated() &&
+                    (
+                      resource.data.customerId == request.auth.uid ||
+                      isAdmin() ||
+                      ownsVerifiedQuoteInbox(resource.data.providerId) ||
+                      isAssignedTechnicianForQuoteBooking()
+                    );
 
       // Create: Authenticated homeowner (or platform admin) requesting a quote
       // for an active quote-required offering owned by an active provider.

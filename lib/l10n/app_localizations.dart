@@ -3440,6 +3440,18 @@ abstract class AppLocalizations {
   /// **'Job started. The company and homeowner can now see it as In Progress.'**
   String get technicianJobStartedNotice;
 
+  /// No description provided for @technicianJobCompletedNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Job marked as completed! The company and homeowner can now see it in service history.'**
+  String get technicianJobCompletedNotice;
+
+  /// No description provided for @technicianJobCompleteUnauthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the technician assigned to this job can mark it as completed.'**
+  String get technicianJobCompleteUnauthorized;
+
   /// No description provided for @technicianJobAppointmentValue.
   ///
   /// In en, this message translates to:
@@ -3451,6 +3463,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Preferred time (not confirmed yet): {time}'**
   String technicianJobPreferredTimeValue(String time);
+
+  /// No description provided for @companyInviteTechnicianButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite Technician'**
+  String get companyInviteTechnicianButton;
+
+  /// No description provided for @companyInviteTechnicianTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite Company Technician'**
+  String get companyInviteTechnicianTitle;
+
+  /// No description provided for @companyInviteTechnicianSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the technician\'s email to generate an activation link for your company.'**
+  String get companyInviteTechnicianSubtitle;
+
+  /// No description provided for @companyInviteTechnicianEmailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Technician Email'**
+  String get companyInviteTechnicianEmailLabel;
+
+  /// No description provided for @companyInviteTechnicianEmailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'tech@company.com'**
+  String get companyInviteTechnicianEmailHint;
+
+  /// No description provided for @companyInviteTechnicianInvalidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email address.'**
+  String get companyInviteTechnicianInvalidEmail;
+
+  /// No description provided for @companyInviteTechnicianSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Invite Link'**
+  String get companyInviteTechnicianSubmit;
+
+  /// No description provided for @companyInviteTechnicianCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Activation link created! Share this link with the technician (or open it after signing out to test).'**
+  String get companyInviteTechnicianCreated;
+
+  /// No description provided for @companyInviteTechnicianCopyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Link'**
+  String get companyInviteTechnicianCopyLink;
+
+  /// No description provided for @companyInviteTechnicianCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Activation link copied to clipboard.'**
+  String get companyInviteTechnicianCopied;
+
+  /// No description provided for @companyInviteTechnicianError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create invite. Make sure your company is verified and try again.'**
+  String get companyInviteTechnicianError;
 }
 
 class _AppLocalizationsDelegate

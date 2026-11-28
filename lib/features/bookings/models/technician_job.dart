@@ -40,6 +40,24 @@ class TechnicianJob {
   bool get canBeStarted =>
       status == BookingStatus.confirmed || status == BookingStatus.assigned;
 
+  /// Whether this assigned job can be marked `Completed` now
+  /// (TECHJOB-3 / SCRUM-102).
+  bool get canBeCompleted => status == BookingStatus.inProgress;
+
+  TechnicianJob copyWith({BookingStatus? status}) {
+    return TechnicianJob(
+      id: id,
+      companyId: companyId,
+      serviceTitle: serviceTitle,
+      serviceCategory: serviceCategory,
+      status: status ?? this.status,
+      appointmentAt: appointmentAt,
+      isAppointmentConfirmed: isAppointmentConfirmed,
+      address: address,
+      description: description,
+    );
+  }
+
   factory TechnicianJob.fromBooking(BookingModel booking) {
     final confirmed = booking.confirmedAppointmentAt;
     return TechnicianJob(

@@ -1952,6 +1952,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Job started. The company and homeowner can now see it as In Progress.';
 
   @override
+  String get technicianJobCompletedNotice =>
+      'Job marked as completed! The company and homeowner can now see it in service history.';
+
+  @override
+  String get technicianJobCompleteUnauthorized =>
+      'Only the technician assigned to this job can mark it as completed.';
+
+  @override
   String technicianJobAppointmentValue(String time) {
     return 'Appointment: $time';
   }
@@ -1960,4 +1968,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String technicianJobPreferredTimeValue(String time) {
     return 'Preferred time (not confirmed yet): $time';
   }
+
+  @override
+  String get companyInviteTechnicianButton => 'Invite Technician';
+
+  @override
+  String get companyInviteTechnicianTitle => 'Invite Company Technician';
+
+  @override
+  String get companyInviteTechnicianSubtitle =>
+      'Enter the technician\'s email to generate an activation link for your company.';
+
+  @override
+  String get companyInviteTechnicianEmailLabel => 'Technician Email';
+
+  @override
+  String get companyInviteTechnicianEmailHint => 'tech@company.com';
+
+  @override
+  String get companyInviteTechnicianInvalidEmail =>
+      'Enter a valid email address.';
+
+  @override
+  String get companyInviteTechnicianSubmit => 'Create Invite Link';
+
+  @override
+  String get companyInviteTechnicianCreated =>
+      'Activation link created! Share this link with the technician (or open it after signing out to test).';
+
+  @override
+  String get companyInviteTechnicianCopyLink => 'Copy Link';
+
+  @override
+  String get companyInviteTechnicianCopied =>
+      'Activation link copied to clipboard.';
+
+  @override
+  String get companyInviteTechnicianError =>
+      'Could not create invite. Make sure your company is verified and try again.';
 }
