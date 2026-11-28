@@ -227,7 +227,7 @@ void main() {
           .take(2)
           .toList();
       await Future<void>.delayed(Duration.zero);
-      await service.startBooking(bookingId: 'assigned');
+      await service.startBooking(bookingId: 'assigned', providerId: companyA);
       expect(
           await statuses, [BookingStatus.assigned, BookingStatus.inProgress]);
     });
