@@ -224,6 +224,13 @@ abstract class IBookingService {
   /// Emits real-time updates for accepted bookings addressed to [providerId].
   Stream<List<BookingModel>> watchProviderBookings(String providerId);
 
+  /// Returns active appointments and ongoing jobs (`Confirmed`, `Assigned`,
+  /// `In Progress`) addressed to [providerId] (BOOK-4 / SCRUM-89).
+  Future<List<BookingModel>> getProviderActiveBookings(String providerId);
+
+  /// Emits real-time updates for active jobs addressed to [providerId].
+  Stream<List<BookingModel>> watchProviderActiveBookings(String providerId);
+
   Future<List<IncomingBookingRequest>> getIncomingRequests(String providerId);
 
   Future<IncomingBookingRequest?> getIncomingRequest(
@@ -653,6 +660,36 @@ class BookingService implements IBookingService {
   bool _isAcceptedBy(BookingModel booking, String providerId) {
     return booking.providerId == providerId &&
         booking.status.exposesAcceptedDetails;
+  }
+
+  @override
+  Future<List<BookingModel>> getProviderActiveBookings(
+    String providerId,
+  ) async {
+    return List.unmodifiable(
+      _bookings.where((booking) => _isActiveWorkFor(booking, providerId)),
+    );
+  }
+
+  @override
+  Stream<List<BookingModel>> watchProviderActiveBookings(
+    String providerId,
+  ) async* {
+    List<BookingModel> filter() => List.unmodifiable(
+          _bookings.where((booking) => _isActiveWorkFor(booking, providerId)),
+        );
+
+    yield filter();
+    yield* _updatesController.stream.map(
+      (list) => List.unmodifiable(
+        list.where((booking) => _isActiveWorkFor(booking, providerId)),
+      ),
+    );
+  }
+
+  bool _isActiveWorkFor(BookingModel booking, String providerId) {
+    return booking.providerId == providerId &&
+        booking.status.isActiveProviderWork;
   }
 
   @override

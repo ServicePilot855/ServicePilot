@@ -685,6 +685,25 @@
   "quoteBookingAlreadyBooked": "You already booked a time for this quote.",
   "quoteBookingUnavailable": "This quote can't be booked from your account.",
 
+  "@_BOOKING_ACTIVE_WORK": {},
+  "providerActiveBookingsTitle": "Current appointments & jobs",
+  "providerActiveBookingsEmpty": "You have no active appointments or jobs right now.",
+  "providerAssignedTechnicianLabel": "Assigned technician",
+  "providerBookingTechnicianValue": "Assigned to {name}",
+  "@providerBookingTechnicianValue": {
+    "placeholders": {"name": {"type": "String"}}
+  },
+  "providerBookingAddressLabel": "Service address",
+  "providerBookingDescriptionLabel": "Problem description",
+  "providerBookingEstimatedFeeLabel": "Estimated fee",
+  "bookingStatusConfirmed": "Confirmed",
+  "bookingStatusAssigned": "Assigned",
+  "bookingStatusInProgress": "In Progress",
+  "bookingStatusCompleted": "Completed",
+  "bookingStatusCancelled": "Cancelled",
+  "bookingStatusDeclined": "Declined",
+  "bookingStatusPending": "Pending",
+
   "@_BOOKING_HISTORY_PROVIDER": {},
   "providerHistoryTitle": "Service records",
   "providerHistorySubtitle": "Completed, cancelled, and declined bookings for your account.",

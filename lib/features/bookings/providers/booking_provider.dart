@@ -123,6 +123,28 @@ final liveProviderBookingsProvider =
   return service.watchProviderBookings(providerId);
 });
 
+/// Fetches active appointments and ongoing jobs (`Confirmed`, `Assigned`,
+/// `In Progress`) addressed to [providerId] (BOOK-4 / SCRUM-89).
+final providerActiveBookingsProvider =
+    FutureProvider.autoDispose.family<List<BookingModel>, String>((
+  ref,
+  providerId,
+) async {
+  final service = ref.watch(bookingServiceProvider);
+  return service.getProviderActiveBookings(providerId);
+});
+
+/// Emits live updates for active appointments and ongoing jobs addressed to
+/// [providerId] (BOOK-4 / SCRUM-89).
+final liveProviderActiveBookingsProvider =
+    StreamProvider.autoDispose.family<List<BookingModel>, String>((
+  ref,
+  providerId,
+) {
+  final service = ref.watch(bookingServiceProvider);
+  return service.watchProviderActiveBookings(providerId);
+});
+
 /// Fetches Completed, Cancelled, and Declined service records owned by the
 /// currently signed-in provider account (BOOK-5 / SCRUM-90).
 final providerServiceRecordsProvider =

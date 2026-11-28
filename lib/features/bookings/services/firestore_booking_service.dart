@@ -300,6 +300,40 @@ class FirestoreBookingService implements IBookingService {
           );
 
   @override
+  Future<List<BookingModel>> getProviderActiveBookings(
+    String providerId,
+  ) async {
+    final snapshot = await _activeProviderBookings(providerId).get(
+      const GetOptions(source: Source.server),
+    );
+    return List.unmodifiable(
+      snapshot.docs.map((d) => BookingModel.fromFirestore(d.id, d.data())),
+    );
+  }
+
+  @override
+  Stream<List<BookingModel>> watchProviderActiveBookings(String providerId) {
+    return _activeProviderBookings(providerId)
+        .snapshots(includeMetadataChanges: true)
+        .where((snapshot) => !snapshot.metadata.isFromCache)
+        .map(
+          (snapshot) => List.unmodifiable(
+            snapshot.docs.map(
+              (d) => BookingModel.fromFirestore(d.id, d.data()),
+            ),
+          ),
+        );
+  }
+
+  Query<Map<String, dynamic>> _activeProviderBookings(String providerId) =>
+      _bookings.where('providerId', isEqualTo: providerId).where(
+            'status',
+            whereIn: BookingStatusExtension.activeProviderStatuses
+                .map((status) => status.value)
+                .toList(),
+          );
+
+  @override
   Future<BookingModel?> getBookingById(String bookingId) async {
     final doc = await _bookings.doc(bookingId).get();
     final data = doc.data();
