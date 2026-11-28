@@ -1933,6 +1933,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get technicianJobServiceLabel => 'Service';
 
   @override
+  String get technicianJobStartedNotice =>
+      'Job started. The company and homeowner can now see it as In Progress.';
+
+  @override
   String technicianJobAppointmentValue(String time) {
     return 'Appointment: $time';
   }
