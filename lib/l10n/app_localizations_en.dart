@@ -1342,6 +1342,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get providerBookingReviewAction => 'Review';
 
   @override
+  String get providerAssignmentTitle => 'Assign technician';
+
+  @override
+  String get providerAssignmentSave => 'Save assignment';
+
+  @override
+  String get providerAssignmentEmpty =>
+      'There are no active technicians on your company roster.';
+
+  @override
+  String get providerAssignmentLoadError =>
+      'Could not load your technicians. Try again.';
+
+  @override
+  String get providerAssignmentSaveError =>
+      'Could not save the assignment. Open the picker and try again.';
+
+  @override
+  String get providerAssignmentIneligible =>
+      'This booking can no longer be assigned.';
+
+  @override
   String get providerBookingDeclineButton => 'Decline Request';
 
   @override

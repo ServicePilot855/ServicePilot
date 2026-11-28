@@ -1332,6 +1332,28 @@ class AppLocalizationsKm extends AppLocalizations {
   String get providerBookingReviewAction => 'ពិនិត្យ';
 
   @override
+  String get providerAssignmentTitle => 'ចាត់តាំងជាង';
+
+  @override
+  String get providerAssignmentSave => 'រក្សាទុកការចាត់តាំង';
+
+  @override
+  String get providerAssignmentEmpty =>
+      'មិនមានជាងសកម្មក្នុងបញ្ជីក្រុមហ៊ុនរបស់អ្នកទេ។';
+
+  @override
+  String get providerAssignmentLoadError =>
+      'មិនអាចផ្ទុកបញ្ជីជាងរបស់អ្នកបានទេ។ សូមព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get providerAssignmentSaveError =>
+      'មិនអាចរក្សាទុកការចាត់តាំងបានទេ។ សូមបើកបញ្ជីជ្រើសរើសជាង ហើយព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get providerAssignmentIneligible =>
+      'មិនអាចចាត់តាំងជាងសម្រាប់ការកក់នេះបានទៀតទេ។';
+
+  @override
   String get providerBookingDeclineButton => 'បដិសេធសំណើ';
 
   @override

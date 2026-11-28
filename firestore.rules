@@ -923,8 +923,11 @@ service cloud.firestore {
         let provider = get(/databases/$(database)/documents/users/$(before.providerId)).data;
         return before.status == 'confirmed' && after.status == 'assigned' &&
           ownsBookingInbox(before.providerId) && provider.role == 'company' &&
+          isVerifiedCompany(before.providerId) &&
           changed.hasOnly(['status', 'updatedAt', 'technicianId', 'technicianName']) &&
-          ('technicianId' in after) && isCompanyBookingTechnician(after.technicianId, before.providerId);
+          after.keys().hasAll(['technicianId', 'technicianName']) &&
+          isCompanyBookingTechnician(after.technicianId, before.providerId) &&
+          after.technicianName == get(technicianRosterPath(before.providerId, after.technicianId)).data.fullName;
       }
 
       function canProgressAcceptedBooking(before, after, changed) {
