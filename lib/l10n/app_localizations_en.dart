@@ -234,7 +234,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeCompanyTechnicianGreeting =>
-      'Your assigned jobs and schedule are coming soon.';
+      'Your assigned jobs are below, with where and when to work.';
 
   @override
   String get homeCustomerGreeting =>
@@ -1342,6 +1342,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get providerBookingReviewAction => 'Review';
 
   @override
+  String get providerAssignmentTitle => 'Assign technician';
+
+  @override
+  String get providerAssignmentSave => 'Save assignment';
+
+  @override
+  String get providerAssignmentEmpty =>
+      'There are no active technicians on your company roster.';
+
+  @override
+  String get providerAssignmentLoadError =>
+      'Could not load your technicians. Try again.';
+
+  @override
+  String get providerAssignmentSaveError =>
+      'Could not save the assignment. Open the picker and try again.';
+
+  @override
+  String get providerAssignmentIneligible =>
+      'This booking can no longer be assigned.';
+
+  @override
   String get providerBookingDeclineButton => 'Decline Request';
 
   @override
@@ -1778,6 +1800,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get providerBookingEstimatedFeeLabel => 'Estimated fee';
 
   @override
+  String get providerBookingStartButton => 'Start Job';
+
+  @override
+  String get providerBookingStartDialogTitle => 'Start this job?';
+
+  @override
+  String get providerBookingStartDialogBody =>
+      'The homeowner will see this job as In Progress. Start it when you arrive on site.';
+
+  @override
+  String get providerBookingStartConfirm => 'Start Job';
+
+  @override
+  String get providerBookingStartKeep => 'Not yet';
+
+  @override
+  String get providerBookingStartedNotice =>
+      'Job started. The homeowner can now see it as In Progress.';
+
+  @override
+  String get providerBookingStartNotAuthorized =>
+      'You are not authorized to start this job.';
+
+  @override
+  String get providerBookingStartIneligible =>
+      'This job cannot be started in its current state.';
+
+  @override
+  String get providerBookingStartQuotePending =>
+      'The homeowner has not approved the quote for this job yet.';
+
+  @override
   String get bookingStatusConfirmed => 'Confirmed';
 
   @override
@@ -1830,4 +1884,80 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get providerBookingCompleteIneligible =>
       'Only In Progress jobs can be marked as completed.';
+
+  @override
+  String get cartCheckoutButton => 'Continue to checkout';
+
+  @override
+  String get cartCheckoutTitle => 'Checkout';
+
+  @override
+  String get cartCheckoutServicesSection => 'Your services';
+
+  @override
+  String get bookingErrorCartInvalid =>
+      'A service in your cart can no longer be booked. Go back to your cart, check it and try again.';
+
+  @override
+  String get bookingErrorCartMixedProviders =>
+      'Your cart has services from more than one provider. Keep services from one provider and try again.';
+
+  @override
+  String get bookingSummaryReference => 'Booking reference';
+
+  @override
+  String get bookingSummaryServices => 'Services';
+
+  @override
+  String get bookingSummaryTotal => 'Total';
+
+  @override
+  String bookingSummaryItemLine(String serviceTitle, String price) {
+    return '$serviceTitle: $price';
+  }
+
+  @override
+  String get technicianJobsTitle => 'My assigned jobs';
+
+  @override
+  String get technicianJobsEmpty =>
+      'No jobs are assigned to you right now. Jobs your company assigns to you appear here.';
+
+  @override
+  String get technicianJobsLoadError =>
+      'Couldn\'t load your jobs. Check your connection and try again.';
+
+  @override
+  String get technicianJobsLoading => 'Loading your jobs';
+
+  @override
+  String get technicianJobDetailTitle => 'Job details';
+
+  @override
+  String get technicianJobUnavailable =>
+      'This job isn\'t assigned to you, or it is no longer active.';
+
+  @override
+  String get technicianJobAppointmentLabel => 'Appointment';
+
+  @override
+  String get technicianJobPreferredTimeLabel =>
+      'Preferred time (not confirmed yet)';
+
+  @override
+  String get technicianJobServiceLabel => 'Service';
+
+  @override
+  String get technicianJobStartedNotice =>
+      'Job started. The company and homeowner can now see it as In Progress.';
+
+  @override
+  String technicianJobAppointmentValue(String time) {
+    return 'Appointment: $time';
+  }
+
+  @override
+  String technicianJobPreferredTimeValue(String time) {
+    return 'Preferred time (not confirmed yet): $time';
+  }
 }

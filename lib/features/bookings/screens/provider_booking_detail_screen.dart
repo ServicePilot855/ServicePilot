@@ -10,8 +10,10 @@ import 'package:service_pilot/features/bookings/models/booking_model.dart';
 import 'package:service_pilot/features/bookings/models/incoming_booking_request.dart';
 import 'package:service_pilot/features/bookings/providers/booking_provider.dart';
 import 'package:service_pilot/features/bookings/services/booking_service.dart';
+import 'package:service_pilot/features/bookings/widgets/assign_technician_dialog.dart';
 import 'package:service_pilot/features/bookings/widgets/booking_status_stepper.dart';
 import 'package:service_pilot/features/bookings/widgets/decline_booking_dialog.dart';
+import 'package:service_pilot/features/bookings/widgets/start_job_dialog.dart';
 import 'package:service_pilot/l10n/l10n.dart';
 import 'package:service_pilot/shared/widgets/sp_button.dart';
 import 'package:service_pilot/shared/widgets/sp_layout.dart';
@@ -39,6 +41,8 @@ class _ProviderBookingDetailScreenState
   bool _isConfirming = false;
   bool _isDeclining = false;
   bool _isCompleting = false;
+  bool _isAssigning = false;
+  bool _isStarting = false;
   String? _successMessage;
   String? _errorMessage;
 
@@ -158,6 +162,40 @@ class _ProviderBookingDetailScreenState
     }
   }
 
+  Future<void> _assignTechnician(String companyId) async {
+    final service = ref.read(bookingServiceProvider);
+    final technicianId = await AssignTechnicianDialog.show(
+      context,
+      loadTechnicians: () => service.getAssignableTechnicians(companyId),
+    );
+    if (technicianId == null || !mounted) return;
+    final user = ref.read(currentUserProvider);
+    if (user == null || user.id != companyId || !user.isCompany ||
+        !user.canViewBookingInbox) {
+      return;
+    }
+
+    final l10n = context.l10n;
+    setState(() {
+      _isAssigning = true;
+      _successMessage = null;
+      _errorMessage = null;
+    });
+    try {
+      await service.assignBooking(
+        bookingId: widget.bookingId,
+        companyId: companyId,
+        technicianId: technicianId,
+      );
+    } on InvalidBookingTransitionException {
+      if (mounted) setState(() => _errorMessage = l10n.providerAssignmentIneligible);
+    } catch (_) {
+      if (mounted) setState(() => _errorMessage = l10n.providerAssignmentSaveError);
+    } finally {
+      if (mounted) setState(() => _isAssigning = false);
+    }
+  }
+
   /// Asks for a reason, then declines an owned `Pending` request (BOOK-3 / SCRUM-105).
   Future<void> _declineBooking(String providerId) async {
     final l10n = context.l10n;
@@ -208,6 +246,72 @@ class _ProviderBookingDetailScreenState
       if (!mounted) return;
       setState(() {
         _isDeclining = false;
+        _errorMessage = l10n.providerBookingsLoadError;
+      });
+    }
+  }
+
+  /// Confirms, then marks an owned confirmed/assigned job In Progress
+  /// (WORK-1 / SCRUM-91).
+  Future<void> _startBooking(String providerId) async {
+    final l10n = context.l10n;
+    final confirmed = await StartJobDialog.show(context);
+    if (confirmed != true || !mounted) return;
+
+    setState(() {
+      _isStarting = true;
+      _errorMessage = null;
+      _successMessage = null;
+    });
+
+    try {
+      final service = ref.read(bookingServiceProvider);
+      await service.startBooking(
+        bookingId: widget.bookingId,
+        providerId: providerId,
+      );
+
+      if (!mounted) return;
+      ref.invalidate(bookingDetailProvider(widget.bookingId));
+      ref.invalidate(liveBookingDetailProvider(widget.bookingId));
+      ref.invalidate(providerBookingsProvider(providerId));
+      ref.invalidate(liveProviderBookingsProvider(providerId));
+      ref.invalidate(providerActiveBookingsProvider(providerId));
+      ref.invalidate(liveProviderActiveBookingsProvider(providerId));
+      ref.invalidate(providerServiceRecordsProvider);
+
+      setState(() {
+        _isStarting = false;
+        _successMessage = l10n.providerBookingStartedNotice;
+      });
+    } on UnauthorizedBookingStartException {
+      if (!mounted) return;
+      setState(() {
+        _isStarting = false;
+        _errorMessage = l10n.providerBookingStartNotAuthorized;
+      });
+    } on InvalidBookingStartStateException {
+      if (!mounted) return;
+      setState(() {
+        _isStarting = false;
+        _errorMessage = l10n.providerBookingStartIneligible;
+      });
+    } on QuoteNotApprovedForStartException {
+      if (!mounted) return;
+      setState(() {
+        _isStarting = false;
+        _errorMessage = l10n.providerBookingStartQuotePending;
+      });
+    } on BookingSubmissionException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isStarting = false;
+        _errorMessage = e.message;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isStarting = false;
         _errorMessage = l10n.providerBookingsLoadError;
       });
     }
@@ -422,7 +526,14 @@ class _ProviderBookingDetailScreenState
     final l10n = context.l10n;
     final isOwned = activeProviderId.isNotEmpty &&
         booking.isOwnedByProvider(activeProviderId);
-    final canConfirm = isOwned && booking.canBeConfirmed;
+    final canConfirm = isOwned &&
+        booking.canBeConfirmed &&
+        booking.confirmedAppointmentAt == null;
+    final technicianName = booking.assignedTechnicianName?.trim() ?? '';
+    final canAssign = isOwned &&
+        booking.canBeAssigned &&
+        ref.watch(currentUserProvider)?.isCompany == true;
+    final canStart = isOwned && booking.canBeStarted;
     final canComplete = isOwned && booking.canBeCompleted;
 
     final preferredFormatted = DateFormat('EEE, d MMM yyyy • h:mm a')
@@ -440,23 +551,17 @@ class _ProviderBookingDetailScreenState
           children: [
             if (_successMessage != null &&
                 (booking.status == BookingStatus.confirmed ||
+                    booking.status == BookingStatus.inProgress ||
                     booking.status == BookingStatus.completed)) ...[
               SpNotice(
                 key: booking.status == BookingStatus.completed
                     ? const Key('provider_booking_completed_notice')
-                    : const Key('provider_booking_confirmed_notice'),
+                    : (booking.status == BookingStatus.inProgress
+                        ? const Key('provider_booking_started_notice')
+                        : const Key('provider_booking_confirmed_notice')),
                 icon: Icons.check_circle_outline_rounded,
                 message: _successMessage!,
                 tone: SpTone.success,
-              ),
-              const SizedBox(height: 16),
-            ],
-            if (_errorMessage != null) ...[
-              SpNotice(
-                key: const Key('provider_booking_error_notice'),
-                icon: Icons.error_outline_rounded,
-                message: _errorMessage!,
-                tone: SpTone.danger,
               ),
               const SizedBox(height: 16),
             ],
@@ -471,8 +576,11 @@ class _ProviderBookingDetailScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       Text(
                         'ID: ${booking.id}',
@@ -543,14 +651,13 @@ class _ProviderBookingDetailScreenState
                     label: l10n.providerBookingAddressLabel,
                     value: booking.address,
                   ),
-                  if (booking.assignedTechnicianName != null &&
-                      booking.assignedTechnicianName!.trim().isNotEmpty) ...[
+                  if (technicianName.isNotEmpty) ...[
                     const SizedBox(height: 12),
                     _InfoRow(
                       key: const Key('provider_assigned_technician_row'),
                       icon: Icons.person_pin_rounded,
                       label: l10n.providerAssignedTechnicianLabel,
-                      value: booking.assignedTechnicianName!.trim(),
+                      value: technicianName,
                     ),
                   ],
                   const SizedBox(height: 12),
@@ -574,12 +681,31 @@ class _ProviderBookingDetailScreenState
               booking: booking,
             ),
             const SizedBox(height: 24),
+            if (_errorMessage != null) ...[
+              SpNotice(
+                key: const Key('provider_booking_error_notice'),
+                icon: Icons.error_outline_rounded,
+                message: _errorMessage!,
+                tone: SpTone.danger,
+              ),
+              const SizedBox(height: 16),
+            ],
             if (!isOwned)
               SpNotice(
                 key: const Key('provider_booking_unauthorized_notice'),
                 icon: Icons.lock_outline_rounded,
                 message: l10n.providerBookingNotAuthorized,
                 tone: SpTone.danger,
+              )
+            else if (canAssign)
+              SpPrimaryButton(
+                key: const Key('provider_open_assignment_button'),
+                label: l10n.providerAssignmentTitle,
+                wrapLabel: true,
+                isLoading: _isAssigning,
+                onPressed: _isAssigning
+                    ? null
+                    : () => _assignTechnician(activeProviderId),
               )
             else if (canConfirm)
               SpPrimaryButton(
@@ -590,6 +716,17 @@ class _ProviderBookingDetailScreenState
                     ? null
                     : () => _confirmBooking(
                         booking.preferredDateTime, activeProviderId),
+              )
+            else if (canStart)
+              SpPrimaryButton(
+                key: const Key('provider_start_booking_button'),
+                label: l10n.providerBookingStartButton,
+                icon: Icons.play_arrow_rounded,
+                wrapLabel: true,
+                isLoading: _isStarting,
+                onPressed: _isStarting
+                    ? null
+                    : () => _startBooking(activeProviderId),
               )
             else if (canComplete)
               SpPrimaryButton(

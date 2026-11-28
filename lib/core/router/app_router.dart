@@ -25,6 +25,8 @@ import 'package:service_pilot/features/bookings/screens/incoming_booking_screen.
 import 'package:service_pilot/features/bookings/screens/location_picker_screen.dart';
 import 'package:service_pilot/features/bookings/screens/provider_booking_detail_screen.dart';
 import 'package:service_pilot/features/bookings/screens/provider_service_history_screen.dart';
+import 'package:service_pilot/features/bookings/screens/technician_job_detail_screen.dart';
+import 'package:service_pilot/features/cart/screens/cart_checkout_screen.dart';
 import 'package:service_pilot/features/cart/screens/cart_screen.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
 import 'package:service_pilot/features/providers/screens/company_profile_edit_screen.dart';
@@ -72,6 +74,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           state.matchedLocation.startsWith(IncomingBookingScreen.path) ||
           state.matchedLocation.startsWith('/provider/bookings') ||
           state.matchedLocation.startsWith('/provider/quotes');
+      final isGoingToTechnicianJobs =
+          state.matchedLocation.startsWith('/technician/jobs');
       final isGoingToHome = state.matchedLocation.startsWith('/home') ||
           state.matchedLocation.startsWith('/categories') ||
           state.matchedLocation.startsWith('/providers') ||
@@ -80,6 +84,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           state.matchedLocation.startsWith('/offerings') ||
           state.matchedLocation.startsWith(CartScreen.path) ||
           isGoingToBookingInbox ||
+          isGoingToTechnicianJobs ||
           isGoingToAdmin;
       final isGoingToLogin = state.matchedLocation == '/login';
       final isGoingToSplash = state.matchedLocation == '/splash';
@@ -93,6 +98,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (isAuthenticated &&
           isGoingToBookingInbox &&
           !authState.user.canViewBookingInbox) {
+        return authState.user.role.homeRoute;
+      }
+
+      // Only company technicians have assigned jobs (TECHJOB-1 / SCRUM-100).
+      if (isAuthenticated &&
+          isGoingToTechnicianJobs &&
+          !authState.user.isCompanyTechnician) {
         return authState.user.role.homeRoute;
       }
 
@@ -221,6 +233,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: CartScreen.path,
         builder: (_, __) => const CartScreen(),
       ),
+      // ── Cart checkout (CART-3 / SCRUM-82) ─────────────────────────────
+      GoRoute(
+        path: CartScreen.checkoutPath,
+        builder: (_, __) => const CartCheckoutScreen(),
+      ),
       // ── Provider Details & Profiles (US-11) ───────────────────────────
       GoRoute(
         path: '/providers/:providerId',
@@ -324,6 +341,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/provider/bookings/:bookingId',
         builder: (_, state) => ProviderBookingDetailScreen(
+          bookingId: state.pathParameters['bookingId']!,
+        ),
+      ),
+      // ── Technician job detail (TECHJOB-1 / SCRUM-100) ───────────────────
+      GoRoute(
+        path: TechnicianJobDetailScreen.path,
+        builder: (_, state) => TechnicianJobDetailScreen(
           bookingId: state.pathParameters['bookingId']!,
         ),
       ),

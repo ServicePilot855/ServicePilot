@@ -515,7 +515,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeCompanyTechnicianGreeting.
   ///
   /// In en, this message translates to:
-  /// **'Your assigned jobs and schedule are coming soon.'**
+  /// **'Your assigned jobs are below, with where and when to work.'**
   String get homeCompanyTechnicianGreeting;
 
   /// No description provided for @homeCustomerGreeting.
@@ -2456,6 +2456,42 @@ abstract class AppLocalizations {
   /// **'Review'**
   String get providerBookingReviewAction;
 
+  /// No description provided for @providerAssignmentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign technician'**
+  String get providerAssignmentTitle;
+
+  /// No description provided for @providerAssignmentSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save assignment'**
+  String get providerAssignmentSave;
+
+  /// No description provided for @providerAssignmentEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'There are no active technicians on your company roster.'**
+  String get providerAssignmentEmpty;
+
+  /// No description provided for @providerAssignmentLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load your technicians. Try again.'**
+  String get providerAssignmentLoadError;
+
+  /// No description provided for @providerAssignmentSaveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the assignment. Open the picker and try again.'**
+  String get providerAssignmentSaveError;
+
+  /// No description provided for @providerAssignmentIneligible.
+  ///
+  /// In en, this message translates to:
+  /// **'This booking can no longer be assigned.'**
+  String get providerAssignmentIneligible;
+
   /// No description provided for @providerBookingDeclineButton.
   ///
   /// In en, this message translates to:
@@ -3140,6 +3176,60 @@ abstract class AppLocalizations {
   /// **'Estimated fee'**
   String get providerBookingEstimatedFeeLabel;
 
+  /// No description provided for @providerBookingStartButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Job'**
+  String get providerBookingStartButton;
+
+  /// No description provided for @providerBookingStartDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start this job?'**
+  String get providerBookingStartDialogTitle;
+
+  /// No description provided for @providerBookingStartDialogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The homeowner will see this job as In Progress. Start it when you arrive on site.'**
+  String get providerBookingStartDialogBody;
+
+  /// No description provided for @providerBookingStartConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Job'**
+  String get providerBookingStartConfirm;
+
+  /// No description provided for @providerBookingStartKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Not yet'**
+  String get providerBookingStartKeep;
+
+  /// No description provided for @providerBookingStartedNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Job started. The homeowner can now see it as In Progress.'**
+  String get providerBookingStartedNotice;
+
+  /// No description provided for @providerBookingStartNotAuthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'You are not authorized to start this job.'**
+  String get providerBookingStartNotAuthorized;
+
+  /// No description provided for @providerBookingStartIneligible.
+  ///
+  /// In en, this message translates to:
+  /// **'This job cannot be started in its current state.'**
+  String get providerBookingStartIneligible;
+
+  /// No description provided for @providerBookingStartQuotePending.
+  ///
+  /// In en, this message translates to:
+  /// **'The homeowner has not approved the quote for this job yet.'**
+  String get providerBookingStartQuotePending;
+
   /// No description provided for @bookingStatusConfirmed.
   ///
   /// In en, this message translates to:
@@ -3235,6 +3325,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Only In Progress jobs can be marked as completed.'**
   String get providerBookingCompleteIneligible;
+
+  /// No description provided for @cartCheckoutButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to checkout'**
+  String get cartCheckoutButton;
+
+  /// No description provided for @cartCheckoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkout'**
+  String get cartCheckoutTitle;
+
+  /// No description provided for @cartCheckoutServicesSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Your services'**
+  String get cartCheckoutServicesSection;
+
+  /// No description provided for @bookingErrorCartInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'A service in your cart can no longer be booked. Go back to your cart, check it and try again.'**
+  String get bookingErrorCartInvalid;
+
+  /// No description provided for @bookingErrorCartMixedProviders.
+  ///
+  /// In en, this message translates to:
+  /// **'Your cart has services from more than one provider. Keep services from one provider and try again.'**
+  String get bookingErrorCartMixedProviders;
+
+  /// No description provided for @bookingSummaryReference.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking reference'**
+  String get bookingSummaryReference;
+
+  /// No description provided for @bookingSummaryServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Services'**
+  String get bookingSummaryServices;
+
+  /// No description provided for @bookingSummaryTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get bookingSummaryTotal;
+
+  /// No description provided for @bookingSummaryItemLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{serviceTitle}: {price}'**
+  String bookingSummaryItemLine(String serviceTitle, String price);
+
+  /// No description provided for @technicianJobsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My assigned jobs'**
+  String get technicianJobsTitle;
+
+  /// No description provided for @technicianJobsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No jobs are assigned to you right now. Jobs your company assigns to you appear here.'**
+  String get technicianJobsEmpty;
+
+  /// No description provided for @technicianJobsLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your jobs. Check your connection and try again.'**
+  String get technicianJobsLoadError;
+
+  /// No description provided for @technicianJobsLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading your jobs'**
+  String get technicianJobsLoading;
+
+  /// No description provided for @technicianJobDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Job details'**
+  String get technicianJobDetailTitle;
+
+  /// No description provided for @technicianJobUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This job isn\'t assigned to you, or it is no longer active.'**
+  String get technicianJobUnavailable;
+
+  /// No description provided for @technicianJobAppointmentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Appointment'**
+  String get technicianJobAppointmentLabel;
+
+  /// No description provided for @technicianJobPreferredTimeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred time (not confirmed yet)'**
+  String get technicianJobPreferredTimeLabel;
+
+  /// No description provided for @technicianJobServiceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Service'**
+  String get technicianJobServiceLabel;
+
+  /// No description provided for @technicianJobStartedNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Job started. The company and homeowner can now see it as In Progress.'**
+  String get technicianJobStartedNotice;
+
+  /// No description provided for @technicianJobAppointmentValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Appointment: {time}'**
+  String technicianJobAppointmentValue(String time);
+
+  /// No description provided for @technicianJobPreferredTimeValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred time (not confirmed yet): {time}'**
+  String technicianJobPreferredTimeValue(String time);
 }
 
 class _AppLocalizationsDelegate

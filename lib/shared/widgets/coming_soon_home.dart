@@ -21,6 +21,7 @@ class ComingSoonHome extends ConsumerWidget {
     this.displayName,
     this.companyName,
     this.extraContent,
+    this.showComingSoonNotice = true,
   });
 
   final IconData roleIcon;
@@ -31,6 +32,10 @@ class ComingSoonHome extends ConsumerWidget {
   final String? displayName;
   final String? companyName;
   final Widget? extraContent;
+
+  /// Shows the "arrives in the next sprint" notice when there is no
+  /// [primaryAction]. Turn it off once the role has real tools on its home.
+  final bool showComingSoonNotice;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -128,13 +133,17 @@ class ComingSoonHome extends ConsumerWidget {
                           height: 1.5,
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      primaryAction ??
-                          SpNotice(
-                            icon: Icons.hourglass_top_rounded,
-                            tone: SpTone.waiting,
-                            message: l10n.homeComingSoonNotice,
-                          ),
+                      if (primaryAction != null) ...[
+                        const SizedBox(height: 16),
+                        primaryAction!,
+                      ] else if (showComingSoonNotice) ...[
+                        const SizedBox(height: 16),
+                        SpNotice(
+                          icon: Icons.hourglass_top_rounded,
+                          tone: SpTone.waiting,
+                          message: l10n.homeComingSoonNotice,
+                        ),
+                      ],
                       if (secondaryAction != null) ...[
                         const SizedBox(height: 12),
                         secondaryAction!,

@@ -234,7 +234,7 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get homeCompanyTechnicianGreeting =>
-      'Your assigned jobs and schedule are coming soon.';
+      'ការងារដែលបានចាត់ឱ្យអ្នក រួមទាំងទីកន្លែង និងពេលវេលា មាននៅខាងក្រោម។';
 
   @override
   String get homeCustomerGreeting =>
@@ -1332,6 +1332,28 @@ class AppLocalizationsKm extends AppLocalizations {
   String get providerBookingReviewAction => 'ពិនិត្យ';
 
   @override
+  String get providerAssignmentTitle => 'ចាត់តាំងជាង';
+
+  @override
+  String get providerAssignmentSave => 'រក្សាទុកការចាត់តាំង';
+
+  @override
+  String get providerAssignmentEmpty =>
+      'មិនមានជាងសកម្មក្នុងបញ្ជីក្រុមហ៊ុនរបស់អ្នកទេ។';
+
+  @override
+  String get providerAssignmentLoadError =>
+      'មិនអាចផ្ទុកបញ្ជីជាងរបស់អ្នកបានទេ។ សូមព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get providerAssignmentSaveError =>
+      'មិនអាចរក្សាទុកការចាត់តាំងបានទេ។ សូមបើកបញ្ជីជ្រើសរើសជាង ហើយព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get providerAssignmentIneligible =>
+      'មិនអាចចាត់តាំងជាងសម្រាប់ការកក់នេះបានទៀតទេ។';
+
+  @override
   String get providerBookingDeclineButton => 'បដិសេធសំណើ';
 
   @override
@@ -1753,6 +1775,38 @@ class AppLocalizationsKm extends AppLocalizations {
   String get providerBookingEstimatedFeeLabel => 'ថ្លៃប៉ាន់ស្មាន';
 
   @override
+  String get providerBookingStartButton => 'ចាប់ផ្តើមការងារ';
+
+  @override
+  String get providerBookingStartDialogTitle => 'ចាប់ផ្តើមការងារនេះមែនទេ?';
+
+  @override
+  String get providerBookingStartDialogBody =>
+      'អតិថិជននឹងឃើញការងារនេះជា «កំពុងដំណើរការ»។ សូមចាប់ផ្តើមនៅពេលអ្នកទៅដល់ទីតាំង។';
+
+  @override
+  String get providerBookingStartConfirm => 'ចាប់ផ្តើមការងារ';
+
+  @override
+  String get providerBookingStartKeep => 'មិនទាន់ទេ';
+
+  @override
+  String get providerBookingStartedNotice =>
+      'បានចាប់ផ្តើមការងារ។ អតិថិជនអាចឃើញវាជា «កំពុងដំណើរការ» ហើយ។';
+
+  @override
+  String get providerBookingStartNotAuthorized =>
+      'អ្នកមិនមានសិទ្ធិចាប់ផ្តើមការងារនេះទេ។';
+
+  @override
+  String get providerBookingStartIneligible =>
+      'ការងារនេះមិនអាចចាប់ផ្តើមបានក្នុងស្ថានភាពបច្ចុប្បន្នទេ។';
+
+  @override
+  String get providerBookingStartQuotePending =>
+      'អតិថិជនមិនទាន់បានអនុម័តសម្រង់តម្លៃសម្រាប់ការងារនេះទេ។';
+
+  @override
   String get bookingStatusConfirmed => 'បានបញ្ជាក់';
 
   @override
@@ -1805,4 +1859,80 @@ class AppLocalizationsKm extends AppLocalizations {
   @override
   String get providerBookingCompleteIneligible =>
       'មានតែការងារដែលកំពុងដំណើរការប៉ុណ្ណោះដែលអាចសម្គាល់ថាបានបញ្ចប់។';
+
+  @override
+  String get cartCheckoutButton => 'បន្តទៅការបញ្ជាទិញ';
+
+  @override
+  String get cartCheckoutTitle => 'ការបញ្ជាទិញ';
+
+  @override
+  String get cartCheckoutServicesSection => 'សេវាកម្មរបស់អ្នក';
+
+  @override
+  String get bookingErrorCartInvalid =>
+      'សេវាកម្មមួយក្នុងកន្ត្រករបស់អ្នកមិនអាចកក់បានទៀតទេ។ សូមត្រឡប់ទៅកន្ត្រក ពិនិត្យវា ហើយព្យាយាមម្តងទៀត។';
+
+  @override
+  String get bookingErrorCartMixedProviders =>
+      'កន្ត្រករបស់អ្នកមានសេវាកម្មពីអ្នកផ្តល់សេវាច្រើនជាងមួយ។ សូមរក្សាទុកតែសេវាកម្មពីអ្នកផ្តល់សេវាតែមួយ ហើយព្យាយាមម្តងទៀត។';
+
+  @override
+  String get bookingSummaryReference => 'លេខយោងការកក់';
+
+  @override
+  String get bookingSummaryServices => 'សេវាកម្ម';
+
+  @override
+  String get bookingSummaryTotal => 'សរុប';
+
+  @override
+  String bookingSummaryItemLine(String serviceTitle, String price) {
+    return '$serviceTitle៖ $price';
+  }
+
+  @override
+  String get technicianJobsTitle => 'ការងារដែលបានចាត់ឱ្យខ្ញុំ';
+
+  @override
+  String get technicianJobsEmpty =>
+      'បច្ចុប្បន្នមិនមានការងារចាត់ឱ្យអ្នកទេ។ ការងារដែលក្រុមហ៊ុនចាត់ឱ្យអ្នកនឹងបង្ហាញនៅទីនេះ។';
+
+  @override
+  String get technicianJobsLoadError =>
+      'មិនអាចផ្ទុកការងាររបស់អ្នកបានទេ។ សូមពិនិត្យការតភ្ជាប់ ហើយព្យាយាមម្តងទៀត។';
+
+  @override
+  String get technicianJobsLoading => 'កំពុងផ្ទុកការងាររបស់អ្នក';
+
+  @override
+  String get technicianJobDetailTitle => 'ព័ត៌មានលម្អិតការងារ';
+
+  @override
+  String get technicianJobUnavailable =>
+      'ការងារនេះមិនត្រូវបានចាត់ឱ្យអ្នក ឬលែងសកម្មទៀតហើយ។';
+
+  @override
+  String get technicianJobAppointmentLabel => 'ពេលណាត់ជួប';
+
+  @override
+  String get technicianJobPreferredTimeLabel =>
+      'ពេលវេលាដែលចង់បាន (មិនទាន់បញ្ជាក់)';
+
+  @override
+  String get technicianJobServiceLabel => 'សេវាកម្ម';
+
+  @override
+  String get technicianJobStartedNotice =>
+      'បានចាប់ផ្តើមការងារ។ ក្រុមហ៊ុន និងអតិថិជនអាចឃើញវាជា «កំពុងដំណើរការ» ហើយ។';
+
+  @override
+  String technicianJobAppointmentValue(String time) {
+    return 'ពេលណាត់ជួប៖ $time';
+  }
+
+  @override
+  String technicianJobPreferredTimeValue(String time) {
+    return 'ពេលវេលាដែលចង់បាន (មិនទាន់បញ្ជាក់)៖ $time';
+  }
 }

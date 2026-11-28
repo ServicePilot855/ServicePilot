@@ -13,11 +13,13 @@ import 'package:service_pilot/shared/widgets/sp_layout.dart';
 /// price, and the computed total. An empty cart shows an empty state.
 ///
 /// CART-2 (SCRUM-81, subtask SCRUM-128). Reached from the cart badge on the
-/// provider page at [CartScreen.path].
+/// provider page at [CartScreen.path]. Continue to checkout opens the request
+/// form for the cart at [CartScreen.checkoutPath] (CART-3 / SCRUM-82).
 class CartScreen extends ConsumerWidget {
   const CartScreen({super.key});
 
   static const String path = '/cart';
+  static const String checkoutPath = '/cart/checkout';
 
   static void _leave(BuildContext context) {
     if (context.canPop()) {
@@ -59,17 +61,23 @@ class CartScreen extends ConsumerWidget {
     return SpFlowPage(
       title: l10n.cartTitle,
       onBack: () => _leave(context),
+      bottom: SpPrimaryButton(
+        key: const Key('cart_checkout_button'),
+        label: l10n.cartCheckoutButton,
+        wrapLabel: true,
+        onPressed: () => context.push(CartScreen.checkoutPath),
+      ),
       children: [
         SpPageHeader(
           title: l10n.cartHeading,
           subtitle: l10n.cartItemCount(cart.itemCount),
         ),
         const SizedBox(height: 24),
-        _CartProvider(cart: cart),
+        CartProviderLine(cart: cart),
         const SizedBox(height: 24),
         const Divider(height: 1, color: AppTheme.border),
         for (final item in cart.items) ...[
-          _CartItemRow(
+          CartItemRow(
             item: item,
             onRemove: () => ref
                 .read(cartProvider.notifier)
@@ -78,7 +86,7 @@ class CartScreen extends ConsumerWidget {
           const Divider(height: 1, color: AppTheme.border),
         ],
         const SizedBox(height: 16),
-        _CartTotal(total: cart.totalPrice),
+        CartTotalRow(total: cart.totalPrice, alignWithRemove: true),
         const SizedBox(height: 24),
         SpNotice(
           icon: Icons.info_outline_rounded,
@@ -95,8 +103,9 @@ String formatCartPrice(double amount) => '\$${amount.toStringAsFixed(2)}';
 
 const _tabular = [FontFeature.tabularFigures()];
 
-class _CartProvider extends StatelessWidget {
-  const _CartProvider({required this.cart});
+/// "Provider" label over the cart's provider name.
+class CartProviderLine extends StatelessWidget {
+  const CartProviderLine({super.key, required this.cart});
 
   final CartState cart;
 
@@ -144,11 +153,13 @@ class _CartProvider extends StatelessWidget {
   }
 }
 
-class _CartItemRow extends StatelessWidget {
-  const _CartItemRow({required this.item, required this.onRemove});
+/// One cart line: title, unit price (with quantity when above 1) and the line
+/// total. Read-only when [onRemove] is null, as on the checkout form.
+class CartItemRow extends StatelessWidget {
+  const CartItemRow({super.key, required this.item, this.onRemove});
 
   final CartItem item;
-  final VoidCallback onRemove;
+  final VoidCallback? onRemove;
 
   @override
   Widget build(BuildContext context) {
@@ -204,24 +215,35 @@ class _CartItemRow extends StatelessWidget {
               color: AppTheme.textPrimary,
             ).copyWith(fontFeatures: _tabular),
           ),
-          IconButton(
-            key: Key('cart_remove_${offering.id}'),
-            tooltip: l10n.cartRemoveItem(offering.title),
-            constraints: const BoxConstraints.tightFor(width: 48, height: 48),
-            icon: const Icon(Icons.delete_outline_rounded, size: 22),
-            color: AppTheme.textSecondary,
-            onPressed: onRemove,
-          ),
+          if (onRemove != null)
+            IconButton(
+              key: Key('cart_remove_${offering.id}'),
+              tooltip: l10n.cartRemoveItem(offering.title),
+              constraints:
+                  const BoxConstraints.tightFor(width: 48, height: 48),
+              icon: const Icon(Icons.delete_outline_rounded, size: 22),
+              color: AppTheme.textSecondary,
+              onPressed: onRemove,
+            ),
         ],
       ),
     );
   }
 }
 
-class _CartTotal extends StatelessWidget {
-  const _CartTotal({required this.total});
+/// "Total" and the cart sum in Headline type.
+class CartTotalRow extends StatelessWidget {
+  const CartTotalRow({
+    super.key,
+    required this.total,
+    this.alignWithRemove = false,
+  });
 
   final double total;
+
+  /// Indent the amount so it lines up with line totals that have a remove
+  /// button beside them.
+  final bool alignWithRemove;
 
   @override
   Widget build(BuildContext context) {
@@ -242,7 +264,7 @@ class _CartTotal extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.only(right: 48),
+            padding: EdgeInsets.only(right: alignWithRemove ? 48 : 0),
             child: Text(
               value,
               key: const Key('cart_total_value'),

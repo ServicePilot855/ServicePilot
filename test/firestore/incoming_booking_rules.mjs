@@ -1,4 +1,4 @@
-import assert from 'node:assert/strict';
+﻿import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 
 const project = 'demo-servicepilot';
@@ -64,6 +64,7 @@ const commit = (token, writes, status = 200) => request(`${documents}:commit`, {
 
 const companyTechnician = await account();
 const otherTechnician = await account('company_technician', { companyId: otherCompany.id });
+const teammate = await account('company_technician', { companyId: company.id });
 const uninvited = await account();
 const companyProvider = id => update(`providers/${id}`, {
   ...fields({ id, providerType: 'company', status: 'active' }),
@@ -186,6 +187,15 @@ for (const provider of [independent, company, suspended]) {
   await commit(customer.token, [removePreview], 403);
   await commit(customer.token, [cancelled], 403);
   await commit(customer.token, [cancelled, removePreview]);
+  if (provider === company) {
+    const assignmentFields = fields({
+      status: 'assigned', technicianId: companyTechnician.id, technicianName: 'Borey Nhem',
+    });
+    await commit(company.token, [{
+      ...update(booking, assignmentFields), updateMask: { fieldPaths: Object.keys(assignmentFields) },
+    }], 403);
+    assert.deepEqual((await request(`${documents}/${booking}`, { token: customer.token })).fields, cancelled.update.fields);
+  }
   await request(`${documents}/${preview}`, { token: provider.token, status: ownStatus === 200 ? 404 : 403 });
   await request(`${documents}/${booking}`, { token: provider.token, status: 403 });
 }
@@ -278,16 +288,43 @@ const updateBooking = (token, changes, status = 200) => commit(token, [
 ], status);
 await updateBooking(company.token, { status: 'completed' }, 403);
 await updateBooking(company.token, { status: 'in_progress', address: 'Changed address' }, 403);
-await updateBooking(company.token, { status: 'assigned', technicianId: outsider.id }, 403);
-await updateBooking(company.token, { status: 'assigned', technicianId: otherTechnician.id }, 403);
-await updateBooking(company.token, { status: 'assigned', technicianId: companyTechnician.id });
-assert.deepEqual((await request(`${documents}/${booking}`, { token: companyTechnician.token })).fields.address, original.address);
+const assignment = (technicianId = companyTechnician.id, technicianName = 'Borey Nhem') =>
+  ({ status: 'assigned', technicianId, technicianName });
+await updateBooking(company.token, assignment(outsider.id), 403);
+await updateBooking(company.token, assignment(otherTechnician.id), 403);
+await updateBooking(company.token, assignment(teammate.id), 403);
+await updateBooking(company.token, assignment(companyTechnician.id, 'Wrong Name'), 403);
+await updateBooking(company.token, { status: 'assigned', technicianId: companyTechnician.id }, 403);
+await updateBooking(otherCompany.token, assignment(), 403);
+await updateBooking(companyTechnician.token, assignment(), 403);
+assert.deepEqual((await request(`${documents}/${booking}`, { token: company.token })).fields, confirmedFields);
+await updateBooking(company.token, assignment());
+const assignedFields = (await request(`${documents}/${booking}`, { token: company.token })).fields;
+assert.equal(assignedFields.technicianId.stringValue, companyTechnician.id);
+assert.equal(assignedFields.technicianName.stringValue, 'Borey Nhem');
+assert.deepEqual(assignedFields.confirmedAppointmentAt, confirmedFields.confirmedAppointmentAt);
+assert.deepEqual((await request(`${documents}/${booking}`, { token: freshTechnicianToken })).fields, assignedFields);
+for (const actor of [teammate, otherTechnician, otherCompany]) {
+  await request(`${documents}/${booking}`, { token: actor.token, status: 403 });
+}
+const assignedQuery = structuredClone(acceptedQuery);
+assignedQuery.structuredQuery.where.compositeFilter.filters.push({
+  fieldFilter: { field: { fieldPath: 'technicianId' }, op: 'EQUAL', value: { stringValue: companyTechnician.id } },
+});
+const assignedJobs = await request(`${documents}:runQuery`, {
+  method: 'POST', token: freshTechnicianToken, body: assignedQuery,
+});
+assert.deepEqual(assignedJobs.flatMap(row => row.document ? [row.document.fields] : []), [assignedFields]);
+await request(`${documents}:runQuery`, {
+  method: 'POST', token: teammate.token, body: assignedQuery, status: 403,
+});
+await updateBooking(company.token, assignment(), 403);
 await updateBooking(company.token, { status: 'confirmed' }, 403);
 await commit(company.token, [confirmWrite(company.id)]);
 await request(`${documents}/${booking}`, { token: companyTechnician.token, status: 403 });
 if (storage) await readPhoto(companyTechnician.token, false);
 
-await updateBooking(company.token, { status: 'assigned', technicianId: companyTechnician.id });
+await updateBooking(company.token, assignment());
 await updateBooking(companyTechnician.token, { status: 'in_progress' });
 await updateBooking(companyTechnician.token, { status: 'completed' });
 if (storage) {
@@ -388,4 +425,47 @@ assert.match(backfill('--declined', '--apply'), /3 declined booking\(s\) process
 assert.deepEqual((await request(`${documents}/${legacyArchive}`, { token: independent.token })).fields, job);
 await request(`${documents}/${legacyDeclined}`, { token: independent.token, status: 403 });
 
+// WORK-1 (SCRUM-91): quote-based work cannot start before the homeowner approves.
+{
+  const quoteId = crypto.randomUUID();
+  const quotePath = `quoteRequests/${quoteId}`;
+  const startId = crypto.randomUUID();
+  const startPath = `bookings/${startId}`;
+  const quoteFields = {
+    ...fields({ id: quoteId, customerId: customer.id, providerId: independent.id,
+      offeringId: 'offering-quote-start', offeringTitle: 'AC deep clean',
+      description: 'Please quote a deep clean for two units.', status: 'quoted' }),
+    quotedPrice: { doubleValue: 45 },
+    createdAt: { timestampValue: '2026-11-28T02:00:00Z' },
+  };
+  const startFields = {
+    ...bookingFor(independent.id, startId),
+    quoteId: { stringValue: quoteId },
+    status: { stringValue: 'confirmed' },
+    confirmedAppointmentAt: job.appointmentDate,
+    confirmedBy: { stringValue: independent.id },
+    confirmedAt: { timestampValue: '2026-11-28T03:00:00Z' },
+  };
+  await commit('owner', [update(quotePath, quoteFields)]);
+  await commit('owner', [update(startPath, startFields)]);
+
+  const start = (token, status = 200) => commit(token, [{
+    ...update(startPath, { ...startFields, status: { stringValue: 'in_progress' },
+      updatedAt: { timestampValue: '2026-11-28T04:00:00Z' } }),
+    updateMask: { fieldPaths: ['status', 'updatedAt'] },
+  }], status);
+
+  await start(outsider.token, 403);
+  await start(independent.token, 403); // quote is still only 'quoted'
+  await commit('owner', [update(quotePath, { ...quoteFields,
+    status: { stringValue: 'approved' }, approvedPrice: { doubleValue: 45 },
+    approvedAt: { timestampValue: '2026-11-28T03:30:00Z' } })]);
+  await start(independent.token);
+  assert.equal(
+    (await request(`${documents}/${startPath}`, { token: independent.token })).fields.status.stringValue,
+    'in_progress',
+  );
+}
+
 console.log('Technician enrollment, company roster isolation, and incoming booking rules passed.');
+

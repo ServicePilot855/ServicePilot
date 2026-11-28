@@ -301,6 +301,9 @@ The cart holds fixed-price services from one provider. [Cart review](lib/feature
 - Put **Total** in Headline type, aligned with the line totals, then a neutral notice saying that no payment is taken in the app.
 - An empty cart shows an `SpStatusHero` and an outlined **Browse services** button.
 - Only homeowners can open `/cart`.
+- Pin **Continue to checkout** as the cart's one filled button.
+
+[Checkout](lib/features/cart/screens/cart_checkout_screen.dart) at `/cart/checkout` is the [booking request form](lib/features/bookings/screens/create_booking_screen.dart) titled **Checkout**. A read-only **Your services** section takes the place of the service picker: provider, lines and total, with no remove buttons. The job details, photo, address and time fields stay as they are. When the save succeeds, the cart empties and the **Request sent** page shows the booking reference, each service with its price, and the total. When the save fails, no receipt appears and the cart is kept. Cart problems that aren't tied to one field use `showSpError`.
 
 ## Quote requests
 
@@ -315,6 +318,12 @@ Quote-required offerings follow a separate flow from fixed-price cart checkout a
 - **Approve the price (QUOTE-4).** On a Quoted request the homeowner detail shows a brand `SpNotice` naming the provider and amount, a **Quoted price** row in tabular figures, and pins **Approve $85.00** as the filled button. After approval the row becomes **Approved price**, a success notice appears, and the pinned button becomes **Book a time**.
 - **Book with the approved quote (QUOTE-5).** [Quote booking](lib/features/quotes/screens/quote_booking_screen.dart) at `/quotes/:quoteId/book` asks only for where and when, reusing the booking form's address field and the shared [appointment fields](lib/features/bookings/widgets/appointment_fields.dart) (date and time row, map pin). The approved price sits in a flat row under the header and a neutral notice says no payment is taken in the app. The service, details, photos, provider and price come from the quote. A quote that is not approved, belongs to someone else or is already booked shows an `SpStatusHero` with the reason instead of the form; a booked quote links to its booking. Submitting replaces the step with the usual booking-sent page.
 - The homeowner and provider dashboards show the latest 20 quote requests first. Use an outlined **Show older quote requests** button when more records are available. Keep provider decisions live as the list expands.
+
+## Technician jobs
+
+A company technician's home lists the jobs assigned to them (TECHJOB-1). The [job list](lib/features/bookings/widgets/technician_job_list.dart) follows the BOOK-4 [provider list](lib/features/bookings/widgets/provider_booking_list.dart): a **My assigned jobs** heading, then one white card per job, soonest first. Each card is one tap target showing the service title, the `StatusBadge`, the appointment time and the address. An empty list shows a neutral `SpNotice`, and a load failure shows a danger notice with **Try again**. The home drops the "coming soon" notice once a technician can see jobs.
+
+[Job details](lib/features/bookings/screens/technician_job_detail_screen.dart) at `/technician/jobs/:bookingId` uses the provider detail layout: the service title as the page header, the status badge, then one flat card of label-over-value rows for the appointment, service address, service and problem description. Technicians don't see the price or the homeowner's details. Only Assigned and In Progress jobs open. A job that isn't the technician's own active job shows a neutral **unavailable** notice and nothing from the booking. Only company technicians can open `/technician/jobs`.
 
 ## Reviewing UI changes
 

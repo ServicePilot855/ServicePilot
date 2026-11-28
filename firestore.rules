@@ -823,6 +823,20 @@ service cloud.firestore {
         getAfter(path).data.get('bookingId', '') == bookingId;
     }
 
+    // WORK-1 (SCRUM-91): quote-based work may only start once the homeowner has
+    // approved the quote that produced this booking.
+    function quoteApprovedForStart(bookingId, booking) {
+      let quoteId = booking.get('quoteId', null);
+      let quotePath = /databases/$(database)/documents/quoteRequests/$(quoteId);
+      return quoteId == null ||
+        (exists(quotePath) &&
+          get(quotePath).data.status == 'approved' &&
+          (
+            get(quotePath).data.get('bookingId', null) == null ||
+            get(quotePath).data.bookingId == bookingId
+          ));
+    }
+
     function noProviderPreviews(providerId, bookingId) {
       return !existsAfter(inboxDocument(providerId, bookingId)) &&
         !existsAfter(declinedRequestDocument(providerId, bookingId)) &&
@@ -924,8 +938,11 @@ service cloud.firestore {
         let provider = get(/databases/$(database)/documents/users/$(before.providerId)).data;
         return before.status == 'confirmed' && after.status == 'assigned' &&
           ownsBookingInbox(before.providerId) && provider.role == 'company' &&
+          isVerifiedCompany(before.providerId) &&
           changed.hasOnly(['status', 'updatedAt', 'technicianId', 'technicianName']) &&
-          ('technicianId' in after) && isCompanyBookingTechnician(after.technicianId, before.providerId);
+          after.keys().hasAll(['technicianId', 'technicianName']) &&
+          isCompanyBookingTechnician(after.technicianId, before.providerId) &&
+          after.technicianName == get(technicianRosterPath(before.providerId, after.technicianId)).data.fullName;
       }
 
       function canProgressAcceptedBooking(before, after, changed) {
@@ -933,7 +950,8 @@ service cloud.firestore {
                 ownsBookingInbox(before.providerId) && validConfirmation(before, after, changed)) ||
            (changed.hasOnly(['status', 'updatedAt']) &&
             (ownsBookingInbox(before.providerId) || isAssignedBookingTechnician(before)) &&
-             ((before.status in ['confirmed', 'assigned'] && after.status == 'in_progress') ||
+             ((before.status in ['confirmed', 'assigned'] && after.status == 'in_progress' &&
+                 quoteApprovedForStart(bookingId, before)) ||
                (before.status == 'in_progress' && after.status == 'completed')));
       }
 

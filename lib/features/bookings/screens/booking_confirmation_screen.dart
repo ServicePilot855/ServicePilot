@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:service_pilot/core/theme/app_theme.dart';
 import 'package:service_pilot/features/bookings/models/booking_model.dart';
 import 'package:service_pilot/features/bookings/providers/booking_provider.dart';
+import 'package:service_pilot/features/cart/screens/cart_screen.dart';
 import 'package:service_pilot/l10n/l10n.dart';
 import 'package:service_pilot/shared/widgets/sp_button.dart';
 import 'package:service_pilot/shared/widgets/sp_layout.dart';
@@ -90,10 +91,40 @@ class _Content extends StatelessWidget {
         if (b != null) ...[
           const SizedBox(height: 32),
           const Divider(height: 1),
+          // Identifies the saved booking (CART-3 / SCRUM-132).
           _SummaryRow(
-            label: l10n.bookingSummaryService,
-            value: b.serviceTitle,
+            key: const Key('booking_sent_reference'),
+            label: l10n.bookingSummaryReference,
+            value: b.id,
           ),
+          if (b.items.isEmpty)
+            _SummaryRow(
+              label: l10n.bookingSummaryService,
+              value: b.serviceTitle,
+            )
+          else ...[
+            _SummaryRow(
+              key: const Key('booking_sent_services'),
+              label: l10n.bookingSummaryServices,
+              value: [
+                for (final item in b.items)
+                  l10n.bookingSummaryItemLine(
+                    item.title,
+                    item.quantity > 1
+                        ? l10n.cartItemQuantityPrice(
+                            item.quantity,
+                            formatCartPrice(item.unitPrice),
+                          )
+                        : formatCartPrice(item.unitPrice),
+                  ),
+              ].join('\n'),
+            ),
+            _SummaryRow(
+              key: const Key('booking_sent_total'),
+              label: l10n.bookingSummaryTotal,
+              value: formatCartPrice(b.totalPrice),
+            ),
+          ],
           _SummaryRow(
             label: l10n.bookingSummaryWhen,
             value: '${material.formatFullDate(b.preferredDateTime)}, '
@@ -117,7 +148,7 @@ class _Content extends StatelessWidget {
 }
 
 class _SummaryRow extends StatelessWidget {
-  const _SummaryRow({required this.label, required this.value});
+  const _SummaryRow({super.key, required this.label, required this.value});
 
   final String label;
   final String value;

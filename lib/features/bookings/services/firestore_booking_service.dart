@@ -8,6 +8,7 @@ import 'package:service_pilot/features/bookings/models/booking_request.dart';
 import 'package:service_pilot/features/bookings/models/incoming_booking_request.dart';
 import 'package:service_pilot/features/bookings/models/provider_service_record.dart';
 import 'package:service_pilot/features/bookings/models/quote_booking_request.dart';
+import 'package:service_pilot/features/bookings/models/technician_job.dart';
 import 'package:service_pilot/features/bookings/services/booking_photo_uploader.dart';
 import 'package:service_pilot/features/bookings/services/booking_service.dart';
 import 'package:service_pilot/features/quotes/models/quote_request_model.dart';
@@ -95,11 +96,12 @@ class FirestoreBookingService implements IBookingService {
       address: request.address.trim(),
       preferredDateTime: request.preferredDateTime,
       status: BookingStatus.pending,
-      totalPrice: request.estimatedPrice,
+      totalPrice: request.totalPrice,
       createdAt: DateTime.now(),
       latitude: request.latitude,
       longitude: request.longitude,
       photoUrls: photoUrls,
+      items: request.items,
     );
 
     await _guard(() {
@@ -350,6 +352,74 @@ class FirestoreBookingService implements IBookingService {
     });
   }
 
+  /// TECHJOB-1 (SCRUM-100): the rules let a technician list bookings only
+  /// when the query itself pins the company, the technician and the active
+  /// statuses, so every filter here is required.
+  @override
+  Stream<List<TechnicianJob>> watchTechnicianJobs({
+    required String technicianId,
+    required String companyId,
+  }) {
+    if (technicianId.isEmpty || companyId.isEmpty) {
+      return Stream.value(const []);
+    }
+    return _bookings
+        .where('providerId', isEqualTo: companyId)
+        .where('technicianId', isEqualTo: technicianId)
+        .where(
+          'status',
+          whereIn: BookingStatusExtension.technicianJobStatuses
+              .map((status) => status.value)
+              .toList(),
+        )
+        .snapshots(includeMetadataChanges: true)
+        .where((snapshot) => !snapshot.metadata.isFromCache)
+        .map(
+          (snapshot) => TechnicianJob.sorted(
+            snapshot.docs
+                .map((d) => BookingModel.fromFirestore(d.id, d.data()))
+                .where((booking) => TechnicianJob.isAssignedTo(
+                      booking,
+                      technicianId: technicianId,
+                      companyId: companyId,
+                    ))
+                .map(TechnicianJob.fromBooking),
+          ),
+        );
+  }
+
+  @override
+  Stream<TechnicianJob?> watchTechnicianJob({
+    required String technicianId,
+    required String companyId,
+    required String bookingId,
+  }) {
+    return _bookings.doc(bookingId).snapshots().map<TechnicianJob?>((doc) {
+      final data = doc.data();
+      if (!doc.exists || data == null) return null;
+      final booking = BookingModel.fromFirestore(doc.id, data);
+      return TechnicianJob.isAssignedTo(
+        booking,
+        technicianId: technicianId,
+        companyId: companyId,
+      )
+          ? TechnicianJob.fromBooking(booking)
+          : null;
+    }).transform(
+      // The rules refuse the read once the job is not this technician's
+      // active job (unassigned, reassigned, cancelled or completed).
+      StreamTransformer.fromHandlers(
+        handleError: (error, stack, sink) {
+          if (error is FirebaseException && error.code == 'permission-denied') {
+            sink.add(null);
+          } else {
+            sink.addError(error, stack);
+          }
+        },
+      ),
+    );
+  }
+
   @override
   Future<BookingModel> cancelBooking({
     required String bookingId,
@@ -474,27 +544,154 @@ class FirestoreBookingService implements IBookingService {
   }
 
   @override
-  Future<BookingModel> assignBooking({
-    required String bookingId,
-    required String technicianId,
-    required String technicianName,
-  }) {
-    return _update(bookingId, (booking) {
-      _checkTransition(booking, BookingStatus.assigned);
-      return booking.copyWith(
-        status: BookingStatus.assigned,
-        assignedTechnicianId: technicianId,
-        assignedTechnicianName: technicianName,
-        updatedAt: DateTime.now(),
-      );
-    });
+  Future<Map<String, String>> getAssignableTechnicians(String companyId) async {
+    final roster = await _providerRequests(companyId, 'technicians')
+        .orderBy('fullName')
+        .get(const GetOptions(source: Source.server));
+    return {
+      for (final doc in roster.docs)
+        if (doc.data()['fullName'] case final String name when name.isNotEmpty)
+          doc.id: name,
+    };
   }
 
   @override
-  Future<BookingModel> startBooking({required String bookingId}) {
-    return updateBookingStatus(
+  Future<BookingModel> assignBooking({
+    required String bookingId,
+    required String companyId,
+    required String technicianId,
+  }) {
+    final bookingRef = _bookings.doc(bookingId);
+    final technicianRef =
+        _providerRequests(companyId, 'technicians').doc(technicianId);
+    return _guard(() => _firestore.runTransaction((transaction) async {
+          final data = (await transaction.get(bookingRef)).data();
+          if (data == null) throw BookingNotFoundException(bookingId);
+          final booking = BookingModel.fromFirestore(bookingId, data);
+          if (!booking.isOwnedByProvider(companyId)) {
+            throw const BookingSubmissionException('This company does not own the booking.');
+          }
+          if (!booking.canBeAssigned) {
+            throw InvalidBookingTransitionException(
+              bookingId: bookingId,
+              currentStatus: booking.status,
+              targetStatus: BookingStatus.assigned,
+            );
+          }
+          final name = (await transaction.get(technicianRef)).data()?['fullName'];
+          if (name is! String || name.isEmpty) {
+            throw const BookingSubmissionException('The technician is unavailable.');
+          }
+          transaction.update(bookingRef, {
+            'status': BookingStatus.assigned.value,
+            'technicianId': technicianId,
+            'technicianName': name,
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+          return booking.copyWith(
+            status: BookingStatus.assigned,
+            assignedTechnicianId: technicianId,
+            assignedTechnicianName: name,
+            updatedAt: DateTime.now(),
+          );
+        }));
+  }
+
+  /// WORK-1 (SCRUM-91): starts an owned confirmed/assigned job. A booking that
+  /// came from a quote also needs that quote to be approved, read in the same
+  /// transaction so a missing approval can never slip through.
+  @override
+  Future<BookingModel> startBooking({
+    required String bookingId,
+    required String providerId,
+  }) {
+    return _startBookingTransaction(
       bookingId: bookingId,
-      newStatus: BookingStatus.inProgress,
+      actorId: providerId,
+      isAuthorized: (booking) => booking.isOwnedByProvider(providerId),
+    );
+  }
+
+  /// TECHJOB-2 (SCRUM-101): starts an assigned job for the company technician
+  /// using the same state and transactional quote-approval gate as
+  /// [startBooking].
+  @override
+  Future<BookingModel> startTechnicianJob({
+    required String bookingId,
+    required String technicianId,
+    required String companyId,
+  }) {
+    return _startBookingTransaction(
+      bookingId: bookingId,
+      actorId: technicianId,
+      isAuthorized: (booking) =>
+          technicianId.isNotEmpty &&
+          companyId.isNotEmpty &&
+          booking.isOwnedByProvider(companyId) &&
+          booking.assignedTechnicianId == technicianId,
+    );
+  }
+
+  Future<BookingModel> _startBookingTransaction({
+    required String bookingId,
+    required String actorId,
+    required bool Function(BookingModel booking) isAuthorized,
+  }) {
+    final ref = _bookings.doc(bookingId);
+    return _guard(
+      () => _firestore.runTransaction((transaction) async {
+        final snapshot = await transaction.get(ref);
+        final data = snapshot.data();
+        if (!snapshot.exists || data == null) {
+          throw BookingNotFoundException(bookingId);
+        }
+
+        final booking = BookingModel.fromFirestore(ref.id, data);
+        if (!isAuthorized(booking)) {
+          throw UnauthorizedBookingStartException(
+            bookingId: bookingId,
+            providerId: actorId,
+          );
+        }
+        if (!booking.canBeStarted) {
+          throw InvalidBookingStartStateException(
+            bookingId: bookingId,
+            currentStatus: booking.status,
+          );
+        }
+
+        final quoteId = booking.quoteId;
+        if (booking.isFromQuote) {
+          final quoteData = (await transaction.get(
+            _firestore.collection('quoteRequests').doc(quoteId),
+          ))
+              .data();
+          final approved = quoteData != null &&
+              quoteData['status'] == 'approved' &&
+              (() {
+                final linked = quoteData['bookingId'];
+                return linked == null ||
+                    (linked is String && linked.isEmpty) ||
+                    linked == bookingId;
+              })();
+          if (!approved) {
+            throw QuoteNotApprovedForStartException(
+              bookingId: bookingId,
+              quoteId: quoteId,
+            );
+          }
+        }
+
+        final now = DateTime.now();
+        transaction.update(ref, {
+          'status': BookingStatus.inProgress.value,
+          'updatedAt': Timestamp.fromDate(now),
+        });
+        return booking.copyWith(
+          status: BookingStatus.inProgress,
+          updatedAt: now,
+        );
+      }),
     );
   }
 
