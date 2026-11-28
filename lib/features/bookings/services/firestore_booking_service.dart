@@ -528,11 +528,69 @@ class FirestoreBookingService implements IBookingService {
         }));
   }
 
+  /// WORK-1 (SCRUM-91): starts an owned confirmed/assigned job. A booking that
+  /// came from a quote also needs that quote to be approved, read in the same
+  /// transaction so a missing approval can never slip through.
   @override
-  Future<BookingModel> startBooking({required String bookingId}) {
-    return updateBookingStatus(
-      bookingId: bookingId,
-      newStatus: BookingStatus.inProgress,
+  Future<BookingModel> startBooking({
+    required String bookingId,
+    required String providerId,
+  }) {
+    final ref = _bookings.doc(bookingId);
+    return _guard(
+      () => _firestore.runTransaction((transaction) async {
+        final snapshot = await transaction.get(ref);
+        final data = snapshot.data();
+        if (!snapshot.exists || data == null) {
+          throw BookingNotFoundException(bookingId);
+        }
+
+        final booking = BookingModel.fromFirestore(ref.id, data);
+        if (!booking.isOwnedByProvider(providerId)) {
+          throw UnauthorizedBookingStartException(
+            bookingId: bookingId,
+            providerId: providerId,
+          );
+        }
+        if (!booking.canBeStarted) {
+          throw InvalidBookingStartStateException(
+            bookingId: bookingId,
+            currentStatus: booking.status,
+          );
+        }
+
+        final quoteId = booking.quoteId;
+        if (booking.isFromQuote) {
+          final quoteData = (await transaction.get(
+            _firestore.collection('quoteRequests').doc(quoteId),
+          ))
+              .data();
+          final approved = quoteData != null &&
+              quoteData['status'] == 'approved' &&
+              (() {
+                final linked = quoteData['bookingId'];
+                return linked == null ||
+                    (linked is String && linked.isEmpty) ||
+                    linked == bookingId;
+              })();
+          if (!approved) {
+            throw QuoteNotApprovedForStartException(
+              bookingId: bookingId,
+              quoteId: quoteId,
+            );
+          }
+        }
+
+        final now = DateTime.now();
+        transaction.update(ref, {
+          'status': BookingStatus.inProgress.value,
+          'updatedAt': Timestamp.fromDate(now),
+        });
+        return booking.copyWith(
+          status: BookingStatus.inProgress,
+          updatedAt: now,
+        );
+      }),
     );
   }
 

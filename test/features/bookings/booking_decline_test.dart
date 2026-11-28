@@ -195,8 +195,8 @@ service cloud.firestore {
         throwsA(isA<InvalidBookingTransitionException>()),
       );
       await expectLater(
-        service.startBooking(bookingId: 'bk-4'),
-        throwsA(isA<InvalidBookingTransitionException>()),
+        service.startBooking(bookingId: 'bk-4', providerId: ownerId),
+        throwsA(isA<InvalidBookingStartStateException>()),
       );
     });
 

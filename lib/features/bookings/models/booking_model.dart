@@ -110,6 +110,14 @@ class BookingModel {
   /// Company dispatch takes place after the appointment is confirmed.
   bool get canBeAssigned => status == BookingStatus.confirmed;
 
+  /// WORK-1 (SCRUM-91): only a confirmed or assigned job can be started.
+  bool get canBeStarted =>
+      status == BookingStatus.confirmed || status == BookingStatus.assigned;
+
+  /// Whether [targetProviderId] is authorized to start this job now.
+  bool canBeStartedBy(String targetProviderId) =>
+      isOwnedByProvider(targetProviderId) && canBeStarted;
+
   /// US-14 (SCRUM-45) AC:
   /// Only the customer who created the booking can cancel it, and only when
   /// its status is Pending, Assigned, or Confirmed.

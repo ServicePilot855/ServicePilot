@@ -1775,6 +1775,38 @@ class AppLocalizationsKm extends AppLocalizations {
   String get providerBookingEstimatedFeeLabel => 'ថ្លៃប៉ាន់ស្មាន';
 
   @override
+  String get providerBookingStartButton => 'ចាប់ផ្តើមការងារ';
+
+  @override
+  String get providerBookingStartDialogTitle => 'ចាប់ផ្តើមការងារនេះមែនទេ?';
+
+  @override
+  String get providerBookingStartDialogBody =>
+      'អតិថិជននឹងឃើញការងារនេះជា «កំពុងដំណើរការ»។ សូមចាប់ផ្តើមនៅពេលអ្នកទៅដល់ទីតាំង។';
+
+  @override
+  String get providerBookingStartConfirm => 'ចាប់ផ្តើមការងារ';
+
+  @override
+  String get providerBookingStartKeep => 'មិនទាន់ទេ';
+
+  @override
+  String get providerBookingStartedNotice =>
+      'បានចាប់ផ្តើមការងារ។ អតិថិជនអាចឃើញវាជា «កំពុងដំណើរការ» ហើយ។';
+
+  @override
+  String get providerBookingStartNotAuthorized =>
+      'អ្នកមិនមានសិទ្ធិចាប់ផ្តើមការងារនេះទេ។';
+
+  @override
+  String get providerBookingStartIneligible =>
+      'ការងារនេះមិនអាចចាប់ផ្តើមបានក្នុងស្ថានភាពបច្ចុប្បន្នទេ។';
+
+  @override
+  String get providerBookingStartQuotePending =>
+      'អតិថិជនមិនទាន់បានអនុម័តសម្រង់តម្លៃសម្រាប់ការងារនេះទេ។';
+
+  @override
   String get bookingStatusConfirmed => 'បានបញ្ជាក់';
 
   @override

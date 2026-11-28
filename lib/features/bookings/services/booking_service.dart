@@ -7,6 +7,7 @@ import 'package:service_pilot/features/bookings/models/incoming_booking_request.
 import 'package:service_pilot/features/bookings/models/provider_service_record.dart';
 import 'package:service_pilot/features/bookings/models/quote_booking_request.dart';
 import 'package:service_pilot/features/quotes/models/quote_request_model.dart';
+import 'package:service_pilot/features/quotes/models/quote_status.dart';
 
 /// Thrown when a requested booking ID does not exist.
 class BookingNotFoundException implements Exception {
@@ -129,6 +130,84 @@ class InvalidBookingDeclineStateException implements Exception {
   @override
   String toString() =>
       'InvalidBookingDeclineStateException(bookingId: $bookingId, status: ${currentStatus.value}): $message';
+}
+
+/// Thrown when a provider attempts to start a job addressed to another
+/// provider.
+///
+/// Enforces WORK-1 (SCRUM-91) AC:
+/// "A booking belonging to another provider cannot start."
+class UnauthorizedBookingStartException implements Exception {
+  final String bookingId;
+  final String providerId;
+  final String message;
+
+  const UnauthorizedBookingStartException({
+    required this.bookingId,
+    required this.providerId,
+    this.message = 'Only the provider this job belongs to can start it.',
+  });
+
+  @override
+  String toString() =>
+      'UnauthorizedBookingStartException(bookingId: $bookingId, providerId: $providerId): $message';
+}
+
+/// Thrown when a start is attempted on a booking that is not `Confirmed` or
+/// `Assigned` (cancelled, declined, pending, completed or already in progress).
+///
+/// Enforces WORK-1 (SCRUM-91) AC:
+/// "A cancelled booking ... cannot start."
+class InvalidBookingStartStateException implements Exception {
+  final String bookingId;
+  final BookingStatus currentStatus;
+  final String message;
+
+  InvalidBookingStartStateException({
+    required this.bookingId,
+    required this.currentStatus,
+    String? message,
+  }) : message =
+           message ??
+           'This job cannot be started because it is ${currentStatus.label}. '
+               'Only confirmed or assigned jobs can start.';
+
+  @override
+  String toString() =>
+      'InvalidBookingStartStateException(bookingId: $bookingId, status: ${currentStatus.value}): $message';
+}
+
+/// Thrown when a quote-based booking cannot start because its quote is missing
+/// or the homeowner has not approved it.
+///
+/// Enforces WORK-1 (SCRUM-91) AC:
+/// "Quote-based work without recorded approval cannot start."
+class QuoteNotApprovedForStartException implements Exception {
+  final String bookingId;
+  final String? quoteId;
+  final String message;
+
+  const QuoteNotApprovedForStartException({
+    required this.bookingId,
+    this.quoteId,
+    this.message =
+        'This job was requested from a quote that the homeowner has not approved.',
+  });
+
+  @override
+  String toString() =>
+      'QuoteNotApprovedForStartException(bookingId: $bookingId, quoteId: $quoteId): $message';
+}
+
+/// WORK-1 (SCRUM-91) gate: a quote-based booking may only start when the linked
+/// quote is approved and, when a link was recorded, points at this booking.
+bool quoteAllowsStart(QuoteRequestModel? quote, String bookingId) {
+  if (quote == null) return false;
+  if (quote.status != QuoteStatus.approved) return false;
+  final linkedBooking = quote.bookingId;
+  return linkedBooking == null ||
+      linkedBooking.isEmpty ||
+      linkedBooking == bookingId;
 }
 
 /// Thrown when an invalid status transition is attempted on a booking
@@ -305,12 +384,18 @@ abstract class IBookingService {
     required String technicianId,
   });
 
-  /// Technician/provider starts work (`In Progress`) on a booking.
+  /// The authorized provider or company administrator starts work
+  /// (`In Progress`) on their own confirmed/assigned job (WORK-1 / SCRUM-91).
   ///
-  /// Throws [InvalidBookingTransitionException] if the booking was cancelled
-  /// or cannot transition to [BookingStatus.inProgress].
+  /// Throws:
+  /// - [BookingNotFoundException] if [bookingId] does not exist.
+  /// - [UnauthorizedBookingStartException] if [providerId] does not own the job.
+  /// - [InvalidBookingStartStateException] if the job is not confirmed/assigned.
+  /// - [QuoteNotApprovedForStartException] if the job came from a quote that is
+  ///   missing or not approved by the homeowner.
   Future<BookingModel> startBooking({
     required String bookingId,
+    required String providerId,
   });
 
   /// Updates a booking to [newStatus] if the lifecycle transition is valid.
@@ -900,11 +985,43 @@ class BookingService implements IBookingService {
   @override
   Future<BookingModel> startBooking({
     required String bookingId,
+    required String providerId,
   }) async {
-    return updateBookingStatus(
-      bookingId: bookingId,
-      newStatus: BookingStatus.inProgress,
+    final index = _bookings.indexWhere((b) => b.id == bookingId);
+    if (index == -1) {
+      throw BookingNotFoundException(bookingId);
+    }
+
+    final booking = _bookings[index];
+    if (!booking.isOwnedByProvider(providerId)) {
+      throw UnauthorizedBookingStartException(
+        bookingId: bookingId,
+        providerId: providerId,
+      );
+    }
+    if (!booking.canBeStarted) {
+      throw InvalidBookingStartStateException(
+        bookingId: bookingId,
+        currentStatus: booking.status,
+      );
+    }
+    if (booking.isFromQuote) {
+      final quote = await findQuote?.call(booking.quoteId!);
+      if (!quoteAllowsStart(quote, bookingId)) {
+        throw QuoteNotApprovedForStartException(
+          bookingId: bookingId,
+          quoteId: booking.quoteId,
+        );
+      }
+    }
+
+    final updated = booking.copyWith(
+      status: BookingStatus.inProgress,
+      updatedAt: DateTime.now(),
     );
+    _bookings[index] = updated;
+    _notifyListeners();
+    return updated;
   }
 
   @override
