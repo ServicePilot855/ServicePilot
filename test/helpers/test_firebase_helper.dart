@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:service_pilot/core/auth/firebase_auth_service.dart';
@@ -28,12 +29,14 @@ class FakeUser extends Fake implements User {
 
   @override
   final UserMetadata metadata;
+  final void Function()? onDelete;
 
   FakeUser({
     required this.uid,
     this.email,
     this.displayName,
     this.phoneNumber,
+    this.onDelete,
     DateTime? creationTime,
   }) : metadata = FakeUserMetadata(creationTime: creationTime);
 
@@ -41,6 +44,9 @@ class FakeUser extends Fake implements User {
   Future<void> updateDisplayName(String? name) async {
     displayName = name;
   }
+
+  @override
+  Future<void> delete() async => onDelete?.call();
 }
 
 /// Fake implementation of [UserCredential] for testing.
@@ -135,6 +141,11 @@ class FakeFirebaseAuth extends Fake implements FirebaseAuth {
     final user = FakeUser(
       uid: 'uid_${DateTime.now().millisecondsSinceEpoch}_${_users.length}',
       email: email,
+      onDelete: () {
+        _users.remove(normalized);
+        _userProfiles.remove(normalized);
+        _currentUser = null;
+      },
     );
     _users[normalized] = password;
     _userProfiles[normalized] = user;
@@ -200,11 +211,26 @@ class FakeFirebaseAuth extends Fake implements FirebaseAuth {
 /// Helper to instantiate a test-ready [FirebaseAuthService] with in-memory persistence.
 Future<FirebaseAuthService> createTestFirebaseAuthService({
   FakeFirebaseAuth? fakeAuth,
+  FirebaseFirestore? firestore,
 }) async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
   return FirebaseAuthService(
     firebaseAuth: fakeAuth ?? FakeFirebaseAuth(),
     prefs: prefs,
+    firestore: firestore,
   );
 }
+
+const testTechnicianInviteId = 'test-invite-with-32-characters-0001';
+const testTechnicianEmail = 'borey@example.test';
+const testTechnicianCompanyId = 'company-1';
+
+Future<void> seedTechnicianInvite(FirebaseFirestore firestore, {DateTime? expiresAt}) =>
+    firestore.collection('technicianInvites').doc(testTechnicianInviteId).set({
+      'email': testTechnicianEmail,
+      'companyId': testTechnicianCompanyId,
+      'expiresAt': Timestamp.fromDate(
+        expiresAt ?? DateTime.now().add(const Duration(days: 1)),
+      ),
+    });
