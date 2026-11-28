@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:service_pilot/features/auth/models/user_model.dart';
@@ -94,5 +97,38 @@ class CompanyProfileService {
         'updatedAt': FieldValue.serverTimestamp(),
       });
     });
+  }
+
+  /// Creates a 7-day `technicianInvites` document for [email] owned by
+  /// [companyId] so the technician can activate via `/activate` (TEAM-1).
+  Future<String> createTechnicianInvite({
+    required UserModel actor,
+    required String companyId,
+    required String email,
+  }) async {
+    _ownedProfile(actor, companyId);
+    final normalizedEmail = email.trim().toLowerCase();
+    if (!_isValidEmail(normalizedEmail)) {
+      throw const FormatException('Invalid technician email.');
+    }
+
+    final token = _generateInviteToken();
+    await _firestore.collection('technicianInvites').doc(token).set({
+      'email': normalizedEmail,
+      'companyId': companyId,
+      'expiresAt': Timestamp.fromDate(
+        DateTime.now().add(const Duration(days: 7)),
+      ),
+    });
+    return token;
+  }
+
+  static bool _isValidEmail(String email) =>
+      RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email);
+
+  static String _generateInviteToken() {
+    final random = Random.secure();
+    final bytes = List<int>.generate(30, (_) => random.nextInt(256));
+    return base64UrlEncode(bytes).replaceAll('=', '');
   }
 }

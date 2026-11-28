@@ -343,6 +343,19 @@
   "technicianJobPreferredTimeLabel": "ពេលវេលាដែលចង់បាន (មិនទាន់បញ្ជាក់)",
   "technicianJobServiceLabel": "សេវាកម្ម",
   "technicianJobStartedNotice": "បានចាប់ផ្តើមការងារ។ ក្រុមហ៊ុន និងអតិថិជនអាចឃើញវាជា «កំពុងដំណើរការ» ហើយ។",
+  "technicianJobCompletedNotice": "ការងារត្រូវបានសម្គាល់ថាបានបញ្ចប់! ក្រុមហ៊ុន និងម្ចាស់ផ្ទះអាចមើលឃើញវានៅក្នុងប្រវត្តិសេវាកម្ម។",
+  "technicianJobCompleteUnauthorized": "មានតែអ្នកបច្ចេកទេសដែលបានចាត់តាំងឱ្យការងារនេះប៉ុណ្ណោះដែលអាចសម្គាល់ថាបានបញ្ចប់។",
   "technicianJobAppointmentValue": "ពេលណាត់ជួប៖ {time}",
-  "technicianJobPreferredTimeValue": "ពេលវេលាដែលចង់បាន (មិនទាន់បញ្ជាក់)៖ {time}"
+  "technicianJobPreferredTimeValue": "ពេលវេលាដែលចង់បាន (មិនទាន់បញ្ជាក់)៖ {time}",
+  "companyInviteTechnicianButton": "អញ្ជើញអ្នកបច្ចេកទេស",
+  "companyInviteTechnicianTitle": "អញ្ជើញអ្នកបច្ចេកទេសក្រុមហ៊ុន",
+  "companyInviteTechnicianSubtitle": "បញ្ចូលអ៊ីមែលរបស់អ្នកបច្ចេកទេស ដើម្បីបង្កើតតំណភ្ជាប់ដំណើរការគណនីសម្រាប់ក្រុមហ៊ុនរបស់អ្នក។",
+  "companyInviteTechnicianEmailLabel": "អ៊ីមែលអ្នកបច្ចេកទេស",
+  "companyInviteTechnicianEmailHint": "tech@company.com",
+  "companyInviteTechnicianInvalidEmail": "សូមបញ្ចូលអាសយដ្ឋានអ៊ីមែលត្រឹមត្រូវ។",
+  "companyInviteTechnicianSubmit": "បង្កើតតំណអញ្ជើញ",
+  "companyInviteTechnicianCreated": "បានបង្កើតតំណដំណើរការគណនី! ចែករំលែកតំណនេះទៅកាន់អ្នកបច្ចេកទេស។",
+  "companyInviteTechnicianCopyLink": "ចម្លងតំណ",
+  "companyInviteTechnicianCopied": "បានចម្លងតំណដំណើរការគណនី។",
+  "companyInviteTechnicianError": "មិនអាចបង្កើតការអញ្ជើញបានទេ។ សូមប្រាកដថាក្រុមហ៊ុនរបស់អ្នកត្រូវបានផ្ទៀងផ្ទាត់ ហើយព្យាយាមម្តងទៀត។"
 }

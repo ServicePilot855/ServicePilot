@@ -700,11 +700,40 @@ class FirestoreBookingService implements IBookingService {
     required String bookingId,
     required String providerId,
   }) {
+    return _completeBookingTransaction(
+      bookingId: bookingId,
+      actorId: providerId,
+      isAuthorized: (booking) => booking.isOwnedByProvider(providerId),
+    );
+  }
+
+  @override
+  Future<BookingModel> completeTechnicianJob({
+    required String bookingId,
+    required String technicianId,
+    required String companyId,
+  }) {
+    return _completeBookingTransaction(
+      bookingId: bookingId,
+      actorId: technicianId,
+      isAuthorized: (booking) =>
+          technicianId.isNotEmpty &&
+          companyId.isNotEmpty &&
+          booking.isOwnedByProvider(companyId) &&
+          booking.assignedTechnicianId == technicianId,
+    );
+  }
+
+  Future<BookingModel> _completeBookingTransaction({
+    required String bookingId,
+    required String actorId,
+    required bool Function(BookingModel booking) isAuthorized,
+  }) {
     return _update(bookingId, (booking) {
-      if (!booking.isOwnedByProvider(providerId)) {
+      if (!isAuthorized(booking)) {
         throw UnauthorizedBookingCompletionException(
           bookingId: bookingId,
-          actorId: providerId,
+          actorId: actorId,
         );
       }
       _checkTransition(booking, BookingStatus.completed);

@@ -1927,6 +1927,14 @@ class AppLocalizationsKm extends AppLocalizations {
       'បានចាប់ផ្តើមការងារ។ ក្រុមហ៊ុន និងអតិថិជនអាចឃើញវាជា «កំពុងដំណើរការ» ហើយ។';
 
   @override
+  String get technicianJobCompletedNotice =>
+      'ការងារត្រូវបានសម្គាល់ថាបានបញ្ចប់! ក្រុមហ៊ុន និងម្ចាស់ផ្ទះអាចមើលឃើញវានៅក្នុងប្រវត្តិសេវាកម្ម។';
+
+  @override
+  String get technicianJobCompleteUnauthorized =>
+      'មានតែអ្នកបច្ចេកទេសដែលបានចាត់តាំងឱ្យការងារនេះប៉ុណ្ណោះដែលអាចសម្គាល់ថាបានបញ្ចប់។';
+
+  @override
   String technicianJobAppointmentValue(String time) {
     return 'ពេលណាត់ជួប៖ $time';
   }
@@ -1935,4 +1943,41 @@ class AppLocalizationsKm extends AppLocalizations {
   String technicianJobPreferredTimeValue(String time) {
     return 'ពេលវេលាដែលចង់បាន (មិនទាន់បញ្ជាក់)៖ $time';
   }
+
+  @override
+  String get companyInviteTechnicianButton => 'អញ្ជើញអ្នកបច្ចេកទេស';
+
+  @override
+  String get companyInviteTechnicianTitle => 'អញ្ជើញអ្នកបច្ចេកទេសក្រុមហ៊ុន';
+
+  @override
+  String get companyInviteTechnicianSubtitle =>
+      'បញ្ចូលអ៊ីមែលរបស់អ្នកបច្ចេកទេស ដើម្បីបង្កើតតំណភ្ជាប់ដំណើរការគណនីសម្រាប់ក្រុមហ៊ុនរបស់អ្នក។';
+
+  @override
+  String get companyInviteTechnicianEmailLabel => 'អ៊ីមែលអ្នកបច្ចេកទេស';
+
+  @override
+  String get companyInviteTechnicianEmailHint => 'tech@company.com';
+
+  @override
+  String get companyInviteTechnicianInvalidEmail =>
+      'សូមបញ្ចូលអាសយដ្ឋានអ៊ីមែលត្រឹមត្រូវ។';
+
+  @override
+  String get companyInviteTechnicianSubmit => 'បង្កើតតំណអញ្ជើញ';
+
+  @override
+  String get companyInviteTechnicianCreated =>
+      'បានបង្កើតតំណដំណើរការគណនី! ចែករំលែកតំណនេះទៅកាន់អ្នកបច្ចេកទេស។';
+
+  @override
+  String get companyInviteTechnicianCopyLink => 'ចម្លងតំណ';
+
+  @override
+  String get companyInviteTechnicianCopied => 'បានចម្លងតំណដំណើរការគណនី។';
+
+  @override
+  String get companyInviteTechnicianError =>
+      'មិនអាចបង្កើតការអញ្ជើញបានទេ។ សូមប្រាកដថាក្រុមហ៊ុនរបស់អ្នកត្រូវបានផ្ទៀងផ្ទាត់ ហើយព្យាយាមម្តងទៀត។';
 }

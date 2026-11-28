@@ -763,8 +763,21 @@
   "technicianJobPreferredTimeLabel": "Preferred time (not confirmed yet)",
   "technicianJobServiceLabel": "Service",
   "technicianJobStartedNotice": "Job started. The company and homeowner can now see it as In Progress.",
+  "technicianJobCompletedNotice": "Job marked as completed! The company and homeowner can now see it in service history.",
+  "technicianJobCompleteUnauthorized": "Only the technician assigned to this job can mark it as completed.",
   "technicianJobAppointmentValue": "Appointment: {time}",
   "@technicianJobAppointmentValue": {"placeholders": {"time": {"type": "String"}}},
   "technicianJobPreferredTimeValue": "Preferred time (not confirmed yet): {time}",
-  "@technicianJobPreferredTimeValue": {"placeholders": {"time": {"type": "String"}}}
+  "@technicianJobPreferredTimeValue": {"placeholders": {"time": {"type": "String"}}},
+  "companyInviteTechnicianButton": "Invite Technician",
+  "companyInviteTechnicianTitle": "Invite Company Technician",
+  "companyInviteTechnicianSubtitle": "Enter the technician's email to generate an activation link for your company.",
+  "companyInviteTechnicianEmailLabel": "Technician Email",
+  "companyInviteTechnicianEmailHint": "tech@company.com",
+  "companyInviteTechnicianInvalidEmail": "Enter a valid email address.",
+  "companyInviteTechnicianSubmit": "Create Invite Link",
+  "companyInviteTechnicianCreated": "Activation link created! Share this link with the technician (or open it after signing out to test).",
+  "companyInviteTechnicianCopyLink": "Copy Link",
+  "companyInviteTechnicianCopied": "Activation link copied to clipboard.",
+  "companyInviteTechnicianError": "Could not create invite. Make sure your company is verified and try again."
 }

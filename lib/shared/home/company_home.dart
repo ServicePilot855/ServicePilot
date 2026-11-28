@@ -8,6 +8,7 @@ import 'package:service_pilot/features/bookings/screens/provider_service_history
 import 'package:service_pilot/features/bookings/widgets/provider_booking_list.dart';
 import 'package:service_pilot/features/providers/providers/provider_provider.dart';
 import 'package:service_pilot/features/providers/services/company_profile_service.dart';
+import 'package:service_pilot/features/providers/widgets/invite_technician_dialog.dart';
 import 'package:service_pilot/features/quotes/widgets/provider_quote_list.dart';
 import 'package:service_pilot/features/services/widgets/provider_offering_list.dart';
 import 'package:service_pilot/l10n/l10n.dart';
@@ -70,6 +71,21 @@ class CompanyHome extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
             const ProviderQuoteList(),
+            const SizedBox(height: 24),
+          ],
+          if (canEditProfile) ...[
+            SpSecondaryButton(
+              key: const Key('company_invite_technician_button'),
+              label: context.l10n.companyInviteTechnicianButton,
+              icon: Icons.person_add_alt_1_outlined,
+              wrapLabel: true,
+              onPressed: () => InviteTechnicianDialog.show(
+                context,
+                actor: user,
+                companyId: providerId,
+                companyName: providerName,
+              ),
+            ),
             const SizedBox(height: 24),
           ],
           ProviderOfferingList(

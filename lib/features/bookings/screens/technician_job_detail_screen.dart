@@ -40,6 +40,8 @@ class TechnicianJobDetailScreen extends ConsumerStatefulWidget {
 class _TechnicianJobDetailScreenState
     extends ConsumerState<TechnicianJobDetailScreen> {
   bool _isStarting = false;
+  bool _isCompleting = false;
+  TechnicianJob? _completedJob;
   String? _errorMessage;
   String? _successMessage;
 
@@ -109,6 +111,67 @@ class _TechnicianJobDetailScreenState
     }
   }
 
+  Future<void> _completeJob(TechnicianJob job, UserModel user) async {
+    final l10n = context.l10n;
+
+    setState(() {
+      _isCompleting = true;
+      _errorMessage = null;
+      _successMessage = null;
+    });
+
+    try {
+      final service = ref.read(bookingServiceProvider);
+      await service.completeTechnicianJob(
+        bookingId: job.id,
+        technicianId: user.id,
+        companyId: user.companyId ?? '',
+      );
+
+      if (!mounted) return;
+      ref.invalidate(technicianJobsProvider);
+      ref.invalidate(technicianJobProvider(widget.bookingId));
+      ref.invalidate(bookingDetailProvider(widget.bookingId));
+      ref.invalidate(liveBookingDetailProvider(widget.bookingId));
+      ref.invalidate(providerBookingsProvider(job.companyId));
+      ref.invalidate(liveProviderBookingsProvider(job.companyId));
+      ref.invalidate(providerActiveBookingsProvider(job.companyId));
+      ref.invalidate(liveProviderActiveBookingsProvider(job.companyId));
+      ref.invalidate(providerServiceRecordsProvider);
+      ref.invalidate(customerBookingsProvider);
+
+      setState(() {
+        _isCompleting = false;
+        _completedJob = job.copyWith(status: BookingStatus.completed);
+        _successMessage = l10n.technicianJobCompletedNotice;
+      });
+    } on UnauthorizedBookingCompletionException {
+      if (!mounted) return;
+      setState(() {
+        _isCompleting = false;
+        _errorMessage = l10n.technicianJobCompleteUnauthorized;
+      });
+    } on InvalidBookingTransitionException {
+      if (!mounted) return;
+      setState(() {
+        _isCompleting = false;
+        _errorMessage = l10n.providerBookingCompleteIneligible;
+      });
+    } on BookingSubmissionException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isCompleting = false;
+        _errorMessage = e.message;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isCompleting = false;
+        _errorMessage = l10n.technicianJobsLoadError;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -137,16 +200,23 @@ class _TechnicianJobDetailScreenState
         ),
       ),
       body: ref.watch(jobProvider).when(
-            data: (job) => job == null
-                ? const _Unavailable()
-                : _JobDetails(
-                    job: job,
-                    canStart: canActAsTechnician && job.canBeStarted,
-                    isStarting: _isStarting,
-                    errorMessage: _errorMessage,
-                    successMessage: _successMessage,
-                    onStart: () => _startJob(job, user!),
-                  ),
+            data: (job) {
+              final displayJob = job ?? _completedJob;
+              return displayJob == null
+                  ? const _Unavailable()
+                  : _JobDetails(
+                      job: displayJob,
+                      canStart: canActAsTechnician && displayJob.canBeStarted,
+                      canComplete:
+                          canActAsTechnician && displayJob.canBeCompleted,
+                      isStarting: _isStarting,
+                      isCompleting: _isCompleting,
+                      errorMessage: _errorMessage,
+                      successMessage: _successMessage,
+                      onStart: () => _startJob(displayJob, user!),
+                      onComplete: () => _completeJob(displayJob, user!),
+                    );
+            },
             loading: () => Center(
               child: CircularProgressIndicator(
                 semanticsLabel: l10n.technicianJobsLoading,
@@ -183,18 +253,24 @@ class _JobDetails extends StatelessWidget {
   const _JobDetails({
     required this.job,
     required this.canStart,
+    required this.canComplete,
     required this.isStarting,
+    required this.isCompleting,
     required this.errorMessage,
     required this.successMessage,
     required this.onStart,
+    required this.onComplete,
   });
 
   final TechnicianJob job;
   final bool canStart;
+  final bool canComplete;
   final bool isStarting;
+  final bool isCompleting;
   final String? errorMessage;
   final String? successMessage;
   final VoidCallback onStart;
+  final VoidCallback onComplete;
 
   @override
   Widget build(BuildContext context) {
@@ -213,10 +289,13 @@ class _JobDetails extends StatelessWidget {
               status: job.status,
             ),
             if (successMessage != null &&
-                job.status == BookingStatus.inProgress) ...[
+                (job.status == BookingStatus.inProgress ||
+                    job.status == BookingStatus.completed)) ...[
               const SizedBox(height: 16),
               SpNotice(
-                key: const Key('technician_job_started_notice'),
+                key: job.status == BookingStatus.completed
+                    ? const Key('technician_job_completed_notice')
+                    : const Key('technician_job_started_notice'),
                 icon: Icons.check_circle_outline_rounded,
                 message: successMessage!,
                 tone: SpTone.success,
@@ -292,6 +371,17 @@ class _JobDetails extends StatelessWidget {
                 wrapLabel: true,
                 isLoading: isStarting,
                 onPressed: isStarting ? null : onStart,
+              ),
+            ],
+            if (canComplete) ...[
+              const SizedBox(height: 24),
+              SpPrimaryButton(
+                key: const Key('technician_complete_job_button'),
+                label: l10n.providerBookingCompleteButton,
+                icon: Icons.check_circle_outline_rounded,
+                wrapLabel: true,
+                isLoading: isCompleting,
+                onPressed: isCompleting ? null : onComplete,
               ),
             ],
           ],
