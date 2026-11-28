@@ -4,6 +4,7 @@ import 'package:service_pilot/core/constants/booking_status.dart';
 import 'package:service_pilot/features/bookings/models/booking_model.dart';
 import 'package:service_pilot/features/bookings/models/booking_request.dart';
 import 'package:service_pilot/features/bookings/models/incoming_booking_request.dart';
+import 'package:service_pilot/features/bookings/models/provider_service_record.dart';
 import 'package:service_pilot/features/bookings/models/quote_booking_request.dart';
 import 'package:service_pilot/features/quotes/models/quote_request_model.dart';
 
@@ -223,6 +224,13 @@ abstract class IBookingService {
   /// Emits real-time updates for accepted bookings addressed to [providerId].
   Stream<List<BookingModel>> watchProviderBookings(String providerId);
 
+  /// Returns active appointments and ongoing jobs (`Confirmed`, `Assigned`,
+  /// `In Progress`) addressed to [providerId] (BOOK-4 / SCRUM-89).
+  Future<List<BookingModel>> getProviderActiveBookings(String providerId);
+
+  /// Emits real-time updates for active jobs addressed to [providerId].
+  Stream<List<BookingModel>> watchProviderActiveBookings(String providerId);
+
   Future<List<IncomingBookingRequest>> getIncomingRequests(String providerId);
 
   Future<IncomingBookingRequest?> getIncomingRequest(
@@ -231,6 +239,12 @@ abstract class IBookingService {
   );
 
   Future<List<IncomingBookingRequest>> getDeclinedRequests(String providerId);
+
+  /// Returns completed, cancelled, and declined service records for [providerId]
+  /// (BOOK-5 / SCRUM-90).
+  Future<List<ProviderServiceRecord>> getProviderServiceRecords(
+    String providerId,
+  );
 
   Future<IncomingBookingRequest?> getDeclinedRequest(
     String providerId,
@@ -576,7 +590,7 @@ class BookingService implements IBookingService {
       address: request.address.trim(),
       preferredDateTime: request.preferredDateTime,
       status: BookingStatus.pending,
-      totalPrice: request.estimatedPrice,
+      totalPrice: request.totalPrice,
       createdAt: now,
       latitude: request.latitude,
       longitude: request.longitude,
@@ -585,6 +599,7 @@ class BookingService implements IBookingService {
         for (final photo in request.photos)
           'memory://bk-${now.microsecondsSinceEpoch}/${photo.name}',
       ],
+      items: request.items,
     );
     _bookings.add(booking);
     _notifyListeners();
@@ -654,6 +669,52 @@ class BookingService implements IBookingService {
   bool _isAcceptedBy(BookingModel booking, String providerId) {
     return booking.providerId == providerId &&
         booking.status.exposesAcceptedDetails;
+  }
+
+  @override
+  Future<List<BookingModel>> getProviderActiveBookings(
+    String providerId,
+  ) async {
+    return List.unmodifiable(
+      _bookings.where((booking) => _isActiveWorkFor(booking, providerId)),
+    );
+  }
+
+  @override
+  Stream<List<BookingModel>> watchProviderActiveBookings(
+    String providerId,
+  ) async* {
+    List<BookingModel> filter() => List.unmodifiable(
+          _bookings.where((booking) => _isActiveWorkFor(booking, providerId)),
+        );
+
+    yield filter();
+    yield* _updatesController.stream.map(
+      (list) => List.unmodifiable(
+        list.where((booking) => _isActiveWorkFor(booking, providerId)),
+      ),
+    );
+  }
+
+  bool _isActiveWorkFor(BookingModel booking, String providerId) {
+    return booking.providerId == providerId &&
+        booking.status.isActiveProviderWork;
+  }
+
+  @override
+  Future<List<ProviderServiceRecord>> getProviderServiceRecords(
+    String providerId,
+  ) async {
+    final records = _bookings
+        .where((b) => b.providerId == providerId && b.status.isClosedRecord)
+        .map(ProviderServiceRecord.fromBooking)
+        .toList()
+      ..sort((a, b) {
+        final dateA = a.appointmentDate ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final dateB = b.appointmentDate ?? DateTime.fromMillisecondsSinceEpoch(0);
+        return dateB.compareTo(dateA);
+      });
+    return List.unmodifiable(records);
   }
 
   @override

@@ -1348,9 +1348,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get providerAssignmentSave => 'Save assignment';
 
   @override
-  String get providerAssignmentTechnicianLabel => 'Assigned technician';
-
-  @override
   String get providerAssignmentEmpty =>
       'There are no active technicians on your company roster.';
 
@@ -1777,4 +1774,98 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get quoteBookingUnavailable =>
       'This quote can\'t be booked from your account.';
+
+  @override
+  String get providerActiveBookingsTitle => 'Current appointments & jobs';
+
+  @override
+  String get providerActiveBookingsEmpty =>
+      'You have no active appointments or jobs right now.';
+
+  @override
+  String get providerAssignedTechnicianLabel => 'Assigned technician';
+
+  @override
+  String providerBookingTechnicianValue(String name) {
+    return 'Assigned to $name';
+  }
+
+  @override
+  String get providerBookingAddressLabel => 'Service address';
+
+  @override
+  String get providerBookingDescriptionLabel => 'Problem description';
+
+  @override
+  String get providerBookingEstimatedFeeLabel => 'Estimated fee';
+
+  @override
+  String get bookingStatusConfirmed => 'Confirmed';
+
+  @override
+  String get bookingStatusAssigned => 'Assigned';
+
+  @override
+  String get bookingStatusInProgress => 'In Progress';
+
+  @override
+  String get bookingStatusCompleted => 'Completed';
+
+  @override
+  String get bookingStatusCancelled => 'Cancelled';
+
+  @override
+  String get bookingStatusDeclined => 'Declined';
+
+  @override
+  String get bookingStatusPending => 'Pending';
+
+  @override
+  String get providerHistoryTitle => 'Service records';
+
+  @override
+  String get providerHistorySubtitle =>
+      'Completed, cancelled, and declined bookings for your account.';
+
+  @override
+  String get providerHistoryButton => 'Completed & closed records';
+
+  @override
+  String get providerHistoryEmpty =>
+      'You have no completed, cancelled, or declined service records yet.';
+
+  @override
+  String get providerHistoryLoadError =>
+      'Unable to load service records right now. Please try again.';
+
+  @override
+  String get cartCheckoutButton => 'Continue to checkout';
+
+  @override
+  String get cartCheckoutTitle => 'Checkout';
+
+  @override
+  String get cartCheckoutServicesSection => 'Your services';
+
+  @override
+  String get bookingErrorCartInvalid =>
+      'A service in your cart can no longer be booked. Go back to your cart, check it and try again.';
+
+  @override
+  String get bookingErrorCartMixedProviders =>
+      'Your cart has services from more than one provider. Keep services from one provider and try again.';
+
+  @override
+  String get bookingSummaryReference => 'Booking reference';
+
+  @override
+  String get bookingSummaryServices => 'Services';
+
+  @override
+  String get bookingSummaryTotal => 'Total';
+
+  @override
+  String bookingSummaryItemLine(String serviceTitle, String price) {
+    return '$serviceTitle: $price';
+  }
 }

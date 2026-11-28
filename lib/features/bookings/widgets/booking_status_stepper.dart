@@ -68,9 +68,11 @@ class BookingStatusStepper extends StatelessWidget {
                 color: AppTheme.primary,
               ),
               const SizedBox(width: 8),
-              Text(
-                'Service Progress',
-                style: AppTheme.display(size: 16.5),
+              Flexible(
+                child: Text(
+                  'Service Progress',
+                  style: AppTheme.display(size: 16.5),
+                ),
               ),
             ],
           ),

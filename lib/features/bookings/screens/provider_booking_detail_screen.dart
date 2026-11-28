@@ -11,6 +11,7 @@ import 'package:service_pilot/features/bookings/models/incoming_booking_request.
 import 'package:service_pilot/features/bookings/providers/booking_provider.dart';
 import 'package:service_pilot/features/bookings/services/booking_service.dart';
 import 'package:service_pilot/features/bookings/widgets/assign_technician_dialog.dart';
+import 'package:service_pilot/features/bookings/widgets/booking_status_stepper.dart';
 import 'package:service_pilot/features/bookings/widgets/decline_booking_dialog.dart';
 import 'package:service_pilot/l10n/l10n.dart';
 import 'package:service_pilot/shared/widgets/sp_button.dart';
@@ -68,6 +69,8 @@ class _ProviderBookingDetailScreenState
       ref.invalidate(liveBookingDetailProvider(widget.bookingId));
       ref.invalidate(providerBookingsProvider(providerId));
       ref.invalidate(liveProviderBookingsProvider(providerId));
+      ref.invalidate(providerActiveBookingsProvider(providerId));
+      ref.invalidate(liveProviderActiveBookingsProvider(providerId));
 
       setState(() {
         _isConfirming = false;
@@ -401,7 +404,7 @@ class _ProviderBookingDetailScreenState
     final canConfirm = isOwned &&
         booking.canBeConfirmed &&
         booking.confirmedAppointmentAt == null;
-    final technicianName = booking.assignedTechnicianName;
+    final technicianName = booking.assignedTechnicianName?.trim() ?? '';
     final canAssign = isOwned &&
         booking.canBeAssigned &&
         ref.watch(currentUserProvider)?.isCompany == true;
@@ -509,34 +512,40 @@ class _ProviderBookingDetailScreenState
                       value: confirmedFormatted,
                     ),
                   ],
-                  if (technicianName != null) ...[
+                  const SizedBox(height: 12),
+                  _InfoRow(
+                    icon: Icons.location_on_outlined,
+                    label: l10n.providerBookingAddressLabel,
+                    value: booking.address,
+                  ),
+                  if (technicianName.isNotEmpty) ...[
                     const SizedBox(height: 12),
                     _InfoRow(
-                      icon: Icons.engineering_outlined,
-                      label: l10n.providerAssignmentTechnicianLabel,
+                      key: const Key('provider_assigned_technician_row'),
+                      icon: Icons.person_pin_rounded,
+                      label: l10n.providerAssignedTechnicianLabel,
                       value: technicianName,
                     ),
                   ],
                   const SizedBox(height: 12),
                   _InfoRow(
-                    icon: Icons.location_on_outlined,
-                    label: 'Service Address',
-                    value: booking.address,
-                  ),
-                  const SizedBox(height: 12),
-                  _InfoRow(
                     icon: Icons.description_outlined,
-                    label: 'Problem Description',
+                    label: l10n.providerBookingDescriptionLabel,
                     value: booking.description,
                   ),
                   const SizedBox(height: 12),
                   _InfoRow(
                     icon: Icons.payments_outlined,
-                    label: 'Estimated Fee',
+                    label: l10n.providerBookingEstimatedFeeLabel,
                     value: '\$${booking.totalPrice.toStringAsFixed(2)}',
                   ),
                 ],
               ),
+            ),
+            const SizedBox(height: 16),
+            BookingStatusStepper(
+              key: const Key('provider_booking_status_stepper'),
+              booking: booking,
             ),
             const SizedBox(height: 24),
             if (_errorMessage != null) ...[
@@ -575,8 +584,7 @@ class _ProviderBookingDetailScreenState
                     : () => _confirmBooking(
                         booking.preferredDateTime, activeProviderId),
               )
-            else if (booking.status != BookingStatus.confirmed &&
-                booking.status != BookingStatus.assigned)
+            else if (!booking.status.exposesAcceptedDetails)
               SpNotice(
                 key: const Key('provider_booking_ineligible_notice'),
                 icon: Icons.info_outline_rounded,

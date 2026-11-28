@@ -510,7 +510,6 @@
   "providerBookingReviewAction": "Review",
   "providerAssignmentTitle": "Assign technician",
   "providerAssignmentSave": "Save assignment",
-  "providerAssignmentTechnicianLabel": "Assigned technician",
   "providerAssignmentEmpty": "There are no active technicians on your company roster.",
   "providerAssignmentLoadError": "Could not load your technicians. Try again.",
   "providerAssignmentSaveError": "Could not save the assignment. Open the picker and try again.",
@@ -690,5 +689,48 @@
   "quoteBookingSubmit": "Send booking request",
   "quoteBookingNotApproved": "Approve the quoted price before you book a time.",
   "quoteBookingAlreadyBooked": "You already booked a time for this quote.",
-  "quoteBookingUnavailable": "This quote can't be booked from your account."
+  "quoteBookingUnavailable": "This quote can't be booked from your account.",
+
+  "@_BOOKING_ACTIVE_WORK": {},
+  "providerActiveBookingsTitle": "Current appointments & jobs",
+  "providerActiveBookingsEmpty": "You have no active appointments or jobs right now.",
+  "providerAssignedTechnicianLabel": "Assigned technician",
+  "providerBookingTechnicianValue": "Assigned to {name}",
+  "@providerBookingTechnicianValue": {
+    "placeholders": {"name": {"type": "String"}}
+  },
+  "providerBookingAddressLabel": "Service address",
+  "providerBookingDescriptionLabel": "Problem description",
+  "providerBookingEstimatedFeeLabel": "Estimated fee",
+  "bookingStatusConfirmed": "Confirmed",
+  "bookingStatusAssigned": "Assigned",
+  "bookingStatusInProgress": "In Progress",
+  "bookingStatusCompleted": "Completed",
+  "bookingStatusCancelled": "Cancelled",
+  "bookingStatusDeclined": "Declined",
+  "bookingStatusPending": "Pending",
+
+  "@_BOOKING_HISTORY_PROVIDER": {},
+  "providerHistoryTitle": "Service records",
+  "providerHistorySubtitle": "Completed, cancelled, and declined bookings for your account.",
+  "providerHistoryButton": "Completed & closed records",
+  "providerHistoryEmpty": "You have no completed, cancelled, or declined service records yet.",
+  "providerHistoryLoadError": "Unable to load service records right now. Please try again.",
+
+  "@_CART_CHECKOUT": {},
+  "cartCheckoutButton": "Continue to checkout",
+  "cartCheckoutTitle": "Checkout",
+  "cartCheckoutServicesSection": "Your services",
+  "bookingErrorCartInvalid": "A service in your cart can no longer be booked. Go back to your cart, check it and try again.",
+  "bookingErrorCartMixedProviders": "Your cart has services from more than one provider. Keep services from one provider and try again.",
+  "bookingSummaryReference": "Booking reference",
+  "bookingSummaryServices": "Services",
+  "bookingSummaryTotal": "Total",
+  "bookingSummaryItemLine": "{serviceTitle}: {price}",
+  "@bookingSummaryItemLine": {
+    "placeholders": {
+      "serviceTitle": {"type": "String"},
+      "price": {"type": "String"}
+    }
+  }
 }

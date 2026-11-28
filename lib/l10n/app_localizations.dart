@@ -2468,12 +2468,6 @@ abstract class AppLocalizations {
   /// **'Save assignment'**
   String get providerAssignmentSave;
 
-  /// No description provided for @providerAssignmentTechnicianLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Assigned technician'**
-  String get providerAssignmentTechnicianLabel;
-
   /// No description provided for @providerAssignmentEmpty.
   ///
   /// In en, this message translates to:
@@ -3139,6 +3133,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This quote can\'t be booked from your account.'**
   String get quoteBookingUnavailable;
+
+  /// No description provided for @providerActiveBookingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Current appointments & jobs'**
+  String get providerActiveBookingsTitle;
+
+  /// No description provided for @providerActiveBookingsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no active appointments or jobs right now.'**
+  String get providerActiveBookingsEmpty;
+
+  /// No description provided for @providerAssignedTechnicianLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned technician'**
+  String get providerAssignedTechnicianLabel;
+
+  /// No description provided for @providerBookingTechnicianValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned to {name}'**
+  String providerBookingTechnicianValue(String name);
+
+  /// No description provided for @providerBookingAddressLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Service address'**
+  String get providerBookingAddressLabel;
+
+  /// No description provided for @providerBookingDescriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Problem description'**
+  String get providerBookingDescriptionLabel;
+
+  /// No description provided for @providerBookingEstimatedFeeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated fee'**
+  String get providerBookingEstimatedFeeLabel;
+
+  /// No description provided for @bookingStatusConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get bookingStatusConfirmed;
+
+  /// No description provided for @bookingStatusAssigned.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned'**
+  String get bookingStatusAssigned;
+
+  /// No description provided for @bookingStatusInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'In Progress'**
+  String get bookingStatusInProgress;
+
+  /// No description provided for @bookingStatusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get bookingStatusCompleted;
+
+  /// No description provided for @bookingStatusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get bookingStatusCancelled;
+
+  /// No description provided for @bookingStatusDeclined.
+  ///
+  /// In en, this message translates to:
+  /// **'Declined'**
+  String get bookingStatusDeclined;
+
+  /// No description provided for @bookingStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get bookingStatusPending;
+
+  /// No description provided for @providerHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Service records'**
+  String get providerHistoryTitle;
+
+  /// No description provided for @providerHistorySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed, cancelled, and declined bookings for your account.'**
+  String get providerHistorySubtitle;
+
+  /// No description provided for @providerHistoryButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed & closed records'**
+  String get providerHistoryButton;
+
+  /// No description provided for @providerHistoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no completed, cancelled, or declined service records yet.'**
+  String get providerHistoryEmpty;
+
+  /// No description provided for @providerHistoryLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load service records right now. Please try again.'**
+  String get providerHistoryLoadError;
+
+  /// No description provided for @cartCheckoutButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to checkout'**
+  String get cartCheckoutButton;
+
+  /// No description provided for @cartCheckoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkout'**
+  String get cartCheckoutTitle;
+
+  /// No description provided for @cartCheckoutServicesSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Your services'**
+  String get cartCheckoutServicesSection;
+
+  /// No description provided for @bookingErrorCartInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'A service in your cart can no longer be booked. Go back to your cart, check it and try again.'**
+  String get bookingErrorCartInvalid;
+
+  /// No description provided for @bookingErrorCartMixedProviders.
+  ///
+  /// In en, this message translates to:
+  /// **'Your cart has services from more than one provider. Keep services from one provider and try again.'**
+  String get bookingErrorCartMixedProviders;
+
+  /// No description provided for @bookingSummaryReference.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking reference'**
+  String get bookingSummaryReference;
+
+  /// No description provided for @bookingSummaryServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Services'**
+  String get bookingSummaryServices;
+
+  /// No description provided for @bookingSummaryTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get bookingSummaryTotal;
+
+  /// No description provided for @bookingSummaryItemLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{serviceTitle}: {price}'**
+  String bookingSummaryItemLine(String serviceTitle, String price);
 }
 
 class _AppLocalizationsDelegate

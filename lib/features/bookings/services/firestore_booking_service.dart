@@ -6,6 +6,7 @@ import 'package:service_pilot/core/constants/booking_status.dart';
 import 'package:service_pilot/features/bookings/models/booking_model.dart';
 import 'package:service_pilot/features/bookings/models/booking_request.dart';
 import 'package:service_pilot/features/bookings/models/incoming_booking_request.dart';
+import 'package:service_pilot/features/bookings/models/provider_service_record.dart';
 import 'package:service_pilot/features/bookings/models/quote_booking_request.dart';
 import 'package:service_pilot/features/bookings/services/booking_photo_uploader.dart';
 import 'package:service_pilot/features/bookings/services/booking_service.dart';
@@ -58,6 +59,10 @@ class FirestoreBookingService implements IBookingService {
           String providerId) =>
       _providerRequests(providerId, 'declinedBookingRequests');
 
+  CollectionReference<Map<String, dynamic>> _cancelledRequests(
+          String providerId) =>
+      _providerRequests(providerId, 'cancelledBookingRequests');
+
   @override
   Future<BookingModel> createBooking(BookingRequest request) async {
     final errors = BookingRequestValidator.validate(request);
@@ -90,11 +95,12 @@ class FirestoreBookingService implements IBookingService {
       address: request.address.trim(),
       preferredDateTime: request.preferredDateTime,
       status: BookingStatus.pending,
-      totalPrice: request.estimatedPrice,
+      totalPrice: request.totalPrice,
       createdAt: DateTime.now(),
       latitude: request.latitude,
       longitude: request.longitude,
       photoUrls: photoUrls,
+      items: request.items,
     );
 
     await _guard(() {
@@ -170,6 +176,56 @@ class FirestoreBookingService implements IBookingService {
   ) =>
       _getRequestPreviews(_declinedRequests(providerId));
 
+  @override
+  Future<List<ProviderServiceRecord>> getProviderServiceRecords(
+    String providerId,
+  ) async {
+    final completedFuture = _bookings
+        .where('providerId', isEqualTo: providerId)
+        .where('status', isEqualTo: BookingStatus.completed.value)
+        .get(const GetOptions(source: Source.server));
+    final cancelledFuture = _getRequestPreviews(_cancelledRequests(providerId));
+    final declinedFuture = _getRequestPreviews(_declinedRequests(providerId));
+
+    final completedSnap = await completedFuture;
+    final cancelled = await cancelledFuture;
+    final declined = await declinedFuture;
+
+    final byId = <String, ProviderServiceRecord>{};
+    for (final doc in completedSnap.docs) {
+      final booking = BookingModel.fromFirestore(doc.id, doc.data());
+      byId[booking.id] = ProviderServiceRecord.fromBooking(booking);
+    }
+    for (final preview in cancelled) {
+      byId.putIfAbsent(
+        preview.id,
+        () => ProviderServiceRecord.fromPreview(
+          preview,
+          providerId: providerId,
+          status: BookingStatus.cancelled,
+        ),
+      );
+    }
+    for (final preview in declined) {
+      byId.putIfAbsent(
+        preview.id,
+        () => ProviderServiceRecord.fromPreview(
+          preview,
+          providerId: providerId,
+          status: BookingStatus.declined,
+        ),
+      );
+    }
+
+    final records = byId.values.toList()
+      ..sort((a, b) {
+        final dateA = a.appointmentDate ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final dateB = b.appointmentDate ?? DateTime.fromMillisecondsSinceEpoch(0);
+        return dateB.compareTo(dateA);
+      });
+    return List.unmodifiable(records);
+  }
+
   Future<List<IncomingBookingRequest>> _getRequestPreviews(
     CollectionReference<Map<String, dynamic>> requests,
   ) async {
@@ -240,6 +296,40 @@ class FirestoreBookingService implements IBookingService {
       _bookings.where('providerId', isEqualTo: providerId).where(
             'status',
             whereIn: BookingStatusExtension.acceptedStatuses
+                .map((status) => status.value)
+                .toList(),
+          );
+
+  @override
+  Future<List<BookingModel>> getProviderActiveBookings(
+    String providerId,
+  ) async {
+    final snapshot = await _activeProviderBookings(providerId).get(
+      const GetOptions(source: Source.server),
+    );
+    return List.unmodifiable(
+      snapshot.docs.map((d) => BookingModel.fromFirestore(d.id, d.data())),
+    );
+  }
+
+  @override
+  Stream<List<BookingModel>> watchProviderActiveBookings(String providerId) {
+    return _activeProviderBookings(providerId)
+        .snapshots(includeMetadataChanges: true)
+        .where((snapshot) => !snapshot.metadata.isFromCache)
+        .map(
+          (snapshot) => List.unmodifiable(
+            snapshot.docs.map(
+              (d) => BookingModel.fromFirestore(d.id, d.data()),
+            ),
+          ),
+        );
+  }
+
+  Query<Map<String, dynamic>> _activeProviderBookings(String providerId) =>
+      _bookings.where('providerId', isEqualTo: providerId).where(
+            'status',
+            whereIn: BookingStatusExtension.activeProviderStatuses
                 .map((status) => status.value)
                 .toList(),
           );
@@ -510,6 +600,12 @@ class FirestoreBookingService implements IBookingService {
         if (current.status == BookingStatus.pending &&
             updated.status != BookingStatus.pending) {
           tx.delete(_inbox(current.providerId).doc(bookingId));
+        }
+        if (updated.status == BookingStatus.cancelled) {
+          tx.set(
+            _cancelledRequests(current.providerId).doc(bookingId),
+            IncomingBookingRequest.fromBooking(updated).toFirestore(),
+          );
         }
         return updated;
       }),

@@ -794,6 +794,10 @@ service cloud.firestore {
       return /databases/$(database)/documents/providers/$(providerId)/declinedBookingRequests/$(bookingId);
     }
 
+    function cancelledRequestDocument(providerId, bookingId) {
+      return /databases/$(database)/documents/providers/$(providerId)/cancelledBookingRequests/$(bookingId);
+    }
+
     function previewsMatchBooking(bookingId, booking) {
       let preview = inboxDocument(booking.providerId, bookingId);
       let archived = declinedRequestDocument(booking.providerId, bookingId);
@@ -820,7 +824,8 @@ service cloud.firestore {
 
     function noProviderPreviews(providerId, bookingId) {
       return !existsAfter(inboxDocument(providerId, bookingId)) &&
-        !existsAfter(declinedRequestDocument(providerId, bookingId));
+        !existsAfter(declinedRequestDocument(providerId, bookingId)) &&
+        !existsAfter(cancelledRequestDocument(providerId, bookingId));
     }
 
     // Firestore reads whole documents. Pending requests use a separate view
@@ -873,6 +878,28 @@ service cloud.firestore {
       allow read: if ownsBookingInbox(providerId);
       allow create, update: if isAuthenticated() && canArchive();
       allow delete: if isAdmin() && noLongerDeclinedHere();
+    }
+
+    match /providers/{providerId}/cancelledBookingRequests/{bookingId} {
+      function bookingPath() {
+        return /databases/$(database)/documents/bookings/$(bookingId);
+      }
+
+      function canArchive() {
+        let after = getAfter(bookingPath()).data;
+        return after != null && after.providerId == providerId &&
+          after.status == 'cancelled' && request.resource.data == bookingPreview(after) &&
+          (isAdmin() || isOwner(after.customerId));
+      }
+
+      function noLongerCancelledHere() {
+        let after = getAfter(bookingPath()).data;
+        return after == null || after.status != 'cancelled' || after.providerId != providerId;
+      }
+
+      allow read: if ownsBookingInbox(providerId);
+      allow create, update: if isAuthenticated() && canArchive();
+      allow delete: if isAdmin() && noLongerCancelledHere();
     }
 
     match /bookings/{bookingId} {

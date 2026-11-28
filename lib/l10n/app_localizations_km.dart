@@ -1338,9 +1338,6 @@ class AppLocalizationsKm extends AppLocalizations {
   String get providerAssignmentSave => 'រក្សាទុកការចាត់តាំង';
 
   @override
-  String get providerAssignmentTechnicianLabel => 'ជាងដែលបានចាត់តាំង';
-
-  @override
   String get providerAssignmentEmpty =>
       'មិនមានជាងសកម្មក្នុងបញ្ជីក្រុមហ៊ុនរបស់អ្នកទេ។';
 
@@ -1752,4 +1749,98 @@ class AppLocalizationsKm extends AppLocalizations {
   @override
   String get quoteBookingUnavailable =>
       'សម្រង់តម្លៃនេះមិនអាចកក់ពីគណនីរបស់អ្នកបានទេ។';
+
+  @override
+  String get providerActiveBookingsTitle => 'ការណាត់ជួប និងការងារបច្ចុប្បន្ន';
+
+  @override
+  String get providerActiveBookingsEmpty =>
+      'អ្នកមិនទាន់មានការណាត់ជួប ឬការងារកំពុងដំណើរការទេ។';
+
+  @override
+  String get providerAssignedTechnicianLabel => 'ជាងដែលបានចាត់តាំង';
+
+  @override
+  String providerBookingTechnicianValue(String name) {
+    return 'ចាត់តាំងទៅ $name';
+  }
+
+  @override
+  String get providerBookingAddressLabel => 'អាសយដ្ឋានសេវាកម្ម';
+
+  @override
+  String get providerBookingDescriptionLabel => 'ការពិពណ៌នាបញ្ហា';
+
+  @override
+  String get providerBookingEstimatedFeeLabel => 'ថ្លៃប៉ាន់ស្មាន';
+
+  @override
+  String get bookingStatusConfirmed => 'បានបញ្ជាក់';
+
+  @override
+  String get bookingStatusAssigned => 'បានចាត់តាំង';
+
+  @override
+  String get bookingStatusInProgress => 'កំពុងដំណើរការ';
+
+  @override
+  String get bookingStatusCompleted => 'បានបញ្ចប់';
+
+  @override
+  String get bookingStatusCancelled => 'បានបោះបង់';
+
+  @override
+  String get bookingStatusDeclined => 'បានបដិសេធ';
+
+  @override
+  String get bookingStatusPending => 'កំពុងរង់ចាំ';
+
+  @override
+  String get providerHistoryTitle => 'កំណត់ត្រាសេវាកម្ម';
+
+  @override
+  String get providerHistorySubtitle =>
+      'ការកក់ដែលបានបញ្ចប់ បោះបង់ និងបដិសេធសម្រាប់គណនីរបស់អ្នក។';
+
+  @override
+  String get providerHistoryButton => 'កំណត់ត្រាសេវាកម្មដែលបានបញ្ចប់';
+
+  @override
+  String get providerHistoryEmpty =>
+      'អ្នកមិនទាន់មានកំណត់ត្រាសេវាកម្មដែលបានបញ្ចប់ បោះបង់ ឬបដិសេធទេ។';
+
+  @override
+  String get providerHistoryLoadError =>
+      'មិនអាចផ្ទុកកំណត់ត្រាសេវាកម្មបានទេ។ សូមព្យាយាមម្តងទៀត។';
+
+  @override
+  String get cartCheckoutButton => 'បន្តទៅការបញ្ជាទិញ';
+
+  @override
+  String get cartCheckoutTitle => 'ការបញ្ជាទិញ';
+
+  @override
+  String get cartCheckoutServicesSection => 'សេវាកម្មរបស់អ្នក';
+
+  @override
+  String get bookingErrorCartInvalid =>
+      'សេវាកម្មមួយក្នុងកន្ត្រករបស់អ្នកមិនអាចកក់បានទៀតទេ។ សូមត្រឡប់ទៅកន្ត្រក ពិនិត្យវា ហើយព្យាយាមម្តងទៀត។';
+
+  @override
+  String get bookingErrorCartMixedProviders =>
+      'កន្ត្រករបស់អ្នកមានសេវាកម្មពីអ្នកផ្តល់សេវាច្រើនជាងមួយ។ សូមរក្សាទុកតែសេវាកម្មពីអ្នកផ្តល់សេវាតែមួយ ហើយព្យាយាមម្តងទៀត។';
+
+  @override
+  String get bookingSummaryReference => 'លេខយោងការកក់';
+
+  @override
+  String get bookingSummaryServices => 'សេវាកម្ម';
+
+  @override
+  String get bookingSummaryTotal => 'សរុប';
+
+  @override
+  String bookingSummaryItemLine(String serviceTitle, String price) {
+    return '$serviceTitle៖ $price';
+  }
 }

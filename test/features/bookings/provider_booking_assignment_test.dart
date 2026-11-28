@@ -144,6 +144,14 @@ void main() {
 
     expect(find.text('Sokha Vann'), findsOneWidget);
     expect(find.text('Assigned'), findsWidgets);
+    expect(
+      find.byKey(const Key('provider_assigned_technician_row')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('provider_booking_status_stepper')),
+      findsOneWidget,
+    );
     expect(openPicker, findsNothing);
     expect(
         find.byKey(const Key('provider_confirm_booking_button')), findsNothing);
