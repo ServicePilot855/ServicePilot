@@ -385,20 +385,57 @@ class FirestoreBookingService implements IBookingService {
   }
 
   @override
+  Future<Map<String, String>> getAssignableTechnicians(String companyId) async {
+    final roster = await _providerRequests(companyId, 'technicians')
+        .orderBy('fullName')
+        .get(const GetOptions(source: Source.server));
+    return {
+      for (final doc in roster.docs)
+        if (doc.data()['fullName'] case final String name when name.isNotEmpty)
+          doc.id: name,
+    };
+  }
+
+  @override
   Future<BookingModel> assignBooking({
     required String bookingId,
+    required String companyId,
     required String technicianId,
-    required String technicianName,
   }) {
-    return _update(bookingId, (booking) {
-      _checkTransition(booking, BookingStatus.assigned);
-      return booking.copyWith(
-        status: BookingStatus.assigned,
-        assignedTechnicianId: technicianId,
-        assignedTechnicianName: technicianName,
-        updatedAt: DateTime.now(),
-      );
-    });
+    final bookingRef = _bookings.doc(bookingId);
+    final technicianRef =
+        _providerRequests(companyId, 'technicians').doc(technicianId);
+    return _guard(() => _firestore.runTransaction((transaction) async {
+          final data = (await transaction.get(bookingRef)).data();
+          if (data == null) throw BookingNotFoundException(bookingId);
+          final booking = BookingModel.fromFirestore(bookingId, data);
+          if (!booking.isOwnedByProvider(companyId)) {
+            throw const BookingSubmissionException('This company does not own the booking.');
+          }
+          if (!booking.canBeAssigned) {
+            throw InvalidBookingTransitionException(
+              bookingId: bookingId,
+              currentStatus: booking.status,
+              targetStatus: BookingStatus.assigned,
+            );
+          }
+          final name = (await transaction.get(technicianRef)).data()?['fullName'];
+          if (name is! String || name.isEmpty) {
+            throw const BookingSubmissionException('The technician is unavailable.');
+          }
+          transaction.update(bookingRef, {
+            'status': BookingStatus.assigned.value,
+            'technicianId': technicianId,
+            'technicianName': name,
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+          return booking.copyWith(
+            status: BookingStatus.assigned,
+            assignedTechnicianId: technicianId,
+            assignedTechnicianName: name,
+            updatedAt: DateTime.now(),
+          );
+        }));
   }
 
   @override

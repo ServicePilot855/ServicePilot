@@ -101,6 +101,9 @@ class BookingModel {
   bool canBeConfirmedBy(String targetProviderId) =>
       isOwnedByProvider(targetProviderId) && canBeConfirmed;
 
+  /// Company dispatch takes place after the appointment is confirmed.
+  bool get canBeAssigned => status == BookingStatus.confirmed;
+
   /// US-14 (SCRUM-45) AC:
   /// Only the customer who created the booking can cancel it, and only when
   /// its status is Pending, Assigned, or Confirmed.

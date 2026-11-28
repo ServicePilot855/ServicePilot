@@ -281,14 +281,14 @@ abstract class IBookingService {
     String? reason,
   });
 
-  /// Company/provider assigns a technician (`Assigned`) to a booking.
-  ///
-  /// Throws [InvalidBookingTransitionException] if the booking was cancelled
-  /// or cannot transition to [BookingStatus.assigned].
+  /// Maps the active technicians' IDs to their names for the company owner.
+  Future<Map<String, String>> getAssignableTechnicians(String companyId);
+
+  /// Assigns a confirmed, company-owned booking to one of its technicians.
   Future<BookingModel> assignBooking({
     required String bookingId,
+    required String companyId,
     required String technicianId,
-    required String technicianName,
   });
 
   /// Technician/provider starts work (`In Progress`) on a booking.
@@ -386,11 +386,19 @@ class BookingService implements IBookingService {
   BookingService({
     List<BookingModel>? initialBookings,
     String customerId = defaultCustomerId,
+    Map<String, Map<String, String>> companyTechnicians = const {},
     this.findQuote,
     this.onQuoteBooked,
   }) : _bookings = List<BookingModel>.from(
           initialBookings ?? buildDefaultBookings(customerId: customerId),
-        );
+        ),
+        _companyTechnicians = companyTechnicians;
+
+  final Map<String, Map<String, String>> _companyTechnicians;
+
+  @override
+  Future<Map<String, String>> getAssignableTechnicians(String companyId) async =>
+      Map.unmodifiable(_companyTechnicians[companyId] ?? const {});
 
   /// Looks up quotes for [createQuoteBooking]; without it no quote is found.
   final Future<QuoteRequestModel?> Function(String quoteId)? findQuote;
@@ -793,8 +801,8 @@ class BookingService implements IBookingService {
   @override
   Future<BookingModel> assignBooking({
     required String bookingId,
+    required String companyId,
     required String technicianId,
-    required String technicianName,
   }) async {
     final index = _bookings.indexWhere((b) => b.id == bookingId);
     if (index == -1) {
@@ -802,21 +810,25 @@ class BookingService implements IBookingService {
     }
 
     final booking = _bookings[index];
-    if (!booking.status.canTransitionTo(BookingStatus.assigned)) {
+    if (!booking.isOwnedByProvider(companyId)) {
+      throw const BookingSubmissionException('This company does not own the booking.');
+    }
+    if (!booking.canBeAssigned) {
       throw InvalidBookingTransitionException(
         bookingId: bookingId,
         currentStatus: booking.status,
         targetStatus: BookingStatus.assigned,
-        message: booking.status == BookingStatus.cancelled
-            ? 'Cancelled bookings cannot be accepted, assigned, or started afterward.'
-            : null,
       );
+    }
+    final name = _companyTechnicians[companyId]?[technicianId];
+    if (name == null || name.isEmpty) {
+      throw const BookingSubmissionException('The technician is unavailable.');
     }
 
     final updated = booking.copyWith(
       status: BookingStatus.assigned,
       assignedTechnicianId: technicianId,
-      assignedTechnicianName: technicianName,
+      assignedTechnicianName: name,
       updatedAt: DateTime.now(),
     );
     _bookings[index] = updated;

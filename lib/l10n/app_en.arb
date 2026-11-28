@@ -508,6 +508,13 @@
   "providerBookingNotAuthorized": "You are not authorized to confirm this booking.",
   "providerBookingIneligible": "This booking cannot be confirmed in its current state.",
   "providerBookingReviewAction": "Review",
+  "providerAssignmentTitle": "Assign technician",
+  "providerAssignmentSave": "Save assignment",
+  "providerAssignmentTechnicianLabel": "Assigned technician",
+  "providerAssignmentEmpty": "There are no active technicians on your company roster.",
+  "providerAssignmentLoadError": "Could not load your technicians. Try again.",
+  "providerAssignmentSaveError": "Could not save the assignment. Open the picker and try again.",
+  "providerAssignmentIneligible": "This booking can no longer be assigned.",
 
   "@_BOOKING_DECLINE": {},
   "providerBookingDeclineButton": "Decline Request",

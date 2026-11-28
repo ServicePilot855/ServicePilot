@@ -2456,6 +2456,48 @@ abstract class AppLocalizations {
   /// **'Review'**
   String get providerBookingReviewAction;
 
+  /// No description provided for @providerAssignmentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign technician'**
+  String get providerAssignmentTitle;
+
+  /// No description provided for @providerAssignmentSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save assignment'**
+  String get providerAssignmentSave;
+
+  /// No description provided for @providerAssignmentTechnicianLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned technician'**
+  String get providerAssignmentTechnicianLabel;
+
+  /// No description provided for @providerAssignmentEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'There are no active technicians on your company roster.'**
+  String get providerAssignmentEmpty;
+
+  /// No description provided for @providerAssignmentLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load your technicians. Try again.'**
+  String get providerAssignmentLoadError;
+
+  /// No description provided for @providerAssignmentSaveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the assignment. Open the picker and try again.'**
+  String get providerAssignmentSaveError;
+
+  /// No description provided for @providerAssignmentIneligible.
+  ///
+  /// In en, this message translates to:
+  /// **'This booking can no longer be assigned.'**
+  String get providerAssignmentIneligible;
+
   /// No description provided for @providerBookingDeclineButton.
   ///
   /// In en, this message translates to:

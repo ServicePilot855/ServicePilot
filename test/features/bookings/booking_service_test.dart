@@ -128,8 +128,8 @@ void main() {
         expect(
           () => bookingService.assignBooking(
             bookingId: 'bk-pending-01',
+            companyId: 'prov-ac-01',
             technicianId: 'tech-01',
-            technicianName: 'Sokha Vann',
           ),
           throwsA(isA<InvalidBookingTransitionException>()),
         );
