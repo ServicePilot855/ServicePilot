@@ -317,5 +317,18 @@
   "bookingSummaryReference": "លេខយោងការកក់",
   "bookingSummaryServices": "សេវាកម្ម",
   "bookingSummaryTotal": "សរុប",
-  "bookingSummaryItemLine": "{serviceTitle}៖ {price}"
+  "bookingSummaryItemLine": "{serviceTitle}៖ {price}",
+
+  "homeCompanyTechnicianGreeting": "ការងារដែលបានចាត់ឱ្យអ្នក រួមទាំងទីកន្លែង និងពេលវេលា មាននៅខាងក្រោម។",
+  "technicianJobsTitle": "ការងារដែលបានចាត់ឱ្យខ្ញុំ",
+  "technicianJobsEmpty": "បច្ចុប្បន្នមិនមានការងារចាត់ឱ្យអ្នកទេ។ ការងារដែលក្រុមហ៊ុនចាត់ឱ្យអ្នកនឹងបង្ហាញនៅទីនេះ។",
+  "technicianJobsLoadError": "មិនអាចផ្ទុកការងាររបស់អ្នកបានទេ។ សូមពិនិត្យការតភ្ជាប់ ហើយព្យាយាមម្តងទៀត។",
+  "technicianJobsLoading": "កំពុងផ្ទុកការងាររបស់អ្នក",
+  "technicianJobDetailTitle": "ព័ត៌មានលម្អិតការងារ",
+  "technicianJobUnavailable": "ការងារនេះមិនត្រូវបានចាត់ឱ្យអ្នក ឬលែងសកម្មទៀតហើយ។",
+  "technicianJobAppointmentLabel": "ពេលណាត់ជួប",
+  "technicianJobPreferredTimeLabel": "ពេលវេលាដែលចង់បាន (មិនទាន់បញ្ជាក់)",
+  "technicianJobServiceLabel": "សេវាកម្ម",
+  "technicianJobAppointmentValue": "ពេលណាត់ជួប៖ {time}",
+  "technicianJobPreferredTimeValue": "ពេលវេលាដែលចង់បាន (មិនទាន់បញ្ជាក់)៖ {time}"
 }

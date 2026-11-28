@@ -30,6 +30,13 @@ extension BookingStatusExtension on BookingStatus {
     BookingStatus.inProgress,
   };
 
+  /// Jobs a company technician sees in TECHJOB-1 (SCRUM-100): assigned to
+  /// them and not yet completed.
+  static const technicianJobStatuses = {
+    BookingStatus.assigned,
+    BookingStatus.inProgress,
+  };
+
   /// Terminal service record statuses displayed in BOOK-5 (SCRUM-90).
   static const closedRecordStatuses = {
     BookingStatus.completed,
@@ -40,6 +47,8 @@ extension BookingStatusExtension on BookingStatus {
   bool get exposesAcceptedDetails => acceptedStatuses.contains(this);
 
   bool get isActiveProviderWork => activeProviderStatuses.contains(this);
+
+  bool get isTechnicianJob => technicianJobStatuses.contains(this);
 
   bool get isClosedRecord => closedRecordStatuses.contains(this);
 

@@ -4,6 +4,7 @@ import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/features/bookings/models/booking_model.dart';
 import 'package:service_pilot/features/bookings/models/incoming_booking_request.dart';
 import 'package:service_pilot/features/bookings/models/provider_service_record.dart';
+import 'package:service_pilot/features/bookings/models/technician_job.dart';
 import 'package:service_pilot/features/bookings/services/booking_service.dart';
 import 'package:service_pilot/features/bookings/services/firestore_booking_service.dart';
 import 'package:service_pilot/features/quotes/providers/quote_provider.dart';
@@ -152,4 +153,36 @@ final providerServiceRecordsProvider =
   final user = ref.watch(currentUserProvider);
   if (user == null || !user.canViewBookingInbox) return const [];
   return ref.watch(bookingServiceProvider).getProviderServiceRecords(user.id);
+});
+
+/// Live jobs assigned to the signed-in company technician
+/// (TECHJOB-1 / SCRUM-100). Anyone else gets an empty list.
+final technicianJobsProvider =
+    StreamProvider.autoDispose<List<TechnicianJob>>((ref) {
+  final user = ref.watch(currentUserProvider);
+  if (user == null || !user.canViewAssignedJobs) {
+    return Stream.value(const []);
+  }
+  return ref.watch(bookingServiceProvider).watchTechnicianJobs(
+        technicianId: user.id,
+        companyId: user.companyId!,
+      );
+});
+
+/// One job of the signed-in company technician, or `null` when [bookingId]
+/// is not an active job assigned to them (TECHJOB-1 / SCRUM-100).
+final technicianJobProvider =
+    StreamProvider.autoDispose.family<TechnicianJob?, String>((
+  ref,
+  bookingId,
+) {
+  final user = ref.watch(currentUserProvider);
+  if (user == null || !user.canViewAssignedJobs) {
+    return Stream.value(null);
+  }
+  return ref.watch(bookingServiceProvider).watchTechnicianJob(
+        technicianId: user.id,
+        companyId: user.companyId!,
+        bookingId: bookingId,
+      );
 });

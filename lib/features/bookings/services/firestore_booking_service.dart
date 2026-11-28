@@ -8,6 +8,7 @@ import 'package:service_pilot/features/bookings/models/booking_request.dart';
 import 'package:service_pilot/features/bookings/models/incoming_booking_request.dart';
 import 'package:service_pilot/features/bookings/models/provider_service_record.dart';
 import 'package:service_pilot/features/bookings/models/quote_booking_request.dart';
+import 'package:service_pilot/features/bookings/models/technician_job.dart';
 import 'package:service_pilot/features/bookings/services/booking_photo_uploader.dart';
 import 'package:service_pilot/features/bookings/services/booking_service.dart';
 import 'package:service_pilot/features/quotes/models/quote_request_model.dart';
@@ -349,6 +350,74 @@ class FirestoreBookingService implements IBookingService {
       if (!doc.exists || data == null) return null;
       return BookingModel.fromFirestore(doc.id, data);
     });
+  }
+
+  /// TECHJOB-1 (SCRUM-100): the rules let a technician list bookings only
+  /// when the query itself pins the company, the technician and the active
+  /// statuses, so every filter here is required.
+  @override
+  Stream<List<TechnicianJob>> watchTechnicianJobs({
+    required String technicianId,
+    required String companyId,
+  }) {
+    if (technicianId.isEmpty || companyId.isEmpty) {
+      return Stream.value(const []);
+    }
+    return _bookings
+        .where('providerId', isEqualTo: companyId)
+        .where('technicianId', isEqualTo: technicianId)
+        .where(
+          'status',
+          whereIn: BookingStatusExtension.technicianJobStatuses
+              .map((status) => status.value)
+              .toList(),
+        )
+        .snapshots(includeMetadataChanges: true)
+        .where((snapshot) => !snapshot.metadata.isFromCache)
+        .map(
+          (snapshot) => TechnicianJob.sorted(
+            snapshot.docs
+                .map((d) => BookingModel.fromFirestore(d.id, d.data()))
+                .where((booking) => TechnicianJob.isAssignedTo(
+                      booking,
+                      technicianId: technicianId,
+                      companyId: companyId,
+                    ))
+                .map(TechnicianJob.fromBooking),
+          ),
+        );
+  }
+
+  @override
+  Stream<TechnicianJob?> watchTechnicianJob({
+    required String technicianId,
+    required String companyId,
+    required String bookingId,
+  }) {
+    return _bookings.doc(bookingId).snapshots().map<TechnicianJob?>((doc) {
+      final data = doc.data();
+      if (!doc.exists || data == null) return null;
+      final booking = BookingModel.fromFirestore(doc.id, data);
+      return TechnicianJob.isAssignedTo(
+        booking,
+        technicianId: technicianId,
+        companyId: companyId,
+      )
+          ? TechnicianJob.fromBooking(booking)
+          : null;
+    }).transform(
+      // The rules refuse the read once the job is not this technician's
+      // active job (unassigned, reassigned, cancelled or completed).
+      StreamTransformer.fromHandlers(
+        handleError: (error, stack, sink) {
+          if (error is FirebaseException && error.code == 'permission-denied') {
+            sink.add(null);
+          } else {
+            sink.addError(error, stack);
+          }
+        },
+      ),
+    );
   }
 
   @override
