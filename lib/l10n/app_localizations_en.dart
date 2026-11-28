@@ -1752,4 +1752,49 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get quoteBookingUnavailable =>
       'This quote can\'t be booked from your account.';
+
+  @override
+  String get providerActiveBookingsTitle => 'Current appointments & jobs';
+
+  @override
+  String get providerActiveBookingsEmpty =>
+      'You have no active appointments or jobs right now.';
+
+  @override
+  String get providerAssignedTechnicianLabel => 'Assigned technician';
+
+  @override
+  String providerBookingTechnicianValue(String name) {
+    return 'Assigned to $name';
+  }
+
+  @override
+  String get providerBookingAddressLabel => 'Service address';
+
+  @override
+  String get providerBookingDescriptionLabel => 'Problem description';
+
+  @override
+  String get providerBookingEstimatedFeeLabel => 'Estimated fee';
+
+  @override
+  String get bookingStatusConfirmed => 'Confirmed';
+
+  @override
+  String get bookingStatusAssigned => 'Assigned';
+
+  @override
+  String get bookingStatusInProgress => 'In Progress';
+
+  @override
+  String get bookingStatusCompleted => 'Completed';
+
+  @override
+  String get bookingStatusCancelled => 'Cancelled';
+
+  @override
+  String get bookingStatusDeclined => 'Declined';
+
+  @override
+  String get bookingStatusPending => 'Pending';
 }

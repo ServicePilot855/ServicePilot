@@ -1727,4 +1727,49 @@ class AppLocalizationsKm extends AppLocalizations {
   @override
   String get quoteBookingUnavailable =>
       'សម្រង់តម្លៃនេះមិនអាចកក់ពីគណនីរបស់អ្នកបានទេ។';
+
+  @override
+  String get providerActiveBookingsTitle => 'ការណាត់ជួប និងការងារបច្ចុប្បន្ន';
+
+  @override
+  String get providerActiveBookingsEmpty =>
+      'អ្នកមិនទាន់មានការណាត់ជួប ឬការងារកំពុងដំណើរការទេ។';
+
+  @override
+  String get providerAssignedTechnicianLabel => 'ជាងដែលបានចាត់តាំង';
+
+  @override
+  String providerBookingTechnicianValue(String name) {
+    return 'ចាត់តាំងទៅ $name';
+  }
+
+  @override
+  String get providerBookingAddressLabel => 'អាសយដ្ឋានសេវាកម្ម';
+
+  @override
+  String get providerBookingDescriptionLabel => 'ការពិពណ៌នាបញ្ហា';
+
+  @override
+  String get providerBookingEstimatedFeeLabel => 'ថ្លៃប៉ាន់ស្មាន';
+
+  @override
+  String get bookingStatusConfirmed => 'បានបញ្ជាក់';
+
+  @override
+  String get bookingStatusAssigned => 'បានចាត់តាំង';
+
+  @override
+  String get bookingStatusInProgress => 'កំពុងដំណើរការ';
+
+  @override
+  String get bookingStatusCompleted => 'បានបញ្ចប់';
+
+  @override
+  String get bookingStatusCancelled => 'បានបោះបង់';
+
+  @override
+  String get bookingStatusDeclined => 'បានបដិសេធ';
+
+  @override
+  String get bookingStatusPending => 'កំពុងរង់ចាំ';
 }

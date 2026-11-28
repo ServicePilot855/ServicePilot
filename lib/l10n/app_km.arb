@@ -283,5 +283,19 @@
   "quoteBookingSubmit": "ផ្ញើសំណើកក់",
   "quoteBookingNotApproved": "សូមអនុម័តតម្លៃដែលបានផ្ដល់ មុនពេលកក់ម៉ោង។",
   "quoteBookingAlreadyBooked": "អ្នកបានកក់ម៉ោងសម្រាប់សម្រង់តម្លៃនេះរួចហើយ។",
-  "quoteBookingUnavailable": "សម្រង់តម្លៃនេះមិនអាចកក់ពីគណនីរបស់អ្នកបានទេ។"
+  "quoteBookingUnavailable": "សម្រង់តម្លៃនេះមិនអាចកក់ពីគណនីរបស់អ្នកបានទេ។",
+  "providerActiveBookingsTitle": "ការណាត់ជួប និងការងារបច្ចុប្បន្ន",
+  "providerActiveBookingsEmpty": "អ្នកមិនទាន់មានការណាត់ជួប ឬការងារកំពុងដំណើរការទេ។",
+  "providerAssignedTechnicianLabel": "ជាងដែលបានចាត់តាំង",
+  "providerBookingTechnicianValue": "ចាត់តាំងទៅ {name}",
+  "providerBookingAddressLabel": "អាសយដ្ឋានសេវាកម្ម",
+  "providerBookingDescriptionLabel": "ការពិពណ៌នាបញ្ហា",
+  "providerBookingEstimatedFeeLabel": "ថ្លៃប៉ាន់ស្មាន",
+  "bookingStatusConfirmed": "បានបញ្ជាក់",
+  "bookingStatusAssigned": "បានចាត់តាំង",
+  "bookingStatusInProgress": "កំពុងដំណើរការ",
+  "bookingStatusCompleted": "បានបញ្ចប់",
+  "bookingStatusCancelled": "បានបោះបង់",
+  "bookingStatusDeclined": "បានបដិសេធ",
+  "bookingStatusPending": "កំពុងរង់ចាំ"
 }
