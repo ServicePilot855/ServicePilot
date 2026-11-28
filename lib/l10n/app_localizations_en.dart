@@ -1800,6 +1800,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get providerBookingEstimatedFeeLabel => 'Estimated fee';
 
   @override
+  String get providerBookingStartButton => 'Start Job';
+
+  @override
+  String get providerBookingStartDialogTitle => 'Start this job?';
+
+  @override
+  String get providerBookingStartDialogBody =>
+      'The homeowner will see this job as In Progress. Start it when you arrive on site.';
+
+  @override
+  String get providerBookingStartConfirm => 'Start Job';
+
+  @override
+  String get providerBookingStartKeep => 'Not yet';
+
+  @override
+  String get providerBookingStartedNotice =>
+      'Job started. The homeowner can now see it as In Progress.';
+
+  @override
+  String get providerBookingStartNotAuthorized =>
+      'You are not authorized to start this job.';
+
+  @override
+  String get providerBookingStartIneligible =>
+      'This job cannot be started in its current state.';
+
+  @override
+  String get providerBookingStartQuotePending =>
+      'The homeowner has not approved the quote for this job yet.';
+
+  @override
   String get bookingStatusConfirmed => 'Confirmed';
 
   @override

@@ -13,6 +13,7 @@ import 'package:service_pilot/features/bookings/services/booking_service.dart';
 import 'package:service_pilot/features/bookings/widgets/assign_technician_dialog.dart';
 import 'package:service_pilot/features/bookings/widgets/booking_status_stepper.dart';
 import 'package:service_pilot/features/bookings/widgets/decline_booking_dialog.dart';
+import 'package:service_pilot/features/bookings/widgets/start_job_dialog.dart';
 import 'package:service_pilot/l10n/l10n.dart';
 import 'package:service_pilot/shared/widgets/sp_button.dart';
 import 'package:service_pilot/shared/widgets/sp_layout.dart';
@@ -40,6 +41,7 @@ class _ProviderBookingDetailScreenState
   bool _isConfirming = false;
   bool _isDeclining = false;
   bool _isAssigning = false;
+  bool _isStarting = false;
   String? _successMessage;
   String? _errorMessage;
 
@@ -187,6 +189,72 @@ class _ProviderBookingDetailScreenState
       if (!mounted) return;
       setState(() {
         _isDeclining = false;
+        _errorMessage = l10n.providerBookingsLoadError;
+      });
+    }
+  }
+
+  /// Confirms, then marks an owned confirmed/assigned job In Progress
+  /// (WORK-1 / SCRUM-91).
+  Future<void> _startBooking(String providerId) async {
+    final l10n = context.l10n;
+    final confirmed = await StartJobDialog.show(context);
+    if (confirmed != true || !mounted) return;
+
+    setState(() {
+      _isStarting = true;
+      _errorMessage = null;
+      _successMessage = null;
+    });
+
+    try {
+      final service = ref.read(bookingServiceProvider);
+      await service.startBooking(
+        bookingId: widget.bookingId,
+        providerId: providerId,
+      );
+
+      if (!mounted) return;
+      ref.invalidate(bookingDetailProvider(widget.bookingId));
+      ref.invalidate(liveBookingDetailProvider(widget.bookingId));
+      ref.invalidate(providerBookingsProvider(providerId));
+      ref.invalidate(liveProviderBookingsProvider(providerId));
+      ref.invalidate(providerActiveBookingsProvider(providerId));
+      ref.invalidate(liveProviderActiveBookingsProvider(providerId));
+      ref.invalidate(providerServiceRecordsProvider);
+
+      setState(() {
+        _isStarting = false;
+        _successMessage = l10n.providerBookingStartedNotice;
+      });
+    } on UnauthorizedBookingStartException {
+      if (!mounted) return;
+      setState(() {
+        _isStarting = false;
+        _errorMessage = l10n.providerBookingStartNotAuthorized;
+      });
+    } on InvalidBookingStartStateException {
+      if (!mounted) return;
+      setState(() {
+        _isStarting = false;
+        _errorMessage = l10n.providerBookingStartIneligible;
+      });
+    } on QuoteNotApprovedForStartException {
+      if (!mounted) return;
+      setState(() {
+        _isStarting = false;
+        _errorMessage = l10n.providerBookingStartQuotePending;
+      });
+    } on BookingSubmissionException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isStarting = false;
+        _errorMessage = e.message;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isStarting = false;
         _errorMessage = l10n.providerBookingsLoadError;
       });
     }
@@ -408,6 +476,7 @@ class _ProviderBookingDetailScreenState
     final canAssign = isOwned &&
         booking.canBeAssigned &&
         ref.watch(currentUserProvider)?.isCompany == true;
+    final canStart = isOwned && booking.canBeStarted;
 
     final preferredFormatted = DateFormat('EEE, d MMM yyyy • h:mm a')
         .format(booking.preferredDateTime);
@@ -423,9 +492,12 @@ class _ProviderBookingDetailScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (_successMessage != null &&
-                booking.status == BookingStatus.confirmed) ...[
+                (booking.status == BookingStatus.confirmed ||
+                    booking.status == BookingStatus.inProgress)) ...[
               SpNotice(
-                key: const Key('provider_booking_confirmed_notice'),
+                key: booking.status == BookingStatus.inProgress
+                    ? const Key('provider_booking_started_notice')
+                    : const Key('provider_booking_confirmed_notice'),
                 icon: Icons.check_circle_outline_rounded,
                 message: _successMessage!,
                 tone: SpTone.success,
@@ -583,6 +655,17 @@ class _ProviderBookingDetailScreenState
                     ? null
                     : () => _confirmBooking(
                         booking.preferredDateTime, activeProviderId),
+              )
+            else if (canStart)
+              SpPrimaryButton(
+                key: const Key('provider_start_booking_button'),
+                label: l10n.providerBookingStartButton,
+                icon: Icons.play_arrow_rounded,
+                wrapLabel: true,
+                isLoading: _isStarting,
+                onPressed: _isStarting
+                    ? null
+                    : () => _startBooking(activeProviderId),
               )
             else if (!booking.status.exposesAcceptedDetails)
               SpNotice(

@@ -702,6 +702,18 @@
   "providerBookingAddressLabel": "Service address",
   "providerBookingDescriptionLabel": "Problem description",
   "providerBookingEstimatedFeeLabel": "Estimated fee",
+
+  "@_WORK_START": {},
+  "providerBookingStartButton": "Start Job",
+  "providerBookingStartDialogTitle": "Start this job?",
+  "providerBookingStartDialogBody": "The homeowner will see this job as In Progress. Start it when you arrive on site.",
+  "providerBookingStartConfirm": "Start Job",
+  "providerBookingStartKeep": "Not yet",
+  "providerBookingStartedNotice": "Job started. The homeowner can now see it as In Progress.",
+  "providerBookingStartNotAuthorized": "You are not authorized to start this job.",
+  "providerBookingStartIneligible": "This job cannot be started in its current state.",
+  "providerBookingStartQuotePending": "The homeowner has not approved the quote for this job yet.",
+
   "bookingStatusConfirmed": "Confirmed",
   "bookingStatusAssigned": "Assigned",
   "bookingStatusInProgress": "In Progress",

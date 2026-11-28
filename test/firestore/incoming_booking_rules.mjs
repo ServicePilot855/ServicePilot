@@ -1,4 +1,4 @@
-import assert from 'node:assert/strict';
+﻿import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 
 const project = 'demo-servicepilot';
@@ -425,4 +425,47 @@ assert.match(backfill('--declined', '--apply'), /3 declined booking\(s\) process
 assert.deepEqual((await request(`${documents}/${legacyArchive}`, { token: independent.token })).fields, job);
 await request(`${documents}/${legacyDeclined}`, { token: independent.token, status: 403 });
 
+// WORK-1 (SCRUM-91): quote-based work cannot start before the homeowner approves.
+{
+  const quoteId = crypto.randomUUID();
+  const quotePath = `quoteRequests/${quoteId}`;
+  const startId = crypto.randomUUID();
+  const startPath = `bookings/${startId}`;
+  const quoteFields = {
+    ...fields({ id: quoteId, customerId: customer.id, providerId: independent.id,
+      offeringId: 'offering-quote-start', offeringTitle: 'AC deep clean',
+      description: 'Please quote a deep clean for two units.', status: 'quoted' }),
+    quotedPrice: { doubleValue: 45 },
+    createdAt: { timestampValue: '2026-11-28T02:00:00Z' },
+  };
+  const startFields = {
+    ...bookingFor(independent.id, startId),
+    quoteId: { stringValue: quoteId },
+    status: { stringValue: 'confirmed' },
+    confirmedAppointmentAt: job.appointmentDate,
+    confirmedBy: { stringValue: independent.id },
+    confirmedAt: { timestampValue: '2026-11-28T03:00:00Z' },
+  };
+  await commit('owner', [update(quotePath, quoteFields)]);
+  await commit('owner', [update(startPath, startFields)]);
+
+  const start = (token, status = 200) => commit(token, [{
+    ...update(startPath, { ...startFields, status: { stringValue: 'in_progress' },
+      updatedAt: { timestampValue: '2026-11-28T04:00:00Z' } }),
+    updateMask: { fieldPaths: ['status', 'updatedAt'] },
+  }], status);
+
+  await start(outsider.token, 403);
+  await start(independent.token, 403); // quote is still only 'quoted'
+  await commit('owner', [update(quotePath, { ...quoteFields,
+    status: { stringValue: 'approved' }, approvedPrice: { doubleValue: 45 },
+    approvedAt: { timestampValue: '2026-11-28T03:30:00Z' } })]);
+  await start(independent.token);
+  assert.equal(
+    (await request(`${documents}/${startPath}`, { token: independent.token })).fields.status.stringValue,
+    'in_progress',
+  );
+}
+
 console.log('Technician enrollment, company roster isolation, and incoming booking rules passed.');
+

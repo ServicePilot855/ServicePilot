@@ -3176,6 +3176,60 @@ abstract class AppLocalizations {
   /// **'Estimated fee'**
   String get providerBookingEstimatedFeeLabel;
 
+  /// No description provided for @providerBookingStartButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Job'**
+  String get providerBookingStartButton;
+
+  /// No description provided for @providerBookingStartDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start this job?'**
+  String get providerBookingStartDialogTitle;
+
+  /// No description provided for @providerBookingStartDialogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The homeowner will see this job as In Progress. Start it when you arrive on site.'**
+  String get providerBookingStartDialogBody;
+
+  /// No description provided for @providerBookingStartConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Job'**
+  String get providerBookingStartConfirm;
+
+  /// No description provided for @providerBookingStartKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Not yet'**
+  String get providerBookingStartKeep;
+
+  /// No description provided for @providerBookingStartedNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Job started. The homeowner can now see it as In Progress.'**
+  String get providerBookingStartedNotice;
+
+  /// No description provided for @providerBookingStartNotAuthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'You are not authorized to start this job.'**
+  String get providerBookingStartNotAuthorized;
+
+  /// No description provided for @providerBookingStartIneligible.
+  ///
+  /// In en, this message translates to:
+  /// **'This job cannot be started in its current state.'**
+  String get providerBookingStartIneligible;
+
+  /// No description provided for @providerBookingStartQuotePending.
+  ///
+  /// In en, this message translates to:
+  /// **'The homeowner has not approved the quote for this job yet.'**
+  String get providerBookingStartQuotePending;
+
   /// No description provided for @bookingStatusConfirmed.
   ///
   /// In en, this message translates to:

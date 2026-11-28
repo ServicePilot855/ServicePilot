@@ -138,8 +138,9 @@ void main() {
         expect(
           () => bookingService.startBooking(
             bookingId: 'bk-pending-01',
+            providerId: 'prov-ac-01',
           ),
-          throwsA(isA<InvalidBookingTransitionException>()),
+          throwsA(isA<InvalidBookingStartStateException>()),
         );
       },
     );

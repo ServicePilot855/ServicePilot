@@ -822,6 +822,20 @@ service cloud.firestore {
         getAfter(path).data.get('bookingId', '') == bookingId;
     }
 
+    // WORK-1 (SCRUM-91): quote-based work may only start once the homeowner has
+    // approved the quote that produced this booking.
+    function quoteApprovedForStart(bookingId, booking) {
+      let quoteId = booking.get('quoteId', null);
+      let quotePath = /databases/$(database)/documents/quoteRequests/$(quoteId);
+      return quoteId == null ||
+        (exists(quotePath) &&
+          get(quotePath).data.status == 'approved' &&
+          (
+            get(quotePath).data.get('bookingId', null) == null ||
+            get(quotePath).data.bookingId == bookingId
+          ));
+    }
+
     function noProviderPreviews(providerId, bookingId) {
       return !existsAfter(inboxDocument(providerId, bookingId)) &&
         !existsAfter(declinedRequestDocument(providerId, bookingId)) &&
@@ -935,7 +949,8 @@ service cloud.firestore {
                 ownsBookingInbox(before.providerId) && validConfirmation(before, after, changed)) ||
            (changed.hasOnly(['status', 'updatedAt']) &&
             (ownsBookingInbox(before.providerId) || isAssignedBookingTechnician(before)) &&
-             ((before.status in ['confirmed', 'assigned'] && after.status == 'in_progress') ||
+             ((before.status in ['confirmed', 'assigned'] && after.status == 'in_progress' &&
+                 quoteApprovedForStart(bookingId, before)) ||
                (before.status == 'in_progress' && after.status == 'completed')));
       }
 
