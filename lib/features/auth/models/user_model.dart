@@ -45,6 +45,12 @@ class UserModel {
   bool get isAdmin => role == AppRole.admin;
   bool get isHomeowner => role == AppRole.homeowner;
   bool get isCompany => role == AppRole.company;
+  bool get isCompanyTechnician => role == AppRole.companyTechnician;
+
+  /// An active technician linked to a company can see the jobs assigned to
+  /// them (TECHJOB-1 / SCRUM-100). `firestore.rules` checks the same.
+  bool get canViewAssignedJobs =>
+      isCompanyTechnician && isActive && (companyId ?? '').isNotEmpty;
   bool get canViewBookingInbox => !isSuspended &&
       (isIndependentTechnician || (isCompany && (companyId ?? id) == id));
 

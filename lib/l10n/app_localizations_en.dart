@@ -234,7 +234,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeCompanyTechnicianGreeting =>
-      'Your assigned jobs and schedule are coming soon.';
+      'Your assigned jobs are below, with where and when to work.';
 
   @override
   String get homeCustomerGreeting =>
@@ -1899,5 +1899,46 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String bookingSummaryItemLine(String serviceTitle, String price) {
     return '$serviceTitle: $price';
+  }
+
+  @override
+  String get technicianJobsTitle => 'My assigned jobs';
+
+  @override
+  String get technicianJobsEmpty =>
+      'No jobs are assigned to you right now. Jobs your company assigns to you appear here.';
+
+  @override
+  String get technicianJobsLoadError =>
+      'Couldn\'t load your jobs. Check your connection and try again.';
+
+  @override
+  String get technicianJobsLoading => 'Loading your jobs';
+
+  @override
+  String get technicianJobDetailTitle => 'Job details';
+
+  @override
+  String get technicianJobUnavailable =>
+      'This job isn\'t assigned to you, or it is no longer active.';
+
+  @override
+  String get technicianJobAppointmentLabel => 'Appointment';
+
+  @override
+  String get technicianJobPreferredTimeLabel =>
+      'Preferred time (not confirmed yet)';
+
+  @override
+  String get technicianJobServiceLabel => 'Service';
+
+  @override
+  String technicianJobAppointmentValue(String time) {
+    return 'Appointment: $time';
+  }
+
+  @override
+  String technicianJobPreferredTimeValue(String time) {
+    return 'Preferred time (not confirmed yet): $time';
   }
 }

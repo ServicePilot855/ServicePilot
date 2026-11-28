@@ -319,6 +319,12 @@ Quote-required offerings follow a separate flow from fixed-price cart checkout a
 - **Book with the approved quote (QUOTE-5).** [Quote booking](lib/features/quotes/screens/quote_booking_screen.dart) at `/quotes/:quoteId/book` asks only for where and when, reusing the booking form's address field and the shared [appointment fields](lib/features/bookings/widgets/appointment_fields.dart) (date and time row, map pin). The approved price sits in a flat row under the header and a neutral notice says no payment is taken in the app. The service, details, photos, provider and price come from the quote. A quote that is not approved, belongs to someone else or is already booked shows an `SpStatusHero` with the reason instead of the form; a booked quote links to its booking. Submitting replaces the step with the usual booking-sent page.
 - The homeowner and provider dashboards show the latest 20 quote requests first. Use an outlined **Show older quote requests** button when more records are available. Keep provider decisions live as the list expands.
 
+## Technician jobs
+
+A company technician's home lists the jobs assigned to them (TECHJOB-1). The [job list](lib/features/bookings/widgets/technician_job_list.dart) follows the BOOK-4 [provider list](lib/features/bookings/widgets/provider_booking_list.dart): a **My assigned jobs** heading, then one white card per job, soonest first. Each card is one tap target showing the service title, the `StatusBadge`, the appointment time and the address. An empty list shows a neutral `SpNotice`, and a load failure shows a danger notice with **Try again**. The home drops the "coming soon" notice once a technician can see jobs.
+
+[Job details](lib/features/bookings/screens/technician_job_detail_screen.dart) at `/technician/jobs/:bookingId` uses the provider detail layout: the service title as the page header, the status badge, then one flat card of label-over-value rows for the appointment, service address, service and problem description. Technicians don't see the price or the homeowner's details. Only Assigned and In Progress jobs open. A job that isn't the technician's own active job shows a neutral **unavailable** notice and nothing from the booking. Only company technicians can open `/technician/jobs`.
+
 ## Reviewing UI changes
 
 1. Start from the closest implemented screen. Reuse its `AppTheme` tokens and shared widgets. If a new pattern is needed, document it here with the same change and check any other screens that use the affected theme or component.

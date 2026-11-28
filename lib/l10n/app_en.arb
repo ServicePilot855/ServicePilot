@@ -94,7 +94,7 @@
   "homeLogOut": "Log out",
   "homeAdminGreeting": "The platform admin dashboard is coming soon.",
   "homeCompanyGreeting": "Your team management and booking overview are coming soon.",
-  "homeCompanyTechnicianGreeting": "Your assigned jobs and schedule are coming soon.",
+  "homeCompanyTechnicianGreeting": "Your assigned jobs are below, with where and when to work.",
   "homeCustomerGreeting": "Your home repair booking dashboard is coming soon.",
   "homeTechnicianGreeting": "Your job board and earnings dashboard are coming soon.",
 
@@ -744,5 +744,20 @@
       "serviceTitle": {"type": "String"},
       "price": {"type": "String"}
     }
-  }
+  },
+
+  "@_TECHNICIAN_JOBS": {},
+  "technicianJobsTitle": "My assigned jobs",
+  "technicianJobsEmpty": "No jobs are assigned to you right now. Jobs your company assigns to you appear here.",
+  "technicianJobsLoadError": "Couldn't load your jobs. Check your connection and try again.",
+  "technicianJobsLoading": "Loading your jobs",
+  "technicianJobDetailTitle": "Job details",
+  "technicianJobUnavailable": "This job isn't assigned to you, or it is no longer active.",
+  "technicianJobAppointmentLabel": "Appointment",
+  "technicianJobPreferredTimeLabel": "Preferred time (not confirmed yet)",
+  "technicianJobServiceLabel": "Service",
+  "technicianJobAppointmentValue": "Appointment: {time}",
+  "@technicianJobAppointmentValue": {"placeholders": {"time": {"type": "String"}}},
+  "technicianJobPreferredTimeValue": "Preferred time (not confirmed yet): {time}",
+  "@technicianJobPreferredTimeValue": {"placeholders": {"time": {"type": "String"}}}
 }

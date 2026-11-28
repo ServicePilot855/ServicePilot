@@ -515,7 +515,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeCompanyTechnicianGreeting.
   ///
   /// In en, this message translates to:
-  /// **'Your assigned jobs and schedule are coming soon.'**
+  /// **'Your assigned jobs are below, with where and when to work.'**
   String get homeCompanyTechnicianGreeting;
 
   /// No description provided for @homeCustomerGreeting.
@@ -3355,6 +3355,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{serviceTitle}: {price}'**
   String bookingSummaryItemLine(String serviceTitle, String price);
+
+  /// No description provided for @technicianJobsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My assigned jobs'**
+  String get technicianJobsTitle;
+
+  /// No description provided for @technicianJobsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No jobs are assigned to you right now. Jobs your company assigns to you appear here.'**
+  String get technicianJobsEmpty;
+
+  /// No description provided for @technicianJobsLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your jobs. Check your connection and try again.'**
+  String get technicianJobsLoadError;
+
+  /// No description provided for @technicianJobsLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading your jobs'**
+  String get technicianJobsLoading;
+
+  /// No description provided for @technicianJobDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Job details'**
+  String get technicianJobDetailTitle;
+
+  /// No description provided for @technicianJobUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This job isn\'t assigned to you, or it is no longer active.'**
+  String get technicianJobUnavailable;
+
+  /// No description provided for @technicianJobAppointmentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Appointment'**
+  String get technicianJobAppointmentLabel;
+
+  /// No description provided for @technicianJobPreferredTimeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred time (not confirmed yet)'**
+  String get technicianJobPreferredTimeLabel;
+
+  /// No description provided for @technicianJobServiceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Service'**
+  String get technicianJobServiceLabel;
+
+  /// No description provided for @technicianJobAppointmentValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Appointment: {time}'**
+  String technicianJobAppointmentValue(String time);
+
+  /// No description provided for @technicianJobPreferredTimeValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred time (not confirmed yet): {time}'**
+  String technicianJobPreferredTimeValue(String time);
 }
 
 class _AppLocalizationsDelegate

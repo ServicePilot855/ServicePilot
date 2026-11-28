@@ -234,7 +234,7 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get homeCompanyTechnicianGreeting =>
-      'Your assigned jobs and schedule are coming soon.';
+      'ការងារដែលបានចាត់ឱ្យអ្នក រួមទាំងទីកន្លែង និងពេលវេលា មាននៅខាងក្រោម។';
 
   @override
   String get homeCustomerGreeting =>
@@ -1874,5 +1874,46 @@ class AppLocalizationsKm extends AppLocalizations {
   @override
   String bookingSummaryItemLine(String serviceTitle, String price) {
     return '$serviceTitle៖ $price';
+  }
+
+  @override
+  String get technicianJobsTitle => 'ការងារដែលបានចាត់ឱ្យខ្ញុំ';
+
+  @override
+  String get technicianJobsEmpty =>
+      'បច្ចុប្បន្នមិនមានការងារចាត់ឱ្យអ្នកទេ។ ការងារដែលក្រុមហ៊ុនចាត់ឱ្យអ្នកនឹងបង្ហាញនៅទីនេះ។';
+
+  @override
+  String get technicianJobsLoadError =>
+      'មិនអាចផ្ទុកការងាររបស់អ្នកបានទេ។ សូមពិនិត្យការតភ្ជាប់ ហើយព្យាយាមម្តងទៀត។';
+
+  @override
+  String get technicianJobsLoading => 'កំពុងផ្ទុកការងាររបស់អ្នក';
+
+  @override
+  String get technicianJobDetailTitle => 'ព័ត៌មានលម្អិតការងារ';
+
+  @override
+  String get technicianJobUnavailable =>
+      'ការងារនេះមិនត្រូវបានចាត់ឱ្យអ្នក ឬលែងសកម្មទៀតហើយ។';
+
+  @override
+  String get technicianJobAppointmentLabel => 'ពេលណាត់ជួប';
+
+  @override
+  String get technicianJobPreferredTimeLabel =>
+      'ពេលវេលាដែលចង់បាន (មិនទាន់បញ្ជាក់)';
+
+  @override
+  String get technicianJobServiceLabel => 'សេវាកម្ម';
+
+  @override
+  String technicianJobAppointmentValue(String time) {
+    return 'ពេលណាត់ជួប៖ $time';
+  }
+
+  @override
+  String technicianJobPreferredTimeValue(String time) {
+    return 'ពេលវេលាដែលចង់បាន (មិនទាន់បញ្ជាក់)៖ $time';
   }
 }

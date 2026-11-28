@@ -6,6 +6,7 @@ import 'package:service_pilot/features/bookings/models/booking_request.dart';
 import 'package:service_pilot/features/bookings/models/incoming_booking_request.dart';
 import 'package:service_pilot/features/bookings/models/provider_service_record.dart';
 import 'package:service_pilot/features/bookings/models/quote_booking_request.dart';
+import 'package:service_pilot/features/bookings/models/technician_job.dart';
 import 'package:service_pilot/features/quotes/models/quote_request_model.dart';
 import 'package:service_pilot/features/quotes/models/quote_status.dart';
 
@@ -410,6 +411,22 @@ abstract class IBookingService {
   /// "Status changes made by authorized service providers or technicians are
   /// reflected in the customer's booking view."
   Stream<BookingModel?> watchBookingById(String bookingId);
+
+  /// Emits the active jobs (`Assigned`, `In Progress`) that [companyId] has
+  /// assigned to [technicianId], soonest appointment first
+  /// (TECHJOB-1 / SCRUM-100).
+  Stream<List<TechnicianJob>> watchTechnicianJobs({
+    required String technicianId,
+    required String companyId,
+  });
+
+  /// Emits one job while it is an active job assigned to [technicianId] at
+  /// [companyId], and `null` when it is not (TECHJOB-1 / SCRUM-100).
+  Stream<TechnicianJob?> watchTechnicianJob({
+    required String technicianId,
+    required String companyId,
+    required String bookingId,
+  });
 }
 
 /// Production and testable implementation of [IBookingService].
@@ -1079,5 +1096,50 @@ class BookingService implements IBookingService {
       }
       return null;
     });
+  }
+
+  @override
+  Stream<List<TechnicianJob>> watchTechnicianJobs({
+    required String technicianId,
+    required String companyId,
+  }) async* {
+    List<TechnicianJob> jobsIn(List<BookingModel> bookings) =>
+        TechnicianJob.sorted(
+          bookings
+              .where((booking) => TechnicianJob.isAssignedTo(
+                    booking,
+                    technicianId: technicianId,
+                    companyId: companyId,
+                  ))
+              .map(TechnicianJob.fromBooking),
+        );
+
+    yield jobsIn(_bookings);
+    yield* _updatesController.stream.map(jobsIn);
+  }
+
+  @override
+  Stream<TechnicianJob?> watchTechnicianJob({
+    required String technicianId,
+    required String companyId,
+    required String bookingId,
+  }) async* {
+    TechnicianJob? jobIn(List<BookingModel> bookings) {
+      for (final booking in bookings) {
+        if (booking.id == bookingId) {
+          return TechnicianJob.isAssignedTo(
+            booking,
+            technicianId: technicianId,
+            companyId: companyId,
+          )
+              ? TechnicianJob.fromBooking(booking)
+              : null;
+        }
+      }
+      return null;
+    }
+
+    yield jobIn(_bookings);
+    yield* _updatesController.stream.map(jobIn);
   }
 }
