@@ -1790,4 +1790,19 @@ class AppLocalizationsKm extends AppLocalizations {
   @override
   String get providerHistoryLoadError =>
       'មិនអាចផ្ទុកកំណត់ត្រាសេវាកម្មបានទេ។ សូមព្យាយាមម្តងទៀត។';
+
+  @override
+  String get providerBookingCompleteButton => 'សម្គាល់ថាបានបញ្ចប់';
+
+  @override
+  String get providerBookingCompleteSuccess =>
+      'ការងារត្រូវបានសម្គាល់ថាបានបញ្ចប់! ទាំងអ្នក និងម្ចាស់ផ្ទះអាចមើលឃើញវានៅក្នុងប្រវត្តិសេវាកម្ម។';
+
+  @override
+  String get providerBookingCompleteUnauthorized =>
+      'មានតែអ្នកផ្តល់សេវាដែលមានសិទ្ធិប៉ុណ្ណោះដែលអាចបញ្ចប់ការកក់នេះបាន។';
+
+  @override
+  String get providerBookingCompleteIneligible =>
+      'មានតែការងារដែលកំពុងដំណើរការប៉ុណ្ណោះដែលអាចសម្គាល់ថាបានបញ្ចប់។';
 }

@@ -88,6 +88,27 @@ class UnauthorizedBookingConfirmationException implements Exception {
       'UnauthorizedBookingConfirmationException(bookingId: $bookingId, providerId: $providerId): $message';
 }
 
+/// Thrown when an unrelated provider or technician attempts to complete a booking
+/// they do not own or are not assigned to.
+///
+/// Enforces WORK-2 (SCRUM-92) and TECHJOB-3 (SCRUM-102) AC.
+class UnauthorizedBookingCompletionException implements Exception {
+  final String bookingId;
+  final String actorId;
+  final String message;
+
+  const UnauthorizedBookingCompletionException({
+    required this.bookingId,
+    required this.actorId,
+    this.message =
+        'Only the authorized provider or assigned technician can complete this booking.',
+  });
+
+  @override
+  String toString() =>
+      'UnauthorizedBookingCompletionException(bookingId: $bookingId, actorId: $actorId): $message';
+}
+
 /// Thrown when a provider attempts to decline a request addressed to another
 /// provider.
 ///
@@ -311,6 +332,18 @@ abstract class IBookingService {
   /// or cannot transition to [BookingStatus.inProgress].
   Future<BookingModel> startBooking({
     required String bookingId,
+  });
+
+  /// Authorized provider marks an owned `In Progress` booking as `Completed`
+  /// (WORK-2 / SCRUM-92).
+  ///
+  /// Throws:
+  /// - [BookingNotFoundException] if [bookingId] does not exist.
+  /// - [UnauthorizedBookingCompletionException] if [providerId] does not own the booking.
+  /// - [InvalidBookingTransitionException] if the booking is not `In Progress`.
+  Future<BookingModel> completeBooking({
+    required String bookingId,
+    required String providerId,
   });
 
   /// Updates a booking to [newStatus] if the lifecycle transition is valid.
@@ -891,6 +924,30 @@ class BookingService implements IBookingService {
     return updateBookingStatus(
       bookingId: bookingId,
       newStatus: BookingStatus.inProgress,
+    );
+  }
+
+  @override
+  Future<BookingModel> completeBooking({
+    required String bookingId,
+    required String providerId,
+  }) async {
+    final index = _bookings.indexWhere((b) => b.id == bookingId);
+    if (index == -1) {
+      throw BookingNotFoundException(bookingId);
+    }
+
+    final booking = _bookings[index];
+    if (!booking.isOwnedByProvider(providerId)) {
+      throw UnauthorizedBookingCompletionException(
+        bookingId: bookingId,
+        actorId: providerId,
+      );
+    }
+
+    return updateBookingStatus(
+      bookingId: bookingId,
+      newStatus: BookingStatus.completed,
     );
   }
 

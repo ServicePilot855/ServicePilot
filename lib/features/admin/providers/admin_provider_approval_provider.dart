@@ -11,18 +11,19 @@ final activeAdminActorProvider = Provider<UserModel?>((ref) {
   return ref.watch(currentUserProvider);
 });
 
-/// Fetches pending provider applications (`status == 'pending_verification'`)
+/// Live stream of pending provider applications (`status == 'pending_verification'`)
 /// for the authorized Platform Admin (ADM-1 / ADM-2).
 final pendingProvidersProvider =
-    FutureProvider.autoDispose<List<ProviderModel>>((ref) async {
-      final service = ref.watch(providerServiceProvider);
-      final actor = ref.watch(activeAdminActorProvider);
-      return service.getPendingProviders(actor: actor);
-    });
+    StreamProvider.autoDispose<List<ProviderModel>>((ref) {
+  final service = ref.watch(providerServiceProvider);
+  final actor = ref.watch(activeAdminActorProvider);
+  return service.watchPendingProviders(actor: actor);
+});
 
-/// Fetches approved and active providers (`status == 'active'`, `isVerified == true`).
+/// Live stream of approved and active providers (`status == 'active'`, `isVerified == true`).
+/// Updates automatically when an admin approves a pending provider.
 final approvedProvidersProvider =
-    FutureProvider.autoDispose<List<ProviderModel>>((ref) async {
-      final service = ref.watch(providerServiceProvider);
-      return service.getProviders(activeOnly: true);
-    });
+    StreamProvider.autoDispose<List<ProviderModel>>((ref) {
+  final service = ref.watch(providerServiceProvider);
+  return service.watchActiveProviders();
+});

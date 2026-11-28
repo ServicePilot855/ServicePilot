@@ -302,5 +302,9 @@
   "providerHistorySubtitle": "ការកក់ដែលបានបញ្ចប់ បោះបង់ និងបដិសេធសម្រាប់គណនីរបស់អ្នក។",
   "providerHistoryButton": "កំណត់ត្រាសេវាកម្មដែលបានបញ្ចប់",
   "providerHistoryEmpty": "អ្នកមិនទាន់មានកំណត់ត្រាសេវាកម្មដែលបានបញ្ចប់ បោះបង់ ឬបដិសេធទេ។",
-  "providerHistoryLoadError": "មិនអាចផ្ទុកកំណត់ត្រាសេវាកម្មបានទេ។ សូមព្យាយាមម្តងទៀត។"
+  "providerHistoryLoadError": "មិនអាចផ្ទុកកំណត់ត្រាសេវាកម្មបានទេ។ សូមព្យាយាមម្តងទៀត។",
+  "providerBookingCompleteButton": "សម្គាល់ថាបានបញ្ចប់",
+  "providerBookingCompleteSuccess": "ការងារត្រូវបានសម្គាល់ថាបានបញ្ចប់! ទាំងអ្នក និងម្ចាស់ផ្ទះអាចមើលឃើញវានៅក្នុងប្រវត្តិសេវាកម្ម។",
+  "providerBookingCompleteUnauthorized": "មានតែអ្នកផ្តល់សេវាដែលមានសិទ្ធិប៉ុណ្ណោះដែលអាចបញ្ចប់ការកក់នេះបាន។",
+  "providerBookingCompleteIneligible": "មានតែការងារដែលកំពុងដំណើរការប៉ុណ្ណោះដែលអាចសម្គាល់ថាបានបញ្ចប់។"
 }

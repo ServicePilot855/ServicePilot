@@ -1,4 +1,6 @@
 import 'package:service_pilot/core/constants/app_roles.dart';
+import 'dart:async';
+
 import 'package:service_pilot/features/auth/models/user_model.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
 
@@ -92,6 +94,14 @@ abstract class IProviderService {
     required UserModel? actor,
   });
 
+  /// Real-time stream of `pending_verification` providers for admin review.
+  Stream<List<ProviderModel>> watchPendingProviders({
+    required UserModel? actor,
+  });
+
+  /// Real-time stream of approved `active` providers.
+  Stream<List<ProviderModel>> watchActiveProviders();
+
   /// Approves a `pending_verification` provider so it becomes `active`, verified,
   /// and eligible for customer discovery and bookings (ADM-2 / SCRUM-94).
   ///
@@ -111,6 +121,7 @@ abstract class IProviderService {
 /// Production-ready and mockable implementation of [IProviderService].
 class ProviderService implements IProviderService {
   final List<ProviderModel> _providers;
+  final _changes = StreamController<void>.broadcast();
 
   ProviderService({List<ProviderModel>? initialProviders})
       : _providers = List<ProviderModel>.from(
@@ -454,7 +465,26 @@ class ProviderService implements IProviderService {
       updatedAt: DateTime.now(),
     );
     _providers[index] = approved;
+    _changes.add(null);
     return approved;
+  }
+
+  @override
+  Stream<List<ProviderModel>> watchPendingProviders({
+    required UserModel? actor,
+  }) async* {
+    yield await getPendingProviders(actor: actor);
+    await for (final _ in _changes.stream) {
+      yield await getPendingProviders(actor: actor);
+    }
+  }
+
+  @override
+  Stream<List<ProviderModel>> watchActiveProviders() async* {
+    yield await getProviders(activeOnly: true);
+    await for (final _ in _changes.stream) {
+      yield await getProviders(activeOnly: true);
+    }
   }
 
   @override

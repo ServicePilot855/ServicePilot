@@ -3211,6 +3211,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unable to load service records right now. Please try again.'**
   String get providerHistoryLoadError;
+
+  /// No description provided for @providerBookingCompleteButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as Completed'**
+  String get providerBookingCompleteButton;
+
+  /// No description provided for @providerBookingCompleteSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Job marked as completed! Both you and the homeowner now see it in service history.'**
+  String get providerBookingCompleteSuccess;
+
+  /// No description provided for @providerBookingCompleteUnauthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the authorized service provider can complete this booking.'**
+  String get providerBookingCompleteUnauthorized;
+
+  /// No description provided for @providerBookingCompleteIneligible.
+  ///
+  /// In en, this message translates to:
+  /// **'Only In Progress jobs can be marked as completed.'**
+  String get providerBookingCompleteIneligible;
 }
 
 class _AppLocalizationsDelegate

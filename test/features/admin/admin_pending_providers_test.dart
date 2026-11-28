@@ -3,11 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:service_pilot/core/auth/auth_provider.dart';
 import 'package:service_pilot/core/constants/app_roles.dart';
-import 'package:service_pilot/features/admin/providers/admin_provider.dart';
+import 'package:service_pilot/features/admin/providers/admin_provider_approval_provider.dart';
 import 'package:service_pilot/features/admin/screens/admin_pending_providers_screen.dart';
-import 'package:service_pilot/features/admin/services/admin_provider_service.dart';
 import 'package:service_pilot/features/auth/models/user_model.dart';
 import 'package:service_pilot/features/providers/models/provider_model.dart';
+import 'package:service_pilot/features/providers/providers/provider_provider.dart';
+import 'package:service_pilot/features/providers/services/provider_service.dart';
 import 'package:service_pilot/features/providers/widgets/provider_type_badge.dart';
 import 'package:service_pilot/l10n/l10n.dart';
 import 'package:service_pilot/shared/home/admin_home.dart';
@@ -15,12 +16,13 @@ import 'package:service_pilot/shared/home/admin_home.dart';
 Widget _buildTestApp({
   required Widget child,
   required UserModel? currentUser,
-  required IAdminProviderService adminService,
+  required IProviderService providerService,
 }) {
   return ProviderScope(
     overrides: [
       currentUserProvider.overrideWithValue(currentUser),
-      adminProviderServiceProvider.overrideWithValue(adminService),
+      activeAdminActorProvider.overrideWithValue(currentUser),
+      providerServiceProvider.overrideWithValue(providerService),
     ],
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -90,6 +92,17 @@ void main() {
     createdAt: DateTime.now().subtract(const Duration(days: 1)),
   );
 
+  const sampleActiveProvider = ProviderModel(
+    id: 'active-prov-1',
+    name: 'Borey Nhem',
+    type: ProviderType.independent,
+    description: 'Certified AC & Plumbing Technician',
+    coverageAreas: ['Daun Penh'],
+    serviceArea: 'Daun Penh',
+    status: 'active',
+    isVerified: true,
+  );
+
   group('SCRUM-93 / ADM-1: View Pending Provider Applications', () {
     testWidgets(
       'Admin sees list of pending applications with correct details and badges',
@@ -97,7 +110,7 @@ void main() {
         await tester.binding.setSurfaceSize(const Size(800, 1600));
         addTearDown(() => tester.binding.setSurfaceSize(null));
 
-        final mockService = AdminProviderService(
+        final mockService = ProviderService(
           initialProviders: [samplePendingTech, samplePendingCompany],
         );
 
@@ -105,12 +118,11 @@ void main() {
           _buildTestApp(
             child: const AdminPendingProvidersScreen(),
             currentUser: adminUser,
-            adminService: mockService,
+            providerService: mockService,
           ),
         );
         await tester.pumpAndSettle();
 
-        // Screen title and pending count
         expect(find.text('Provider Applications'), findsOneWidget);
         expect(find.text('2 pending'), findsOneWidget);
 
@@ -132,7 +144,6 @@ void main() {
         expect(find.text('contact@cleanandcool.com.kh'), findsOneWidget);
         expect(find.text('Chamkarmon, BKK1'), findsOneWidget);
 
-        // Pending status badges
         expect(find.textContaining('Pending Verification'), findsNWidgets(2));
       },
     );
@@ -140,13 +151,13 @@ void main() {
     testWidgets(
       'Empty state displays when no applications are pending',
       (tester) async {
-        final mockService = AdminProviderService(initialProviders: []);
+        final mockService = ProviderService(initialProviders: []);
 
         await tester.pumpWidget(
           _buildTestApp(
             child: const AdminPendingProvidersScreen(),
             currentUser: adminUser,
-            adminService: mockService,
+            providerService: mockService,
           ),
         );
         await tester.pumpAndSettle();
@@ -163,7 +174,7 @@ void main() {
     testWidgets(
       'Role security: Non-admin customer is strictly blocked from the queue',
       (tester) async {
-        final mockService = AdminProviderService(
+        final mockService = ProviderService(
           initialProviders: [samplePendingTech],
         );
 
@@ -171,7 +182,7 @@ void main() {
           _buildTestApp(
             child: const AdminPendingProvidersScreen(),
             currentUser: customerUser,
-            adminService: mockService,
+            providerService: mockService,
           ),
         );
         await tester.pumpAndSettle();
@@ -183,7 +194,6 @@ void main() {
           ),
           findsOneWidget,
         );
-        // Provider data must NOT be rendered
         expect(find.text('Sokunthea Keo'), findsNothing);
       },
     );
@@ -191,7 +201,7 @@ void main() {
     testWidgets(
       'Role security: Technician is strictly blocked from the queue',
       (tester) async {
-        final mockService = AdminProviderService(
+        final mockService = ProviderService(
           initialProviders: [samplePendingTech],
         );
 
@@ -199,7 +209,7 @@ void main() {
           _buildTestApp(
             child: const AdminPendingProvidersScreen(),
             currentUser: technicianUser,
-            adminService: mockService,
+            providerService: mockService,
           ),
         );
         await tester.pumpAndSettle();
@@ -210,27 +220,42 @@ void main() {
     );
 
     testWidgets(
-      'AdminHome displays Provider Applications action card with live pending count',
+      'AdminHome dynamically updates pending & active counts when a provider is approved',
       (tester) async {
-        final mockService = AdminProviderService(
-          initialProviders: [samplePendingTech, samplePendingCompany],
+        await tester.binding.setSurfaceSize(const Size(800, 1600));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+
+        final mockService = ProviderService(
+          initialProviders: [
+            samplePendingTech,
+            samplePendingCompany,
+            sampleActiveProvider,
+          ],
         );
 
         await tester.pumpWidget(
           _buildTestApp(
             child: const AdminHome(),
             currentUser: adminUser,
-            adminService: mockService,
+            providerService: mockService,
           ),
         );
         await tester.pumpAndSettle();
 
         expect(find.text('Pending provider applications'), findsOneWidget);
         expect(find.text('Awaiting review'), findsOneWidget);
-        expect(
-          find.byKey(const Key('admin_home_view_all_pending_button')),
-          findsOneWidget,
+        expect(find.text('2 pending'), findsOneWidget);
+        expect(find.text('1 active'), findsOneWidget);
+
+        // Approve one pending provider dynamically
+        await mockService.approveProvider(
+          providerId: samplePendingTech.id,
+          actor: adminUser,
         );
+        await tester.pumpAndSettle();
+
+        expect(find.text('1 pending'), findsOneWidget);
+        expect(find.text('2 active'), findsOneWidget);
       },
     );
   });

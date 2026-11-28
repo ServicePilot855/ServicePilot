@@ -1815,4 +1815,19 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get providerHistoryLoadError =>
       'Unable to load service records right now. Please try again.';
+
+  @override
+  String get providerBookingCompleteButton => 'Mark as Completed';
+
+  @override
+  String get providerBookingCompleteSuccess =>
+      'Job marked as completed! Both you and the homeowner now see it in service history.';
+
+  @override
+  String get providerBookingCompleteUnauthorized =>
+      'Only the authorized service provider can complete this booking.';
+
+  @override
+  String get providerBookingCompleteIneligible =>
+      'Only In Progress jobs can be marked as completed.';
 }

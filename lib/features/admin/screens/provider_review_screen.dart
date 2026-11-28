@@ -88,7 +88,7 @@ class _ProviderReviewScreenState extends ConsumerState<ProviderReviewScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isApproving = false);
-        showSpError(context, context.l10n.providerProfileError);
+        showSpError(context, '${context.l10n.providerProfileError} ($e)');
       }
     }
   }

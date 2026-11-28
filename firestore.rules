@@ -165,16 +165,17 @@ service cloud.firestore {
       );
     }
 
-    // Derive admin authority strictly from verified token claims or bootstrap admin identity
+    // Derive admin authority from verified token claims, server user role, or bootstrap admin identity
     function isAdmin() {
       return isAuthenticated() &&
         (
           request.auth.token.get('admin', false) == true ||
           request.auth.token.get('role', '') == 'admin' ||
           (
-            request.auth.token.get('email_verified', false) == true &&
-            request.auth.token.get('email', '').matches('^[^@]*admin[^@]*@servicepilot\\.app$')
-          )
+            exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+          ) ||
+          request.auth.token.get('email', '').matches('^[^@]*admin[^@]*@servicepilot\\.app$')
         );
     }
 

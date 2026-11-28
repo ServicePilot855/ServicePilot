@@ -499,6 +499,26 @@ class FirestoreBookingService implements IBookingService {
   }
 
   @override
+  Future<BookingModel> completeBooking({
+    required String bookingId,
+    required String providerId,
+  }) {
+    return _update(bookingId, (booking) {
+      if (!booking.isOwnedByProvider(providerId)) {
+        throw UnauthorizedBookingCompletionException(
+          bookingId: bookingId,
+          actorId: providerId,
+        );
+      }
+      _checkTransition(booking, BookingStatus.completed);
+      return booking.copyWith(
+        status: BookingStatus.completed,
+        updatedAt: DateTime.now(),
+      );
+    });
+  }
+
+  @override
   Future<BookingModel> updateBookingStatus({
     required String bookingId,
     required BookingStatus newStatus,
