@@ -61,7 +61,7 @@ abstract class IAuthService {
     required String newPassword,
   });
 
-  /// Validates a company invite token.
+  /// Checks the company invite token format. Firestore authorizes redemption.
   bool validateInviteToken(String token);
 
   /// Activates an invited company technician account using an invite token.

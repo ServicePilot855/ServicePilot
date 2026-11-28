@@ -216,7 +216,8 @@ service cloud.firestore {
     function isValidUser(data) {
       return hasOnlyAllowedFields(data, [
           'id', 'fullName', 'email', 'phoneNumber', 'role', 'status',
-          'serviceArea', 'companyId', 'companyName', 'createdAt', 'updatedAt'
+          'serviceArea', 'companyId', 'companyName', 'createdAt', 'updatedAt',
+          'technicianInviteId'
         ]) &&
         hasRequiredFields(data, ['id', 'fullName', 'email', 'phoneNumber', 'role', 'status']) &&
         data.id is string && data.id.size() >= 1 && data.id.size() <= 128 &&
@@ -231,6 +232,7 @@ service cloud.firestore {
         (!('serviceArea' in data) || (data.serviceArea is string && data.serviceArea.size() <= 300)) &&
         (!('companyId' in data) || (data.companyId is string && data.companyId.size() <= 100)) &&
         (!('companyName' in data) || (data.companyName is string && data.companyName.size() <= 150)) &&
+        (!('technicianInviteId' in data) || validTechnicianInviteId(data.technicianInviteId)) &&
         (!('createdAt' in data) || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
         (!('updatedAt' in data) || data.updatedAt is timestamp || (data.updatedAt is string && data.updatedAt.size() <= 50));
     }
@@ -516,6 +518,104 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    function validTechnicianInviteId(id) {
+      return id is string && id.matches('^[A-Za-z0-9_-]{32,128}$');
+    }
+
+    function isTechnicianProfile(account) {
+      return account != null && account.role in ['company_technician', 'companyTechnician'];
+    }
+
+    function isVerifiedCompany(companyId) {
+      let account = get(/databases/$(database)/documents/users/$(companyId)).data;
+      let provider = get(/databases/$(database)/documents/providers/$(companyId)).data;
+      return account != null && account.role == 'company' &&
+        account.get('companyId', companyId) == companyId &&
+        account.status in ['active', 'pending_verification'] &&
+        provider != null && isCompanyProfile(provider) &&
+        provider.get('isVerified', false) == true && provider.status in ['active', 'inactive'];
+    }
+
+    function technicianRosterPath(companyId, userId) {
+      return /databases/$(database)/documents/providers/$(companyId)/technicians/$(userId);
+    }
+
+    function hasCurrentTechnicianRoster(account, userId) {
+      let entry = technicianRosterPath(account.companyId, userId);
+      return account.status == 'active'
+        ? existsAfter(entry) && getAfter(entry).data.fullName == account.fullName
+        : !existsAfter(entry);
+    }
+
+    function keepsTechnicianMembership(userId, before, after) {
+      return !isTechnicianProfile(before) ||
+        (areImmutableFieldsUnchanged(['companyId']) &&
+          (!('companyId' in before) || keepsTechnicianRoster(userId, before, after)));
+    }
+
+    function keepsTechnicianRoster(userId, before, after) {
+      let entry = technicianRosterPath(before.companyId, userId);
+      return (!('technicianInviteId' in before) && !exists(entry)) ||
+        (isTechnicianProfile(after) ? hasCurrentTechnicianRoster(after, userId) : !existsAfter(entry));
+    }
+
+    function isNewTechnicianEnrollment(account, userId) {
+      let invitePath = /databases/$(database)/documents/technicianInvites/$(account.technicianInviteId);
+      let invite = get(invitePath).data;
+      let redeemed = getAfter(invitePath).data;
+      return account.role == 'company_technician' && account.status == 'active' &&
+        invite != null && !('redeemedBy' in invite) && redeemed != null &&
+        redeemed.redeemedBy == userId && account.companyId == invite.companyId &&
+        account.email == invite.email && hasCurrentTechnicianRoster(account, userId);
+    }
+
+    match /technicianInvites/{inviteId} {
+      allow get: if isAuthenticated() &&
+        (resource.data.email == request.auth.token.get('email', '').lower() ||
+          isOwner(resource.data.companyId));
+
+      allow create: if validTechnicianInviteId(inviteId) &&
+        request.resource.data.keys().hasOnly(['email', 'companyId', 'expiresAt']) &&
+        isOwner(request.resource.data.companyId) &&
+        isVerifiedCompany(request.resource.data.companyId) &&
+        isValidEmail(request.resource.data.email) &&
+        request.resource.data.email == request.resource.data.email.lower() &&
+        request.resource.data.expiresAt is timestamp &&
+        request.resource.data.expiresAt > request.time;
+
+      allow update: if isAuthenticated() && canRedeemInvite();
+
+      function canRedeemInvite() {
+        let accountPath = /databases/$(database)/documents/users/$(request.auth.uid);
+        let account = getAfter(accountPath).data;
+        return !('redeemedBy' in resource.data) && resource.data.expiresAt > request.time &&
+          resource.data.email == request.auth.token.get('email', '').lower() &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['redeemedBy']) &&
+          request.resource.data.redeemedBy == request.auth.uid &&
+          isVerifiedCompany(resource.data.companyId) &&
+          !exists(accountPath) && account != null && account.technicianInviteId == inviteId;
+      }
+    }
+
+    match /providers/{companyId}/technicians/{userId} {
+      function matchesCurrentAccount() {
+        let account = getAfter(/databases/$(database)/documents/users/$(userId)).data;
+        return isTechnicianProfile(account) && account.companyId == companyId &&
+          account.status == 'active' && request.resource.data.keys().hasOnly(['id', 'fullName']) &&
+          request.resource.data.id == userId && request.resource.data.fullName == account.fullName;
+      }
+
+      allow read: if (isOwner(companyId) && isVerifiedCompany(companyId)) || isAdmin();
+      allow create, update: if (isOwner(userId) || isAdmin()) && matchesCurrentAccount();
+      allow delete: if isAdmin() && noActiveMembership();
+
+      function noActiveMembership() {
+        let account = getAfter(/databases/$(database)/documents/users/$(userId)).data;
+        return !isTechnicianProfile(account) || account.companyId != companyId ||
+          account.status != 'active';
+      }
+    }
+
     // ===============================================================
     // Collection 1: /users/{userId}
     // ===============================================================
@@ -530,8 +630,12 @@ service cloud.firestore {
                        isValidUser(request.resource.data) &&
                        request.resource.data.id == userId &&
                        (
-                         (isOwner(userId) && request.resource.data.role != 'admin') ||
-                         isAdmin()
+                         (isOwner(userId) &&
+                           ((!isTechnicianProfile(request.resource.data) &&
+                             request.resource.data.role != 'admin' &&
+                             !('technicianInviteId' in request.resource.data)) ||
+                            isNewTechnicianEnrollment(request.resource.data, userId))) ||
+                         (isAdmin() && !('technicianInviteId' in request.resource.data))
                        );
 
       // Update: User themselves or platform admin.
@@ -540,18 +644,23 @@ service cloud.firestore {
       allow update: if isAuthenticated() &&
                        isValidUser(request.resource.data) &&
                        (isOwner(userId) || isAdmin()) &&
-                       areImmutableFieldsUnchanged(['id', 'createdAt']) &&
+                       areImmutableFieldsUnchanged(['id', 'createdAt', 'technicianInviteId']) &&
+                       keepsTechnicianMembership(userId, resource.data, request.resource.data) &&
                        (
                          isAdmin() ||
                          (
                            resource.data.status != 'suspended' &&
                            request.resource.data.role == resource.data.role &&
-                           request.resource.data.status == resource.data.status
+                           request.resource.data.status == resource.data.status &&
+                           (!isTechnicianProfile(resource.data) ||
+                             areImmutableFieldsUnchanged(['companyName']))
                          )
                        );
 
       // Delete: Account owner or platform admin
-      allow delete: if isOwner(userId) || isAdmin();
+      allow delete: if (!isTechnicianProfile(resource.data) && isOwner(userId)) ||
+        (isAdmin() && (!isTechnicianProfile(resource.data) || !('companyId' in resource.data) ||
+          !existsAfter(technicianRosterPath(resource.data.companyId, userId))));
     }
 
     // ===============================================================
@@ -660,8 +769,8 @@ service cloud.firestore {
 
     function isCompanyBookingTechnician(technicianId, providerId) {
       let account = get(/databases/$(database)/documents/users/$(technicianId)).data;
-      return account != null && account.role in ['company_technician', 'companyTechnician'] &&
-        account.get('companyId', '') == providerId && account.get('status', '') != 'suspended';
+      return isTechnicianProfile(account) &&
+        account.get('companyId', '') == providerId && account.get('status', '') == 'active';
     }
 
     function isAssignedBookingTechnician(booking) {

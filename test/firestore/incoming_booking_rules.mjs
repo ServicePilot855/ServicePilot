@@ -29,34 +29,111 @@ function fields(data) {
 }
 
 async function account(role, { status = 'active', companyId } = {}) {
+  const email = `${crypto.randomUUID()}@example.test`;
+  const password = crypto.randomUUID();
   const { localId: id, idToken: token } = await request(
     `http://${auth}/identitytoolkit.googleapis.com/v1/accounts:signUp?key=fake-key`,
     {
       method: 'POST',
-      body: { email: `${crypto.randomUUID()}@example.test`, password: crypto.randomUUID(), returnSecureToken: true },
+      body: { email, password, returnSecureToken: true },
     },
   );
-  await request(`${documents}/users/${id}`, {
-    method: 'PATCH', token: 'owner',
-    body: { fields: fields({ id, role, status,
-      ...(role === 'company' && { companyId: companyId ?? id }),
-      ...(role === 'company_technician' && { companyId }),
-    }) },
-  });
-  return { id, token };
+  if (role) {
+    await request(`${documents}/users/${id}`, {
+      method: 'PATCH', token: 'owner',
+      body: { fields: fields({ id, role, status,
+        ...(role === 'company' && { companyId: companyId ?? id }),
+        ...(role === 'company_technician' && { companyId }),
+      }) },
+    });
+  }
+  return { id, token, email, password };
 }
 
-const [customer, independent, company, outsider, suspended] = await Promise.all([
+const [customer, independent, company, outsider, suspended, otherCompany] = await Promise.all([
   account('homeowner'), account('independent_provider'), account('company'),
   account('independent_provider'), account('company', { status: 'suspended' }),
+  account('company'),
 ]);
-const companyTechnician = await account('company_technician', { companyId: company.id });
 
 const collection = id => `providers/${id}/incomingBookingRequests`;
 const update = (path, values) => ({ update: { name: `${prefix}/${path}`, fields: values } });
 const commit = (token, writes, status = 200) => request(`${documents}:commit`, {
   method: 'POST', token, body: { writes }, status,
 });
+
+const companyTechnician = await account();
+const otherTechnician = await account('company_technician', { companyId: otherCompany.id });
+const uninvited = await account();
+const companyProvider = id => update(`providers/${id}`, {
+  ...fields({ id, providerType: 'company', status: 'active' }),
+  isVerified: { booleanValue: true },
+});
+await commit('owner', [companyProvider(company.id), companyProvider(otherCompany.id)]);
+const inviteId = crypto.randomUUID();
+const invite = `technicianInvites/${inviteId}`;
+const inviteFields = {
+  ...fields({ companyId: company.id, email: companyTechnician.email }),
+  expiresAt: { timestampValue: new Date(Date.now() + 60_000).toISOString() },
+};
+const accountPath = `users/${companyTechnician.id}`;
+const profile = fields({
+  id: companyTechnician.id, role: 'company_technician', status: 'active',
+  companyId: company.id, technicianInviteId: inviteId,
+  fullName: 'Borey Nhem', email: companyTechnician.email, phoneNumber: '',
+});
+const roster = `providers/${company.id}/technicians`;
+const rosterPath = `${roster}/${companyTechnician.id}`;
+const rosterFields = fields({ id: companyTechnician.id, fullName: 'Borey Nhem' });
+const enrollment = (path, data, profileFields = profile) => [
+  update(accountPath, profileFields),
+  update(path, { ...data, ...fields({ redeemedBy: companyTechnician.id }) }),
+  update(rosterPath, rosterFields),
+];
+await commit(outsider.token, [update(invite, inviteFields)], 403);
+await commit(otherCompany.token, [update(invite, inviteFields)], 403);
+await commit(company.token, [update(invite, inviteFields)]);
+await request(`${documents}/${invite}`, { status: 403 });
+await request(`${documents}/${invite}`, { token: uninvited.token, status: 403 });
+await request(`${documents}/${invite}`, { token: companyTechnician.token });
+await commit(companyTechnician.token, [update(accountPath, profile)], 403);
+await commit(companyTechnician.token, enrollment(invite, inviteFields).slice(0, 2), 403);
+await commit(companyTechnician.token, enrollment(invite, inviteFields, {
+  ...profile, ...fields({ companyId: otherCompany.id }),
+}), 403);
+await commit(uninvited.token, enrollment(invite, inviteFields), 403);
+
+const expiredId = crypto.randomUUID();
+const expiredPath = `technicianInvites/${expiredId}`;
+const expired = { ...inviteFields, expiresAt: { timestampValue: '2020-01-01T00:00:00Z' } };
+await commit(company.token, [update(expiredPath, expired)], 403);
+await commit('owner', [update(expiredPath, expired)]);
+await commit(companyTechnician.token, enrollment(expiredPath, expired, {
+  ...profile, ...fields({ technicianInviteId: expiredId }),
+}), 403);
+
+await commit(companyTechnician.token, enrollment(invite, inviteFields));
+await commit(companyTechnician.token, enrollment(invite, inviteFields), 403);
+const { idToken: freshTechnicianToken } = await request(
+  `http://${auth}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=fake-key`,
+  {
+    method: 'POST',
+    body: { email: companyTechnician.email, password: companyTechnician.password, returnSecureToken: true },
+  },
+);
+const technicianAccount = (await request(`${documents}/${accountPath}`, {
+  token: freshTechnicianToken,
+})).fields;
+assert.deepEqual(technicianAccount, profile);
+await commit(companyTechnician.token, [update(accountPath, {
+  ...profile, ...fields({ companyId: otherCompany.id }),
+})], 403);
+await commit(companyTechnician.token, [{ delete: `${prefix}/${accountPath}` }], 403);
+const rosterList = await request(`${documents}/${roster}`, { token: company.token });
+assert.deepEqual(rosterList.documents.map(doc => doc.fields), [rosterFields]);
+await request(`${documents}/${roster}`, { token: otherCompany.token, status: 403 });
+await request(`${documents}/${roster}`, { token: companyTechnician.token, status: 403 });
+await request(`${documents}/${accountPath}`, { token: company.token, status: 403 });
 
 const job = fields({ serviceTitle: 'Sink repair', description: 'The sink leaks below the trap.' });
 job.appointmentDate = { timestampValue: '2026-12-01T03:00:00Z' };
@@ -202,6 +279,7 @@ const updateBooking = (token, changes, status = 200) => commit(token, [
 await updateBooking(company.token, { status: 'completed' }, 403);
 await updateBooking(company.token, { status: 'in_progress', address: 'Changed address' }, 403);
 await updateBooking(company.token, { status: 'assigned', technicianId: outsider.id }, 403);
+await updateBooking(company.token, { status: 'assigned', technicianId: otherTechnician.id }, 403);
 await updateBooking(company.token, { status: 'assigned', technicianId: companyTechnician.id });
 assert.deepEqual((await request(`${documents}/${booking}`, { token: companyTechnician.token })).fields.address, original.address);
 await updateBooking(company.token, { status: 'confirmed' }, 403);
@@ -215,9 +293,32 @@ await updateBooking(companyTechnician.token, { status: 'completed' });
 if (storage) {
   await readPhoto(company.token, true);
   await readPhoto(companyTechnician.token, true);
+  await readPhoto(otherTechnician.token, false);
   await readPhoto(outsider.token, false);
   console.log('Booking photo privacy passed in the Storage emulator.');
 }
+
+const platformAdmin = await account();
+await request(`http://${auth}/identitytoolkit.googleapis.com/v1/projects/${project}/accounts:update`, {
+  method: 'POST', token: 'owner',
+  body: { localId: platformAdmin.id, customAttributes: JSON.stringify({ admin: true }) },
+});
+const { idToken: adminToken } = await request(
+  `http://${auth}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=fake-key`,
+  {
+    method: 'POST',
+    body: { email: platformAdmin.email, password: platformAdmin.password, returnSecureToken: true },
+  },
+);
+const suspendTechnician = update(accountPath, { ...profile, ...fields({ status: 'suspended' }) });
+const removeRosterEntry = { delete: `${prefix}/${rosterPath}` };
+await commit(adminToken, [suspendTechnician], 403);
+await commit(adminToken, [removeRosterEntry], 403);
+await commit(adminToken, [suspendTechnician, removeRosterEntry]);
+assert.deepEqual((await request(`${documents}/${roster}`, { token: company.token })).documents ?? [], []);
+await request(`${documents}/${booking}`, { token: freshTechnicianToken, status: 403 });
+if (storage) await readPhoto(freshTechnicianToken, false);
+
 await commit('owner', [update(`users/${company.id}`, fields({ role: 'company', status: 'suspended', companyId: company.id }))]);
 await request(`${documents}/${booking}`, { token: company.token, status: 403 });
 if (storage) await readPhoto(company.token, false);
@@ -287,4 +388,4 @@ assert.match(backfill('--declined', '--apply'), /3 declined booking\(s\) process
 assert.deepEqual((await request(`${documents}/${legacyArchive}`, { token: independent.token })).fields, job);
 await request(`${documents}/${legacyDeclined}`, { token: independent.token, status: 403 });
 
-console.log('Incoming booking rules passed for independent, company and unrelated accounts.');
+console.log('Technician enrollment, company roster isolation, and incoming booking rules passed.');

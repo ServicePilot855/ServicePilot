@@ -39,7 +39,7 @@ class _TechnicianActivationScreenState
   @override
   void initState() {
     super.initState();
-    _isTokenValid =
+    _isTokenValid = widget.email?.trim().isNotEmpty == true &&
         ref.read(authServiceProvider).validateInviteToken(widget.token);
   }
 
@@ -52,7 +52,10 @@ class _TechnicianActivationScreenState
   }
 
   Future<void> _handleActivate() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (ref.read(authProvider) is AuthStateLoading ||
+        !_formKey.currentState!.validate()) {
+      return;
+    }
 
     final l10n = context.l10n;
     final success =
@@ -137,8 +140,7 @@ class _TechnicianActivationScreenState
                 children: [
                   SpTextField(
                     label: l10n.activationEmailLabel,
-                    initialValue:
-                        widget.email ?? 'tech.invited@servicepilot.app',
+                    initialValue: widget.email?.trim(),
                     readOnly: true,
                     prefixIcon: Icons.mail_outline_rounded,
                   ),
